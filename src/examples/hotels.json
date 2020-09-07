@@ -1,0 +1,25 @@
+[
+    {
+        "name": "Ibis",
+        "stars": 5,
+        "misc": {
+            "hasPool": true 
+        },
+        "rooms": [
+            {
+                "name": "Suite",
+                "price": 50,
+                "isFree": true
+            },
+            {
+                "name": "Family",
+                "price": 30,
+                "isFree": false
+            }
+        ]
+    },
+    {
+        "name": "BnB",
+        "stars": 3
+    }
+]

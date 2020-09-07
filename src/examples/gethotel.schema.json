@@ -1,0 +1,21 @@
+{
+    "type": "object",
+    "properties": {
+        "misc": {
+            "type": "object",
+            "properties": {
+                "hasPool":  { "const": true }
+            }
+        },
+        "rooms": {
+            "type": "array",
+            "contains": {
+                "type": "object",
+                "properties": {
+                    "isFree": {"const": true}
+                }
+            }
+        }
+    },
+    "required": ["misc", "rooms"]
+}

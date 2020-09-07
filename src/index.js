@@ -1,11 +1,7 @@
-import './style.css';
-import {net} from './net/net';
-import {Net as Visualization} from './visualization/net';
-import {ui} from './ui/ui';
+import './style.scss';
+import '../node_modules/@fortawesome/fontawesome-free/js/all.js';
+import {init as initNet} from './visualization/net';
+import {init as initUI} from './ui/ui';
 
-const visualization = new Visualization(net, ui);
-ui.init(net, visualization);
-
-window.net = net;
-window.visualization = visualization;
-window.ui = ui;
+initUI();
+initNet();

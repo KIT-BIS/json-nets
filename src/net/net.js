@@ -1,138 +1,243 @@
 import {Place} from './place';
 import {Transition} from './transition';
-import {Token} from './token';
+import {PresetEdge} from './presetEdge';
+import {PostsetEdge} from './postsetEdge';
+import {receiveNotification} from '../visualization/net';
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
-export const EVENT_CHANGE_TOKEN = 'EVENT_CHANGE_TOKEN';
+export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
 export const EVENT_CONNECT = 'EVENT_CONNECT';
 export const EVENT_DISCONNECT = 'EVENT_DISCONNECT';
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE';
 export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION';
 export const EVENT_REMOVE_EDGE = 'EVENT_REMOVE_EDGE';
 
-export const net = {
-  transitions: [],
-  places: [],
-  observer: null,
-  addPlace: function() {
-    const newPlace = new Place();
-    this.places.push(newPlace);
-    this.notify(EVENT_ADD_PLACE, newPlace._id);
-  },
-  addTransition: function() {
-    const newTransition = new Transition();
-    this.transitions.push(newTransition);
-    this.notify(EVENT_ADD_TRANSITION, newTransition._id);
-  },
-  removePlace: function(placeID) {
-    this.places = this.places.filter((place) => {
-      place._id !== placeID;
-    });
-    this.notify(EVENT_REMOVE_PLACE, placeID);
+let _transitions = [];
+let _places = [];
+let _edges = [];
 
-    this.transitions.forEach((transition) => {
-      transition.preset.forEach((place) => {
-        if (place._id === placeID) {
-          this.notify(EVENT_DISCONNECT, {from: place._id, to: transition._id});
-        }
-      });
-      transition.postset.forEach((place) => {
-        if (place._id === placeID) {
-          this.notify(EVENT_DISCONNECT, {from: transition._id, to: place._id});
-        }
-      });
-    });
-  },
-  removeTransition: function(transitionID) {
-    let transitionToRemove = null;
-    this.transitions = this.transitions.filter((transition) => {
-      if (transition._id === transitionID) {
-        transitionToRemove = transition;
-        return false;
-      } else {
-        return true;
-      }
-    });
-    this.notify(EVENT_REMOVE_TRANSITION, transitionID);
+/**
+ * Finds a place by given ID.
+ * @param {String} placeID The ID of the place to find.
+ * @return {Place} The found place.
+ */
+export function findPlace(placeID) {
+  return _places.find((place) => place.id === placeID);
+};
 
-    transitionToRemove.preset.forEach((place) => {
-      this.notify(EVENT_DISCONNECT, {from: place._id,
-        to: transitionToRemove._id});
-    });
-    transitionToRemove.postset.forEach((place) => {
-      this.notify(EVENT_DISCONNECT, {from: transitionToRemove._id,
-        to: place._id});
-    });
-  },
-  addToken: function(placeID) {
-    const place = this.places.find((place) => place._id === placeID);
-    place.tokens.push(new Token());
-    this.notify(EVENT_CHANGE_TOKEN, {placeID, num: place.tokens.length});
-  },
-  removeToken: function(placeID) {
-    const place = this.places.find((place) => place._id === placeID);
-    place.tokens.pop();
-    this.notify(EVENT_CHANGE_TOKEN, {placeID, num: place.tokens.length});
-  },
-  connect: function(fromID, toID) {
-    const nodes = this.places.concat(this.transitions);
-    const from = nodes.find((node) => node._id === fromID);
-    const to = nodes.find((node) => node._id === toID);
-    if (from instanceof Place) {
-      if (to instanceof Place) {
-        console.log('Can\'t connect Place with Place.');
-      } else if (to instanceof Transition) {
-        to.preset.push(from);
-      } else {
-        console.log('Can only connect Places and Transitions.');
-      }
-    } else if (from instanceof Transition) {
-      if (to instanceof Transition) {
-        console.log('Can\'t connect Transition with Transition.');
-      } else if (to instanceof Place) {
-        from.postset.push(to);
-      } else {
-        console.log('Can only connect Places and Transitions.');
-      }
+/**
+ * Creates a new place and adds it to the net.
+ */
+export function addPlace() {
+  const newPlace = new Place();
+  _places.push(newPlace);
+  notify(EVENT_ADD_PLACE, newPlace.id);
+};
+
+/**
+ * Removes a place from the net. Will also remove any
+ * edges that were connected to it.
+ * @param {String} placeID The ID of the place to remove.
+ */
+export function removePlace(placeID) {
+  _places = _places.filter((place) => {
+    return place.id !== placeID;
+  });
+  notify(EVENT_REMOVE_PLACE, placeID);
+
+  const edgesToRemove = _edges.filter((edge) => {
+    return edge.place.id === placeID;
+  });
+  edgesToRemove.forEach((edge) => {
+    disconnect(edge.id);
+  });
+};
+
+/**
+ * Set the content of a place (expected to be an array of objects)
+ * @param {String} placeID The place to set the content.
+ * @param {Array} content New content of the place.
+ */
+export function setPlaceContent(placeID, content) {
+  const place = _places.find((place) => place.id === placeID);
+  place.content = content;
+  notify(EVENT_CHANGE_PLACE_CONTENT,
+      {placeID, num: place.content.length});
+};
+
+/**
+ * Finds a transition by given ID.
+ * @param {String} transitionID The ID of the transition to find.
+ * @return {Transition} The found transition.
+ */
+export function findTransition(transitionID) {
+  return _transitions.find((transition) =>
+    transition.id === transitionID);
+};
+
+/**
+ * Creates a new transition and adds it to the net.
+ */
+export function addTransition() {
+  const newTransition = new Transition();
+  _transitions.push(newTransition);
+  notify(EVENT_ADD_TRANSITION, newTransition.id);
+};
+
+/**
+ * Removes a transition from the net. Will also remove
+ * any connected edges.
+ * @param {String} transitionID The ID of the transition to remove.
+ */
+export function removeTransition(transitionID) {
+  let transitionToRemove = null;
+  const newTransitionsList = _transitions.filter((transition) => {
+    if (transition.id === transitionID) {
+      transitionToRemove = transition;
+      return false;
+    } else {
+      return true;
     }
-    this.notify(EVENT_CONNECT, {from: from._id, to: to._id});
-  },
-  step: function() {
-    const alifeTransitions = [];
-    this.transitions.forEach((transition) => {
-      let isAlive = true;
-      if (transition.preset.length < 1) {
-        isAlive = false;
-      }
-      if (transition.preset.some((place) => place.tokens.length < 1)) {
-        isAlive = false;
-      }
-      if (isAlive) {
-        alifeTransitions.push(transition);
-      }
-    });
-    alifeTransitions.forEach((transition) => {
-      let hadConflict = false;
-      transition.preset.forEach((place) => {
-        if (place.tokens.length < 1) {
-          hadConflict = true;
-          return;
-        }
-        this.removeToken(place._id);
+  });
+
+  transitionToRemove.preset.forEach((edge) => {
+    disconnect(edge.id);
+  });
+  transitionToRemove.postset.forEach((edge) => {
+    disconnect(edge.id);
+  });
+  _transitions = newTransitionsList;
+  notify(EVENT_REMOVE_TRANSITION, transitionID);
+};
+
+/**
+ * Connects one node in the net to another.
+ * @param {String} fromID ID of the outgoing node.
+ * @param {String} toID ID of the incoming node.
+ */
+export function connect(fromID, toID) {
+  const nodes = _places.concat(_transitions);
+  const from = nodes.find((node) => node.id === fromID);
+  const to = nodes.find((node) => node.id === toID);
+  let edgeID = '';
+  if (from instanceof Place) {
+    if (to instanceof Place) {
+      console.log('Can\'t connect Place with Place.');
+    } else if (to instanceof Transition) {
+      const presetEdge = new PresetEdge(from, to);
+      edgeID = presetEdge.id;
+      _edges.push(presetEdge);
+      to.preset.push(presetEdge);
+    } else {
+      console.log('Can only connect Places and Transitions.');
+    }
+  } else if (from instanceof Transition) {
+    if (to instanceof Transition) {
+      console.log('Can\'t connect Transition with Transition.');
+    } else if (to instanceof Place) {
+      const postsetEdge = new PostsetEdge(from, to);
+      edgeID = postsetEdge.id;
+      _edges.push(postsetEdge);
+      from.postset.push(postsetEdge);
+    } else {
+      console.log('Can only connect Places and Transitions.');
+    }
+  }
+  notify(EVENT_CONNECT, {from: from.id, to: to.id, edgeID});
+};
+
+/**
+ * Removes an edge.
+ * @param {String} edgeID
+ */
+export function disconnect(edgeID) {
+  _edges = _edges.filter((edge) => {
+    if (edge.id === edgeID) {
+      _transitions.forEach((transition) => {
+        transition.preset = transition.preset.filter((edge) => {
+          return edge.id !== edgeID;
+        });
+        transition.postset = transition.postset.filter((edge) => {
+          return edge.id !== edgeID;
+        });
       });
-      transition.postset.forEach((place) => {
-        if (!hadConflict) {
-          this.addToken(place._id);
-        }
-      });
+      // remove from all transitions preset
+      notify(EVENT_DISCONNECT, edgeID);
+
+      return false;
+    } else {
+      return true;
+    }
+  });
+}
+
+/**
+ * Find an edge by ID.
+ * @param {String} edgeID The edge ID.
+ * @return {PresetEdge|PostsetEdge} The found edge.
+ */
+export function findEdge(edgeID) {
+  return _edges.find((edge) => edge.id === edgeID);
+};
+
+/**
+ * Sets the label for an edge.
+ * @param {String} edgeID The ID of the edge to add the label to.
+ * @param {Object} label The label to set.
+ */
+export function setEdgeLabel(edgeID, label) {
+  const edge = _edges.find((edge) => edge.id === edgeID);
+  edge.label = label;
+};
+
+/**
+ * Fire a given edge
+ * @param {PresetEdge|PostsetEdge} edge The edge to fire.
+ */
+export function fireEdge(edge) {
+  edge.fire();
+  notify(EVENT_CHANGE_PLACE_CONTENT, {
+    placeID: edge.place.id,
+    num: edge.place.content.length,
+  });
+};
+
+/**
+ * Step through the simulation.
+ */
+export function step() {
+  const alifeTransitions = [];
+  _transitions.forEach((transition) => {
+    transition.state = {};
+    let isAlive = true;
+    if (transition.preset.length < 1) {
+      isAlive = false;
+    }
+    if (transition.preset.some((edge) => !edge.canFire())) {
+      isAlive = false;
+    }
+    if (isAlive) {
+      alifeTransitions.push(transition);
+    }
+  });
+  alifeTransitions.forEach((transition) => {
+    // TODO ... conflicts still possible?
+    // let hadConflict = false;
+    transition.preset.forEach((edge) => {
+      fireEdge(edge);
     });
-  },
-  register: function(observer) {
-    console.log(observer);
-    this.observer = observer;
-  },
-  notify: function(event, payload) {
-    this.observer.receiveNotification(event, payload);
-  },
+    transition.postset.forEach((edge) => {
+      fireEdge(edge);
+    });
+  });
+};
+
+/**
+ * Notifies the registered observer of events
+ * @param {String} event The event that occured.
+ * @param {Object} payload Message to send to the observer.
+ */
+export function notify(event, payload) {
+  receiveNotification(event, payload);
 };

@@ -1,0 +1,25 @@
+{
+    "mode": "read",
+    "filter": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string"
+            },
+            "roomAvailable": {
+                "const": true
+            },
+            "price": {
+                "type": "object",
+                "properties": {
+                    "singleRoom": {
+                        "type": "number",
+                        "maximum": 50
+                    }
+                },
+                "required": ["singleRoom"]
+            }
+        },
+        "required": ["id", "roomAvailable", "price"]
+    }
+}

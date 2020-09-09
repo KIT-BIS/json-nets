@@ -1,0 +1,14 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "newID": {
+                "type": "string"
+            }
+        },
+        "required": ["newID"]
+    },
+    "data": [
+        { "newID": "project_0" }
+    ]
+}

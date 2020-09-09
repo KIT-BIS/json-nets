@@ -1,0 +1,43 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "pid": {
+                "type": "string"
+            },
+            "projname": {
+                "type": "string"
+            },
+            "team": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties":  {
+                        "empno": {
+                            "type": "string"
+                        },
+                        "requirement": {
+                            "type": "object",
+                            "properties": {
+                                "task": {
+                                    "type": "string"
+                                },
+                                "time": {
+                                    "type": "string"
+                                },
+                                "qualification": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": ["task", "time", "qualification"]
+                        }
+                    },
+                    "required": ["requirement"]
+                }
+            }
+        },
+        "required": ["pid", "projname", "team"]
+    },
+    "data": [
+    ]
+}

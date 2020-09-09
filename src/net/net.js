@@ -76,7 +76,7 @@ export function setPlaceContent(placeID, content) {
   if (allValid) {
     place.content = content;
     notify(EVENT_CHANGE_PLACE_CONTENT,
-        {placeID, num: place.content.length});
+        {placeID, num: place.content.data.length});
   }
 };
 
@@ -213,7 +213,7 @@ export function fireEdge(edge) {
   edge.fire();
   notify(EVENT_CHANGE_PLACE_CONTENT, {
     placeID: edge.place.id,
-    num: edge.place.content.length,
+    num: edge.place.content.data.length,
   });
 };
 

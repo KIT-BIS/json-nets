@@ -27,7 +27,7 @@ let _inspectorMode = '';
 let _inspectorContent = '';
 let _modalState = '';
 
-const main = () => html`
+const main = (model) => html`
 <div id="container"></div>
 <div id="menu">
   ${button('circle', () => {
@@ -67,7 +67,7 @@ const main = () => html`
     </header>
     <section class="modal-card-body">
     <textarea class="textarea" 
-    rows="10" id="node-content">${_inspectorContent}</textarea>
+    rows="10" id="node-content" .value="${model.inspectorContent}"></textarea>
     </section>
     <footer class="modal-card-foot">
       <button class="button is-success" @click=${ () => {
@@ -106,7 +106,7 @@ function toggleModal(toggle) {
  * Triggers a new render of UI.
  */
 function update() {
-  render(main(), document.body);
+  render(main({inspectorContent: _inspectorContent}), document.body);
 }
 /**
  * Initialize the UI

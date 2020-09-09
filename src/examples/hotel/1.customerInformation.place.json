@@ -1,0 +1,66 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "customername": {
+                "type": "string"
+            },
+            "email": {
+                "type": "string"
+            },
+            "tel": {
+                "type": "string"
+            },
+            "date": {
+                "type": "object",
+                "properties": {
+                    "arrival": {
+                        "type": "string"
+                    },
+                    "departure": {
+                        "type": "string"
+                    }
+                },
+                "required": ["arrival", "departure"]
+            },
+            "payment": {
+                "type": "string"
+            }
+        },
+        "required": ["customername", "email", "tel", "date", "payment"]
+    },
+    "data": [
+        { 
+            "customername": "Andreas Fritsch",
+            "email": "andreas.fritsch@kit.edu",
+            "tel": "12345",
+            "date": {
+                "arrival": "01.06.",
+                "departure": "03.06"
+            },
+            "payment": "cash"
+
+        },
+        { 
+            "customername": "Clemens Schreiber",
+            "email": "clemens.schreiber@kit.edu",
+            "tel": "54321",
+            "date": {
+                "arrival": "01.07.",
+                "departure": "03.07"
+            },
+            "payment": "creditcard"
+
+        },
+        { 
+            "customername": "Selina Schüler",
+            "email": "selina.schüler@kit.edu",
+            "tel": "98765",
+            "date": {
+                "arrival": "05.06.",
+                "departure": "09.06"
+            },
+            "payment": "paypal"
+        }
+    ]
+}

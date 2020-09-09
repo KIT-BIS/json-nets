@@ -1,0 +1,14 @@
+{
+    "mode": "delete",
+    "filter": {
+        "type": "object",
+        "properties": {
+            "newID": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "newID"
+        ]
+    }
+}

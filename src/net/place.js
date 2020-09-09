@@ -5,6 +5,10 @@ import {v4 as uuidv4} from 'uuid';
  */
 export function Place() {
   this.id = uuidv4();
-  this.content = [];
+  // expected to have a "schema" field and a "data" field
+  this.content = {
+    schema: {},
+    data: [],
+  };
 };
 

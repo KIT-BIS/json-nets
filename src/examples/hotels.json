@@ -1,25 +1,60 @@
-[
-    {
-        "name": "Ibis",
-        "stars": 5,
-        "misc": {
-            "hasPool": true 
-        },
-        "rooms": [
-            {
-                "name": "Suite",
-                "price": 50,
-                "isFree": true
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
             },
-            {
-                "name": "Family",
-                "price": 30,
-                "isFree": false
+            "stars": {
+                "type": "integer"
+            },
+            "misc": {
+                "type": "object",
+                "properties": {
+                    "hasPool": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "rooms": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "price": {
+                            "type": "number"
+                        },
+                        "isFree": {
+                            "type": "boolean"
+                        }
+                    }
+                }
             }
-        ]
+        }
     },
-    {
-        "name": "BnB",
-        "stars": 3
-    }
-]
+    "data": [
+        {
+            "name": "Ibis",
+            "stars": 5,
+            "misc": {
+                "hasPool": true
+            },
+            "rooms": [
+                {
+                    "name": "Suite",
+                    "price": 50,
+                    "isFree": true
+                },
+                {
+                    "name": "Family",
+                    "price": 30,
+                    "isFree": false
+                }
+            ]
+        },
+        {
+            "name": "BnB",
+            "stars": 3
+        }
+    ]
+}

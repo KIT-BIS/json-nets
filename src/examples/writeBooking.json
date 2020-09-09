@@ -1,8 +1,0 @@
-{
-    "booking": {
-        "hotel": "$.name",
-        "room": "$.rooms[?(@.isFree==true)]"
-    },
-    "other": "bla",
-    "arrayData": ["one", 3, { "omg": "yes"}]
-}

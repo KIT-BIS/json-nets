@@ -1,24 +1,25 @@
 /** @typedef {import('./transition').Transition} Transition */
 /** @typedef {import('./place').Place} Place */
 import {v4 as uuidv4} from 'uuid';
-import {validate} from '../util/validator';
+import {findValidDocument} from '../util/validator';
 
-export const PRESET_EDGE_MODE_DELETE = 'PRESET_EDGE_MODE_DELETE';
+export const PRESET_EDGE_MODE_DELETE = 'delete';
+export const PRESET_EDGE_MODE_READ = 'read';
 
 /**
  * Creates a new preset-edge that can read and may delete documents in a place
  * and wires the read data to a transition.
  * @param {Place} place Place to read documents from.
  * @param {Transition} transition Transition to wire data to.
- * @param {String} mode Whether the edge "read"s or reads and
- *  "delete"s a document.
  */
-export function PresetEdge(place, transition, mode = PRESET_EDGE_MODE_DELETE) {
+export function PresetEdge(place, transition) {
   this.id = uuidv4();
   this.place = place;
   this.transition = transition;
-  this.mode = mode;
-  this.label = {};
+  this.label = {
+    mode: PRESET_EDGE_MODE_DELETE,
+    filter: {},
+  };
 }
 
 /**
@@ -28,9 +29,10 @@ export function PresetEdge(place, transition, mode = PRESET_EDGE_MODE_DELETE) {
  * @name PresetEdge#fire
  */
 PresetEdge.prototype.fire = function() {
-  const document = this.findValidDocument();
-  if (this.mode === PRESET_EDGE_MODE_DELETE) {
-    this.place.content = this.place.content.filter((doc) => {
+  const document = findValidDocument(this.place.content.data,
+      this.label.filter);
+  if (this.label.mode === PRESET_EDGE_MODE_DELETE) {
+    this.place.content.data = this.place.content.data.filter((doc) => {
       return doc !== document;
     });
   }
@@ -48,23 +50,9 @@ PresetEdge.prototype.fire = function() {
  * @return {Boolean}
  */
 PresetEdge.prototype.canFire = function() {
-  const document = this.findValidDocument();
+  const document = findValidDocument(this.place.content.data, this.label);
 
   return Boolean(document);
 };
 
-/**
- * Finds the first document in the connected place that is
- * valid against label.
- * @method
- * @name PresetEdge#findValidDocument
- * @return {Object}
- */
-PresetEdge.prototype.findValidDocument = function() {
-  const document = this.place.content.find((doc) => {
-    const isValid = validate(doc, this.label);
-    return isValid;
-  });
 
-  return document;
-};

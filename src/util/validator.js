@@ -17,3 +17,19 @@ export function validate(data, schema) {
   }
   return valid;
 }
+
+/**
+ * Finds the first document in a given list that is
+ * valid against schema.
+ * @param {Array} list
+ * @param {Object} schema
+ * @return {Object}
+ */
+export function findValidDocument(list, schema) {
+  const document = list.find((doc) => {
+    const isValid = validate(doc, schema);
+    return isValid;
+  });
+
+  return document;
+};

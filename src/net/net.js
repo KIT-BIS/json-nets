@@ -3,6 +3,7 @@ import {Transition} from './transition';
 import {PresetEdge} from './presetEdge';
 import {PostsetEdge} from './postsetEdge';
 import {receiveNotification} from '../visualization/net';
+import {validate} from '../util/validator';
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
@@ -57,13 +58,26 @@ export function removePlace(placeID) {
 /**
  * Set the content of a place (expected to be an array of objects)
  * @param {String} placeID The place to set the content.
- * @param {Array} content New content of the place.
+ * @param {Object} content New content of the place.
  */
 export function setPlaceContent(placeID, content) {
   const place = _places.find((place) => place.id === placeID);
-  place.content = content;
-  notify(EVENT_CHANGE_PLACE_CONTENT,
-      {placeID, num: place.content.length});
+  const schema = content.schema;
+  const data = content.data;
+  let allValid = true;
+  data.forEach((doc) => {
+    if (!validate(doc, schema)) {
+      console.log('Invalid document:');
+      console.log(doc);
+      allValid = false;
+    }
+  });
+
+  if (allValid) {
+    place.content = content;
+    notify(EVENT_CHANGE_PLACE_CONTENT,
+        {placeID, num: place.content.length});
+  }
 };
 
 /**

@@ -24,6 +24,7 @@ export const INSPECTOR_MODE_EDGE = 'INSPECTOR_MODE_EDGE';
 let _mode = MODE_NONE;
 let _lastSelectedID = null;
 let _inspectorMode = '';
+let _inspectorContent = '';
 let _modalState = '';
 
 const main = () => html`
@@ -65,7 +66,8 @@ const main = () => html`
   }}></button>
     </header>
     <section class="modal-card-body">
-    <textarea class="textarea" rows="10" id="node-content"></textarea>
+    <textarea class="textarea" 
+    rows="10" id="node-content">${_inspectorContent}</textarea>
     </section>
     <footer class="modal-card-foot">
       <button class="button is-success" @click=${ () => {
@@ -163,23 +165,18 @@ export function getMode() {
  * @param {String} entityID
  */
 export function updateInspector(entityType, entityID) {
-  toggleModal(true);
-  // TODO: this should also be implemented with some kind of
-  // state / lit template
   _inspectorMode = entityType;
   _lastSelectedID = entityID;
   if (entityType === INSPECTOR_MODE_PLACE) {
     const place = findPlace(entityID);
-    document.getElementById('node-content')
-        .value = JSON.stringify(place.content);
+    _inspectorContent = JSON.stringify(place.content);
   } else if (entityType === INSPECTOR_MODE_TRANSITION) {
     const transition = findTransition(entityID);
-    document.getElementById('node-content')
-        .value = JSON.stringify(transition.state);
+    _inspectorContent = JSON.stringify(transition.state);
   } else if (entityType === INSPECTOR_MODE_EDGE) {
     const edge = findEdge(entityID);
-    document.getElementById('node-content')
-        .value = JSON.stringify(edge.label);
+    _inspectorContent = JSON.stringify(edge.label);
   }
+  toggleModal(true);
 };
 

@@ -1,0 +1,20 @@
+{
+    "filter": {
+        "type": "object",
+        "properties": {
+            "pid": {
+                "type": "string"
+            },
+            "team": {
+                "type": "array",
+                "items": {
+
+                },
+                "minItems": 1
+            }
+        }
+    },
+    "data": {
+
+    }
+}

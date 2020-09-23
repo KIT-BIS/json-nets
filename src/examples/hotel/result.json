@@ -1,0 +1,66 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string"
+            },
+            "hotel": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    }
+                }
+            },
+            "price": {
+                "type": "number"
+            },
+            "date": {
+                "type": "object",
+                "properties": {
+                    "arrival": {
+                        "type": "string"
+                    },
+                    "departure": {
+                        "type": "string"
+                    }
+                }
+            },
+            "payment": {
+                "type": "string"
+            },
+            "customer": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
+    },
+    "data": [
+        {
+            "hotel": {
+                "name": "Ibis",
+                "address": "Sophienstraße 200"
+            },
+            "date": {
+                "arrival": "01.06.",
+                "departure": "03.06"
+            },
+            "payment": "cash",
+            "customer": {
+                "name": "Andreas Fritsch",
+                "email": "andreas.fritsch@kit.edu"
+            }
+        }
+    ]
+}

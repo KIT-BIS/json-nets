@@ -2,6 +2,7 @@ import Konva from 'konva';
 import {MODE_INSPECT, MODE_REMOVE, INSPECTOR_MODE_EDGE,
   getMode, updateInspector} from '../ui/ui';
 import {disconnect} from '../net/net';
+import {removeEdgesExportArray} from '../util/exportNet';
 
 /**
  * Creates a new visualization of an edge
@@ -29,6 +30,7 @@ export function Edge(points, fromID, toID, id) {
       updateInspector(INSPECTOR_MODE_EDGE, id);
     } else if (getMode() === MODE_REMOVE) {
       disconnect(id);
+      removeEdgesExportArray(id);
     }
   });
 }

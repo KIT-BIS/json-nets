@@ -6,16 +6,20 @@ const ajv = new Ajv();
  * Validates a document against a JSON Schema.
  * @param {Object} data
  * @param {Object} schema
- * @return {Boolean}
+ * @return {Object}
  */
 export function validate(data, schema) {
-  const check = ajv.compile(schema);
-  const valid = check(data);
-  if (!valid) {
-    console.log('document not valid');
-    console.log(check.errors);
+  try {
+    const check = ajv.compile(schema);
+    const valid = check(data);
+    if (!valid) {
+      console.log('document not valid');
+      console.log(check.errors);
+    }
+    return {isValid: valid, errors: check.errors};
+  } catch (error) {
+    return {isValid: false, errors: {message: error.message}};
   }
-  return valid;
 }
 
 /**

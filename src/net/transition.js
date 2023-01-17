@@ -1,4 +1,5 @@
 import {v4 as uuidv4} from 'uuid';
+import {combineArrays} from '../util/util';
 
 /**
  * Creates a new Transition object.
@@ -30,4 +31,34 @@ Transition.prototype.isAlive = function() {
     }
   });
   return isAlive;
+};
+
+/**
+ * Finds all possible assignments and writes them to
+ * transition state
+ * @method
+ */
+Transition.prototype.findAssignments = function() {
+  // const documents = [
+  //  [{'a': 1}, {'b': 1}, {'c': 1}],
+  //  [{'x': 2}, {'y': 2}],
+  //  [{'p': 'bla'}],
+  // ];
+  const keys = [];
+  const documents = [];
+  for (let i = 0; i < this.preset.length; i++) {
+    const filteredDocuments = this.preset[i].applyFilter();
+    if (filteredDocuments.length == 0) {
+      this.state = {};
+      break;
+    } else {
+      documents.push(filteredDocuments);
+      keys.push(this.preset[i].place.name);
+    }
+  }
+
+  this.state = {
+    keys,
+    assignments: combineArrays(documents),
+  };
 };

@@ -106,6 +106,8 @@ export function setTransitionContent(transitionID, content) {
       (transition) => transition.id === transitionID);
   transition.content = content;
   console.log(_transitions);
+  // TODO: Only for testing. Remove later.
+  transition.evaluate();
 }
 
 /**

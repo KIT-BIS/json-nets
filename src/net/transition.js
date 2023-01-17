@@ -91,7 +91,7 @@ Transition.prototype.findAssignments = function() {
     keys,
     assignments: combineArrays(documents),
   };
-
+};
 /**
  * Evaluates the transistions documents with Jsonnet
  * @method
@@ -117,5 +117,4 @@ Transition.prototype.evaluate = function() {
     throw new Error(evaluateDocuments.data);
   }
   return result;
-
 };

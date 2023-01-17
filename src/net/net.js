@@ -3,8 +3,9 @@ import {Transition} from './transition';
 import {PresetEdge} from './presetEdge';
 import {PostsetEdge} from './postsetEdge';
 import {receiveNotification} from '../visualization/net';
-import {validate, validatePlaceName} from '../util/validator';
+import {validate} from '../util/validator';
 import {addEdgesExportArray} from '../util/exportNet';
+import {showConsole} from '../ui/console';
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
 export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
@@ -82,33 +83,10 @@ export function setPlaceContent(placeID, content, placeName) {
       allValid = false;
     }
   });
-  const nameUnique = validatePlaceName(name, _places);
-  const itemNameReturn = document.getElementById('itemNameReturn');
-  const itemName = document.getElementById('itemName');
-  if (!nameUnique) {
-    itemNameReturn.classList.remove('is-hidden');
-    itemName.classList.add('is-danger');
-    itemNameReturn.innerHTML = 'Name already exists and must be unique.';
-  } else {
-    itemNameReturn.classList.add('is-hidden');
-    itemName.classList.remove('is-danger');
-  }
-  if (docErrors.length > 0 ) {
-    const node = document.getElementById('modal-card-body');
-    console.log(node);
-    const consoleElement = document.getElementById('console');
-    if (!consoleElement) {
-      const textArea= document.createElement('textarea');
-      textArea.id = 'console';
-      textArea.className = 'console';
-      textArea.readOnly = true;
-      textArea.style.height = '100px';
-      textArea.style.width = '100%';
-      textArea.style.marginTop = '5px';
-      node.appendChild(textArea);
-    }
+  validatePlaceName(name, _places);
 
-    document.getElementById('console').innerHTML = JSON.stringify(docErrors);
+  if (docErrors.length > 0 ) {
+    showConsole(docErrors);
   }
 
   if (allValid) {
@@ -315,3 +293,24 @@ export function step() {
 export function notify(event, payload) {
   receiveNotification(event, payload);
 };
+
+/**
+ * Validate the name of a place and show Error Message.
+ * Check if place name is unique.
+ * @param {String} name - Name of the place
+ * @param {Array} places - List of places
+ */
+export function validatePlaceName(name, places) {
+  const place = places.find((place) => place.name === name);
+  const itemNameReturn = document.getElementById('itemNameReturn');
+  const itemName = document.getElementById('itemName');
+  if (place) {
+    itemNameReturn.classList.remove('is-hidden');
+    itemName.classList.add('is-danger');
+    itemNameReturn.innerHTML = 'Name already exists and must be unique.';
+  } else {
+    itemNameReturn.classList.add('is-hidden');
+    itemName.classList.remove('is-danger');
+  }
+}
+

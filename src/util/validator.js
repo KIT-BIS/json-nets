@@ -38,17 +38,3 @@ export function findValidDocument(list, schema) {
   return document;
 };
 
-/**
- * Validate the name of a place.
- * Check if place name is unique.
- * @param {String} name - Name of the place
- * @param {Array} places - List of places
- * @return {Boolean}
- */
-export function validatePlaceName(name, places) {
-  const place = places.find((place) => place.name === name);
-  if (place) {
-    return false;
-  }
-  return true;
-}

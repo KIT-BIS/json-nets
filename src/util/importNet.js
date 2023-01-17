@@ -20,7 +20,7 @@ export function importNet(upload=false, uploadData) {
   data.places.forEach((place) => {
     setClickPosition(place.x, place.y);
     addPlace(place.id);
-    setPlaceContent(place.id, place.data);
+    setPlaceContent(place.id, place.data, place.name);
   });
   // Add all transitions to the net.
   data.transitions.forEach((transition) => {

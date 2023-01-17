@@ -2,7 +2,7 @@
 /** @typedef {import('./place').Place} Place */
 import {v4 as uuid} from 'uuid';
 import jsonpath from 'jsonpath';
-import {findValidDocument} from '../util/validator';
+//import {findValidDocument} from '../util/validator';
 
 /**
  * Creates a new postset-edge that can modify or create documents in a place
@@ -31,14 +31,14 @@ PostsetEdge.prototype.fire = function() {
    * field for updates
    * To create a new document, one needs only 'data' field
    */
-  document = assembleDocument(this.transition.state, document, this.label.data);
-  if (this.label.hasOwnProperty('filter')) {
-    const docToUpdate = findValidDocument(this.place.content.data,
-        this.label.filter);
-    Object.assign(docToUpdate, document);
-  } else {
-    this.place.content.data.push(document);
-  }
+//  document = assembleDocument(this.transition.state, document, this.label.data);
+//  if (this.label.hasOwnProperty('filter')) {
+//    const docToUpdate = findValidDocument(this.place.content.data,
+//        this.label.filter);
+//    Object.assign(docToUpdate, document);
+//  } else {
+//    this.place.content.data.push(document);
+//  }
 };
 
 /**

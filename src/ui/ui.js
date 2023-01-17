@@ -114,7 +114,7 @@ ${ (_initalized) ? updateEditor(model): ''}
     <footer class="modal-card-foot">
       <button class="button is-success" @click=${ () => {
     const content = _editor.getValue();
-    _editorLanguage = 'json';
+    // _editorLanguage = 'json';
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
       setPlaceContent(_lastSelectedID, JSON.parse(content));
       updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content));

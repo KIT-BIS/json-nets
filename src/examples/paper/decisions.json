@@ -1,0 +1,20 @@
+[{
+  "accepted": false,
+  "email": "student@uni.edu",
+  "foreignLecture": "Software Engineering and Technology",
+  "foreignUniversity": "university-1",
+  "grade": 1.3,
+  "homeLecture": "Software Engineering",
+  "requestId": 1,
+  "studentId": "student-1"
+},
+{
+  "accepted": true,
+  "email": "student@uni.edu",
+  "foreignLecture": "Big Data and NoSQL",
+  "foreignUniversity": "university-1",
+  "grade": 2,
+  "homeLecture": "Advanced Database Systems",
+  "requestId": 2,
+  "studentId": "student-1"
+}]

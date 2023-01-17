@@ -136,7 +136,7 @@ export function addEdgesExportArray(edgeID, fromId, toId, type) {
   if (type === 'presetEdge') {
     edge['label'] ={
       mode: 'delete',
-      filter: {},
+      filter: "",
     };
   } else {
     edge['label'] = {

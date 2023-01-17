@@ -176,8 +176,10 @@ export function receiveNotification(event, payload) {
     _layer.batchDraw();
   } else if (event === EVENT_CHANGE_PLACE_CONTENT) {
     const place = _stage.findOne('#' + payload.placeID);
-    const text = place.findOne('Text');
+    const text = place.findOne('.counter');
+    const name = place.findOne('.name');
     text.text(payload.num);
+    name.text(payload.name);
     _layer.batchDraw();
   } else if (event === EVENT_REMOVE_PLACE) {
     const place = _stage.findOne('#' + payload);

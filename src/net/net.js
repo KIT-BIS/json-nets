@@ -83,7 +83,7 @@ export function setPlaceContent(placeID, content, placeName) {
       allValid = false;
     }
   });
-  validatePlaceName(name, _places);
+  validatePlaceName(place.id, name, _places);
 
   if (docErrors.length > 0 ) {
     showConsole(docErrors);
@@ -297,14 +297,15 @@ export function notify(event, payload) {
 /**
  * Validate the name of a place and show Error Message.
  * Check if place name is unique.
+ * @param {String} id - Id of the place
  * @param {String} name - Name of the place
  * @param {Array} places - List of places
  */
-export function validatePlaceName(name, places) {
+export function validatePlaceName(id, name, places) {
   const place = places.find((place) => place.name === name);
   const itemNameReturn = document.getElementById('itemNameReturn');
   const itemName = document.getElementById('itemName');
-  if (place) {
+  if (place && place.id !== id) {
     itemNameReturn.classList.remove('is-hidden');
     itemName.classList.add('is-danger');
     itemNameReturn.innerHTML = 'Name already exists and must be unique.';

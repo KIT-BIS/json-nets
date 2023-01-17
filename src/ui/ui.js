@@ -134,7 +134,7 @@ ${ (_initalized) ? updateEditor(model): ''}
       <button class="button is-success" @click=${ () => {
     const content = _editor.getValue();
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
-      const name = document.getElementById('itemName').value;
+      const name = document.getElementById('itemName').value.toLowerCase();
       setPlaceContent(_lastSelectedID, JSON.parse(content), name);
       updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content));
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {

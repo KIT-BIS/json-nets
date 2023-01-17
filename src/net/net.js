@@ -5,6 +5,7 @@ import {PostsetEdge} from './postsetEdge';
 import {receiveNotification} from '../visualization/net';
 import {validate} from '../util/validator';
 import {addEdgesExportArray} from '../util/exportNet';
+import {showConsole} from '../ui/console';
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
 export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
@@ -64,11 +65,13 @@ export function removePlace(placeID) {
  * Set the content of a place (expected to be an array of objects)
  * @param {String} placeID The place to set the content.
  * @param {Object} content New content of the place.
+ * @param {String} placeName Name of the place.
  */
-export function setPlaceContent(placeID, content) {
+export function setPlaceContent(placeID, content, placeName) {
   const place = _places.find((place) => place.id === placeID);
   const schema = content.schema;
   const data = content.data;
+  const name = placeName;
   let allValid = true;
   const docErrors = [];
   data.forEach((doc) => {
@@ -80,27 +83,17 @@ export function setPlaceContent(placeID, content) {
       allValid = false;
     }
   });
-  if (docErrors.length > 0) {
-    const node = document.getElementById('modal-card-body');
-    console.log(node);
-    const consoleElement = document.getElementById('console');
-    if (!consoleElement) {
-      const textArea= document.createElement('textarea');
-      textArea.id = 'console';
-      textArea.className = 'console';
-      textArea.readOnly = true;
-      textArea.style.height = '100px';
-      textArea.style.width = '100%';
-      textArea.style.marginTop = '5px';
-      node.appendChild(textArea);
-    }
+  validatePlaceName(place.id, name, _places);
 
-    document.getElementById('console').innerHTML = JSON.stringify(docErrors);
+  if (docErrors.length > 0 ) {
+    showConsole(docErrors);
   }
+
   if (allValid) {
     place.content = content;
+    place.name = name;
     notify(EVENT_CHANGE_PLACE_CONTENT,
-        {placeID, num: place.content.data.length});
+        {placeID, num: place.content.data.length, name: name});
   }
 };
 /**
@@ -300,3 +293,25 @@ export function step() {
 export function notify(event, payload) {
   receiveNotification(event, payload);
 };
+
+/**
+ * Validate the name of a place and show Error Message.
+ * Check if place name is unique.
+ * @param {String} id - Id of the place
+ * @param {String} name - Name of the place
+ * @param {Array} places - List of places
+ */
+export function validatePlaceName(id, name, places) {
+  const place = places.find((place) => place.name === name);
+  const itemNameReturn = document.getElementById('itemNameReturn');
+  const itemName = document.getElementById('itemName');
+  if (place && place.id !== id) {
+    itemNameReturn.classList.remove('is-hidden');
+    itemName.classList.add('is-danger');
+    itemNameReturn.innerHTML = 'Name already exists and must be unique.';
+  } else {
+    itemNameReturn.classList.add('is-hidden');
+    itemName.classList.remove('is-danger');
+  }
+}
+

@@ -21,6 +21,7 @@ export function Place(x, y, id) {
   });
 
   const text = new Konva.Text({
+    name: 'counter',
     text: '0',
     x: -3,
     y: -3,
@@ -32,8 +33,15 @@ export function Place(x, y, id) {
     shadowOpacity: 0.5,
     shadowOffset: {x: 3, y: 3},
   });
+  const name = new Konva.Text({
+    name: 'name',
+    text: 'place',
+    x: -15,
+    y: 50,
+  });
   this.add(circle);
   this.add(text);
+  this.add(name);
 
   circle.on('click', () => {
     if (getMode() === MODE_CONNECT_START) {

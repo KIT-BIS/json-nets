@@ -33,6 +33,7 @@ let _mode = MODE_NONE;
 let _lastSelectedID = null;
 let _inspectorMode = '';
 let _inspectorContent = '';
+let _itemName = '';
 let _modalState = '';
 let _editor = '';
 let _initalized = false;
@@ -43,6 +44,9 @@ let _initalized = false;
  */
 function updateEditor(model) {
   _editor.setValue(model.inspectorContent);
+  if (_inspectorMode === INSPECTOR_MODE_PLACE) {
+    document.getElementById('itemName').value = model.itemName;
+  }
 }
 const main = (model) => html`
 ${ (_initalized) ? updateEditor(model): ''}
@@ -108,7 +112,22 @@ ${ (_initalized) ? updateEditor(model): ''}
     toggleModal(false);
   }}></button>
     </header>
-    <section id="modal-card-body" class="modal-card-body">
+    <section id="modal-card-body" class="modal-card-body">    
+    <div id="itemNameContainer" class="field is-horizontal is-hidden">
+      <div class="field-label is-normal">
+        <label class="label">Name</label>
+      </div>
+      <div class="field-body">
+        <div class="field">
+          <p class="control">
+            <input id="itemName" class="input" type="text" 
+            placeholder="Name of the place">
+          </p>
+          <p id="itemNameReturn" class="help is-danger">
+          </p>
+        </div>
+      </div>
+    </div>
     <div id="editor" style="min-height: 350px"></div>
     </section>
     <footer class="modal-card-foot">
@@ -116,7 +135,8 @@ ${ (_initalized) ? updateEditor(model): ''}
     const content = _editor.getValue();
     // _editorLanguage = 'json';
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
-      setPlaceContent(_lastSelectedID, JSON.parse(content));
+      const name = document.getElementById('itemName').value.toLowerCase();
+      setPlaceContent(_lastSelectedID, JSON.parse(content), name);
       updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content));
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
       setTransitionContent(_lastSelectedID, content);
@@ -144,6 +164,12 @@ function toggleModal(toggle) {
     _modalState = 'is-active';
     // Format current content
     _editor.getAction('editor.action.formatDocument').run();
+    const itemNameContainer = document.getElementById('itemNameContainer');
+    if (_inspectorMode === INSPECTOR_MODE_PLACE) {
+      itemNameContainer.classList.remove('is-hidden');
+    } else {
+      itemNameContainer.classList.add('is-hidden');
+    }
   } else {
     _modalState = '';
   }
@@ -155,7 +181,8 @@ function toggleModal(toggle) {
  * Triggers a new render of UI.
  */
 function update() {
-  render(main({inspectorContent: _inspectorContent}), document.body);
+  render(main({inspectorContent: _inspectorContent,
+    itemName: _itemName}), document.body);
 }
 /**
  * Initialize the UI
@@ -246,6 +273,7 @@ export function updateInspector(entityType, entityID) {
     changeLang('json');
     const place = findPlace(entityID);
     _inspectorContent = JSON.stringify(place.content);
+    _itemName = place.name;
   } else if (entityType === INSPECTOR_MODE_TRANSITION) {
     changeLang('jsonnet');
     const transition = findTransition(entityID);

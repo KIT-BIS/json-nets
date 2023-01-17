@@ -102,10 +102,12 @@ function download(content, fileName, contentType) {
  * Set the content of a place (expected to be an array of objects)
  * @param {String} placeID The place to set the content.
  * @param {Object} content New content of the place.
+ * @param {String} name Name of the place.
  */
-export function updatePlaceContentExportArray(placeID, content) {
+export function updatePlaceContentExportArray(placeID, content, name) {
   const place = _places.find((place) => place.id === placeID);
   place.data = content;
+  place.name = name;
 }
 /**
  * Set the content of a transition (expected to be a string)

@@ -1,5 +1,6 @@
 import {v4 as uuidv4} from 'uuid';
 import {combineArrays} from '../util/util';
+import {evaluate} from '../util/jsonnet.js';
 
 /**
  * Creates a new Transition object.
@@ -12,8 +13,37 @@ export function Transition(id=uuidv4()) {
   this.id = id;
   this.preset = [];
   this.postset = [];
-  this.state = {};
-  this.content = '//Add your JSONNET Code here';
+  // TODO: Delete dummy
+  this.state = {
+    'request': {
+      'requestId': 1,
+      'studentId': 'student-1',
+      'foreignUniversity': 'university-1',
+      'foreignLecture': 'Software Engineering and Technology',
+      'homeLecture': 'Software Engineering',
+      'grade': 1.3,
+    },
+    'student': {
+      'studentId': 'student-1',
+      'level': 'Master',
+      'studyProgram': 'Information Systems',
+      'email': 'student@uni.edu',
+    },
+    'lecture': {
+      'name': 'Software Engineering 1',
+      'levels': ['Bachelor'],
+      'studyPrograms': ['Information Systems', 'Computer Science'],
+      'recognizableLectures': [{
+        'universityId': 'university-1',
+        'lecture': 'Software Engineering and Technology',
+      }],
+    },
+  }; // Save each document with placeName as key
+  this.content = `
+  local checkLecture = lecture.name == request.homeLecture;
+  local checkStudent = student.studentId == request.studentId;
+  checkLecture && checkStudent
+  `;
 };
 
 /**
@@ -61,4 +91,31 @@ Transition.prototype.findAssignments = function() {
     keys,
     assignments: combineArrays(documents),
   };
+
+/**
+ * Evaluates the transistions documents with Jsonnet
+ * @method
+ * @name Transition#evaluate
+ * @return {Boolean} true if the transition can fire, false otherwise
+ */
+Transition.prototype.evaluate = function() {
+  // get documents and convert them to jsonnet format for evaluation
+  // combine documents with content
+  // Evaluate
+  const documents = this.state;
+  let document = '';
+  for (const [key, value] of Object.entries(documents)) {
+    console.log(key, value);
+    document += `local ${key} = ${JSON.stringify(value)}; \n`;
+  }
+  document += this.content;
+
+  // Convert string to Boolean
+  const evaluateDocuments = evaluate(document);
+  const result = JSON.parse(evaluateDocuments.data);
+  if (!evaluateDocuments.success) {
+    throw new Error(evaluateDocuments.data);
+  }
+  return result;
+
 };

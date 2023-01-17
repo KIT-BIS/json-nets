@@ -3,8 +3,8 @@ import {updateLines, setLastClickedTransition,
   getLastClickedPlace} from './net';
 import {getMode, setMode, updateInspector, MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE, MODE_REMOVE,
-  MODE_INSPECT, INSPECTOR_MODE_TRANSITION} from '../ui/ui';
-import {connect, removeTransition} from '../net/net';
+  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_FIRE} from '../ui/ui';
+import {connect, fire, removeTransition} from '../net/net';
 
 /**
  * Creates a new visualization for a transition by extending
@@ -39,6 +39,8 @@ export function Transition(x, y, id) {
       removeTransition(id);
     } else if (getMode() === MODE_INSPECT) {
       updateInspector(INSPECTOR_MODE_TRANSITION, id);
+    } else if (getMode() === MODE_FIRE) {
+      fire(id);
     }
   });
 

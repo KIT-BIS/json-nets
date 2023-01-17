@@ -16,6 +16,7 @@ export const PRESET_EDGE_TYPE_READ = 'read';
 export function PresetEdge(place, transition) {
   this.id = uuidv4();
   this.place = place;
+  this.type = 'preset';
   this.transition = transition;
   this.label = {
     type: PRESET_EDGE_TYPE_DELETE,
@@ -32,8 +33,14 @@ export function PresetEdge(place, transition) {
  */
 PresetEdge.prototype.applyFilter = function() {
   const documents = this.place.content.data;
-  const filteredDocuments = query(documents, this.filter);
-  return filteredDocuments;
+  if (this.label.filter === '') {
+    console.log('Filter is empty.');
+    return documents;
+  } else {
+    console.log('Filter is ' + this.label.filter + '.');
+    const filteredDocuments = query(documents, this.label.filter);
+    return filteredDocuments;
+  }
 };
 
 /**

@@ -12,8 +12,11 @@ import {removePlacesExportArray} from '../util/exportNet';
  * @param {Number} x
  * @param {Number} y
  * @param {String} id
+ * @param {String} name
  */
-export function Place(x, y, id) {
+export function Place(x, y, {id, name}) {
+  console.log(id);
+  console.log(name);
   Konva.Group.call(this, {
     x,
     y,
@@ -33,15 +36,15 @@ export function Place(x, y, id) {
     shadowOpacity: 0.5,
     shadowOffset: {x: 3, y: 3},
   });
-  const name = new Konva.Text({
+  const nameText = new Konva.Text({
     name: 'name',
-    text: 'place',
+    text: name,
     x: -15,
     y: 50,
   });
   this.add(circle);
   this.add(text);
-  this.add(name);
+  this.add(nameText);
 
   circle.on('click', () => {
     if (getMode() === MODE_CONNECT_START) {

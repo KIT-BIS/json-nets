@@ -30,14 +30,14 @@ export function findPlace(placeID) {
 
 /**
  * Creates a new place and adds it to the net.
- * @param {String} id - id of the place
  * @param {Object} content - content of the place
  * @return {Place} The new place.
  */
-export function addPlace(id) {
-  const newPlace = new Place(id);
+export function addPlace() {
+  const name = 'place' + _places.length;
+  const newPlace = new Place(name);
   _places.push(newPlace);
-  notify(EVENT_ADD_PLACE, newPlace.id);
+  notify(EVENT_ADD_PLACE, {id: newPlace.id, name});
   return newPlace;
 };
 
@@ -48,6 +48,7 @@ export function addPlace(id) {
  * @param {String} placeID The ID of the place to remove.
  */
 export function removePlace(placeID) {
+  console.log(placeID);
   _places = _places.filter((place) => {
     return place.id !== placeID;
   });
@@ -102,12 +103,13 @@ export function setPlaceContent(placeID, content, placeName) {
  * @param {Object} content
  */
 export function setTransitionContent(transitionID, content) {
-  const transition = _transitions.find(
-      (transition) => transition.id === transitionID);
+  const transition = findTransition(transitionID);
+  // const transition = _transitions.find(
+  //    (transition) => transition.id === transitionID);
   transition.content = content;
-  console.log(_transitions);
+  // console.log(_transitions);
   // TODO: Only for testing. Remove later.
-  transition.evaluate();
+  // transition.evaluate();
 }
 
 /**
@@ -257,6 +259,20 @@ export function fireEdge(edge) {
   });
 };
 
+/**
+ * Fire the id with given id
+ * @param {String} id
+ */
+export function fire(id) {
+  const transition = findTransition(id);
+  // alert('Transitoin ' + transition.id + 'will fire');
+  if (!transition.isAlive()) {
+    alert('The transition is not enabled.');
+  } else {
+    //alert('The transition is enabled.');
+    transition.fire();
+  }
+}
 /**
  * Step through the simulation.
  */

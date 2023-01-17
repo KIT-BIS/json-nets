@@ -21,6 +21,13 @@ module.exports = {
       },
     },
   },
+  resolve: {
+    fallback: {
+      'fs': false,
+      'os': false,
+      'path': false,
+    },
+  },
 
   entry: './src/index.js',
   output: {

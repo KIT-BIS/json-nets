@@ -26,3 +26,21 @@ export function evaluate(data) {
     };
   }
 }
+
+/**
+ * Returns a Jsonnet-snippet as string value
+ * where the values of the given document are assigned
+ * to variables whose names correspond to the document
+ * fields.
+ * @param {Object} documents
+ * @return {String}
+ */
+export function variablifyDocuments(documents) {
+  let jsonnetString = '';
+  for (const [key, value] of Object.entries(documents)) {
+    console.log(key, value);
+    jsonnetString += `local ${key} = ${JSON.stringify(value)}; \n`;
+  }
+
+  return jsonnetString;
+}

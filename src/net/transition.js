@@ -1,6 +1,6 @@
 import {v4 as uuidv4} from 'uuid';
 import {combineArrays} from '../util/util';
-import {evaluate} from '../util/jsonnet.js';
+import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
 
 /**
  * Creates a new Transition object.
@@ -103,18 +103,18 @@ Transition.prototype.evaluate = function() {
   // combine documents with content
   // Evaluate
   const documents = this.state;
-  let document = '';
-  for (const [key, value] of Object.entries(documents)) {
-    console.log(key, value);
-    document += `local ${key} = ${JSON.stringify(value)}; \n`;
-  }
-  document += this.content;
+  let jsonnetString = variablifyDocuments(documents);
+  jsonnetString += this.content;
 
   // Convert string to Boolean
-  const evaluateDocuments = evaluate(document);
+  const evaluateDocuments = evaluate(jsonnetString);
   const result = JSON.parse(evaluateDocuments.data);
   if (!evaluateDocuments.success) {
-    throw new Error(evaluateDocuments.data);
+    // throw new Error(evaluateDocuments.data);
+    return false;
+  } else if (result !== true) {
+    return false;
+  } else {
+    return result;
   }
-  return result;
 };

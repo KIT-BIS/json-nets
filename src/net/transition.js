@@ -2,12 +2,17 @@ import {v4 as uuidv4} from 'uuid';
 
 /**
  * Creates a new Transition object.
+ * @param {String} id - id of the transition
+ * @param {Array} preset - array of preset edges
+ * @param {Array} postset - array of postset edges
+ * @param {Object} state - state of the transition
  */
-export function Transition() {
-  this.id = uuidv4();
+export function Transition(id=uuidv4()) {
+  this.id = id;
   this.preset = [];
   this.postset = [];
   this.state = {};
+  this.content = '//Add your JSONNET Code here';
 };
 
 /**

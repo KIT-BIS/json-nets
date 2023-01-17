@@ -5,7 +5,7 @@ import {getMode, setMode, updateInspector, MODE_CONNECT_START,
 import {connect, removePlace} from '../net/net';
 import {updateLines, setLastClickedPlace,
   getLastClickedTransition} from './net';
-
+import {removePlacesExportArray} from '../util/exportNet';
 /**
  * Creates a new visualization for a Place by extending
  * Konva.Group.
@@ -46,6 +46,7 @@ export function Place(x, y, id) {
       updateInspector(INSPECTOR_MODE_PLACE, id);
     } else if (getMode() === MODE_REMOVE) {
       removePlace(id);
+      removePlacesExportArray(id);
     }
   });
 

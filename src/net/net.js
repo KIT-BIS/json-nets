@@ -4,7 +4,7 @@ import {PresetEdge} from './presetEdge';
 import {PostsetEdge} from './postsetEdge';
 import {receiveNotification} from '../visualization/net';
 import {validate} from '../util/validator';
-
+import {addEdgesExportArray} from '../util/exportNet';
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
 export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
@@ -29,12 +29,17 @@ export function findPlace(placeID) {
 
 /**
  * Creates a new place and adds it to the net.
+ * @param {String} id - id of the place
+ * @param {Object} content - content of the place
+ * @return {Place} The new place.
  */
-export function addPlace() {
-  const newPlace = new Place();
+export function addPlace(id) {
+  const newPlace = new Place(id);
   _places.push(newPlace);
   notify(EVENT_ADD_PLACE, newPlace.id);
+  return newPlace;
 };
+
 
 /**
  * Removes a place from the net. Will also remove any
@@ -65,20 +70,50 @@ export function setPlaceContent(placeID, content) {
   const schema = content.schema;
   const data = content.data;
   let allValid = true;
+  const docErrors = [];
   data.forEach((doc) => {
-    if (!validate(doc, schema)) {
+    const {isValid, errors} = validate(doc, schema);
+    if (!isValid) {
       console.log('Invalid document:');
-      console.log(doc);
+      console.log(errors);
+      docErrors.push(errors);
       allValid = false;
     }
   });
+  if (docErrors.length > 0) {
+    const node = document.getElementById('modal-card-body');
+    console.log(node);
+    const consoleElement = document.getElementById('console');
+    if (!consoleElement) {
+      const textArea= document.createElement('textarea');
+      textArea.id = 'console';
+      textArea.className = 'console';
+      textArea.readOnly = true;
+      textArea.style.height = '100px';
+      textArea.style.width = '100%';
+      textArea.style.marginTop = '5px';
+      node.appendChild(textArea);
+    }
 
+    document.getElementById('console').innerHTML = JSON.stringify(docErrors);
+  }
   if (allValid) {
     place.content = content;
     notify(EVENT_CHANGE_PLACE_CONTENT,
         {placeID, num: place.content.data.length});
   }
 };
+/**
+ * Set the content of a transition (expected to be of type jsonnet)
+ * @param {String} transitionID
+ * @param {Object} content
+ */
+export function setTransitionContent(transitionID, content) {
+  const transition = _transitions.find(
+      (transition) => transition.id === transitionID);
+  transition.content = content;
+  console.log(_transitions);
+}
 
 /**
  * Finds a transition by given ID.
@@ -92,11 +127,17 @@ export function findTransition(transitionID) {
 
 /**
  * Creates a new transition and adds it to the net.
+ * @param {String} id - id of the transition
+ * @param {Array} preset - preset of the transition
+ * @param {Array} postset - postset of the transition
+ * @param {Object} state - state of the transition
+ * @return {Transition} The new transition.
  */
-export function addTransition() {
-  const newTransition = new Transition();
+export function addTransition(id) {
+  const newTransition = new Transition(id);
   _transitions.push(newTransition);
   notify(EVENT_ADD_TRANSITION, newTransition.id);
+  return newTransition;
 };
 
 /**
@@ -129,6 +170,7 @@ export function removeTransition(transitionID) {
  * Connects one node in the net to another.
  * @param {String} fromID ID of the outgoing node.
  * @param {String} toID ID of the incoming node.
+ * @return {String} ID of the created edge.
  */
 export function connect(fromID, toID) {
   const nodes = _places.concat(_transitions);
@@ -143,6 +185,7 @@ export function connect(fromID, toID) {
       edgeID = presetEdge.id;
       _edges.push(presetEdge);
       to.preset.push(presetEdge);
+      addEdgesExportArray(edgeID, fromID, toID, 'presetEdge');
     } else {
       console.log('Can only connect Places and Transitions.');
     }
@@ -154,11 +197,13 @@ export function connect(fromID, toID) {
       edgeID = postsetEdge.id;
       _edges.push(postsetEdge);
       from.postset.push(postsetEdge);
+      addEdgesExportArray(edgeID, fromID, toID, 'postsetEdge');
     } else {
       console.log('Can only connect Places and Transitions.');
     }
   }
   notify(EVENT_CONNECT, {from: from.id, to: to.id, edgeID});
+  return edgeID;
 };
 
 /**

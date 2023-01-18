@@ -13,8 +13,8 @@ export const PRESET_EDGE_TYPE_READ = 'read';
  * @param {Place} place Place to read documents from.
  * @param {Transition} transition Transition to wire data to.
  */
-export function PresetEdge(place, transition) {
-  this.id = uuidv4();
+export function PresetEdge(place, transition, id) {
+  this.id = id;
   this.place = place;
   this.type = 'preset';
   this.transition = transition;

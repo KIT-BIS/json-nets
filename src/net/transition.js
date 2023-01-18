@@ -9,8 +9,8 @@ import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
  * @param {Array} postset - array of postset edges
  * @param {Object} state - state of the transition
  */
-export function Transition(name = 'transition') {
-  this.id = uuidv4();
+export function Transition(id, name) {
+  this.id = id;
   this.name = name;
   this.preset = [];
   this.postset = [];

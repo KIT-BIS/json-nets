@@ -1,9 +1,9 @@
-import {importData} from '../examples/paper/net';
+import {importData} from '../examples/recognition/net';
 import {addPlace, addTransition, connect, setPlaceContent,
   setEdgeLabel,
   setTransitionContent} from '../net/net';
 import {setClickPosition} from '../visualization/net';
-import {setPlaces, setTransisions, setEdges} from './exportNet';
+import {setPlaces, setTransisions, setEdges, addEdgesExportArray} from './exportNet';
 /**
  * Imports a net into the frame.
  * @param {Boolean} upload
@@ -11,27 +11,30 @@ import {setPlaces, setTransisions, setEdges} from './exportNet';
  */
 export function importNet(upload=false, uploadData) {
   const data = (upload) ? uploadData : importData;
+  //const data = uploadData;
 
   // Set the places, transitions and edges for later export.
   setPlaces(data.places);
   setTransisions(data.transitions);
-  setEdges(data.edges);
+  // setEdges(data.edges);
   // Add all places to the net.
   data.places.forEach((place) => {
     setClickPosition(place.x, place.y);
     addPlace(place.id);
-    setPlaceContent(place.id, place.data, place.name);
+    setPlaceContent(place.id, place.content, place.name);
   });
   // Add all transitions to the net.
   data.transitions.forEach((transition) => {
     setClickPosition(transition.x, transition.y);
     addTransition(transition.id);
-    setTransitionContent(transition.id, transition.content);
+    setTransitionContent(transition.id, transition.content, transition.name);
   });
   // Connect all edges.And set their labels.
   data.edges.forEach((edge) => {
-    const edgeID = connect(edge.fromId, edge.toId);
+    const edgeID = connect(edge.fromId, edge.toId, edge.id);
     setEdgeLabel(edgeID, edge.label);
+    addEdgesExportArray(edgeID, edge.fromId, edge.toId, edge.type,
+        edge.label);
   } );
 }
 /**

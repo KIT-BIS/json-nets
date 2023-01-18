@@ -1,4 +1,4 @@
-export const importData = {
+{
     "places": [
         {
             "id": "167d54d6-3a73-40f7-b317-0aa3580a44ac",
@@ -394,4 +394,4 @@ export const importData = {
             "label": "{\n  grade: decision.grade,\n  studentId: decision.studentId,\n  lecture: decision.homeLecture\n}"
         }
     ]
-}; 
+}

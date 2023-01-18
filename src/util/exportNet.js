@@ -8,12 +8,13 @@ let _edges = [];
  * @param {Object} data - added schema and data
  * @param {String} id - id of the place
  */
-export function addPlacesExportArray(x, y, data, id) {
+export function addPlacesExportArray(x, y, id, name, content) {
   const place = {
     id,
     x,
     y,
-    data,
+    name,
+    content,
   };
   _places.push(place);
 }
@@ -24,15 +25,23 @@ export function addPlacesExportArray(x, y, data, id) {
  */
 export function removePlacesExportArray(id) {
   _places = _places.filter((place) => {
-    return place.id !== placeID;
+    return place.id !== id;
   });
 
-  const edgesToRemove = _edges.filter((edge) => {
-    return edge.place.id === placeID;
+  _edges = _edges.filter((edge) => {
+    if (edge.type === 'preset') {
+      return edge.fromId === id;
+    } else if (edge.type === 'postset') {
+      return edge.toId === id;
+    }
   });
-  edgesToRemove.forEach((edge) => {
-    disconnect(edge.id);
-  });
+
+//  const edgesToRemove = _edges.filter((edge) => {
+//    return edge.place.id === id;
+//  });
+//  edgesToRemove.forEach((edge) => {
+//    disconnect(edge.id);
+//  });
 }
 
 /**
@@ -42,11 +51,12 @@ export function removePlacesExportArray(id) {
  * @param {String} id - id of the transition
  * @param {String} content - content of the transition
  */
-export function addTransitionsExportArray(x, y, id, content) {
+export function addTransitionsExportArray(x, y, id, name, content) {
   const transition = {
     id,
     x,
     y,
+    name,
     content,
   };
   _transitions.push(transition);
@@ -56,16 +66,32 @@ export function addTransitionsExportArray(x, y, id, content) {
  * Removes a transition from the net.
  * @param {String} id - id of the transition
  */
-export function removeTranisionsExportArray(id) {
-  const newTransitionsList = _transitions.filter((transition) => {
-    if (transition.id === id) {
-      transitionToRemove = transition;
-      return false;
-    } else {
-      return true;
+export function removeTransitionExportArray(id) {
+  _transitions = _transitions.filter((transition) => {
+    return transition.id !== id;
+  });
+
+  _edges = _edges.filter((edge) => {
+    if (edge.type === 'preset') {
+      return edge.toId === id;
+    } else if (edge.type === 'postset') {
+      return edge.fromId === id;
     }
   });
-  _transitions = newTransitionsList;
+
+//  edgesToRemove.forEach((edge) => {
+//    disconnect(edge.id);
+//  });
+
+//  const newTransitionsList = _transitions.filter((transition) => {
+//    if (transition.id === id) {
+//      transitionToRemove = transition;
+//      return false;
+//    } else {
+//      return true;
+//    }
+//  });
+//  _transitions = newTransitionsList;
 }
 
 /**
@@ -106,7 +132,7 @@ function download(content, fileName, contentType) {
  */
 export function updatePlaceContentExportArray(placeID, content, name) {
   const place = _places.find((place) => place.id === placeID);
-  place.data = content;
+  place.content = content;
   place.name = name;
 }
 /**
@@ -114,10 +140,11 @@ export function updatePlaceContentExportArray(placeID, content, name) {
  * @param {String} transitionID
  * @param {String} content
  */
-export function updateTransitionContentExportArray(transitionID, content) {
+export function updateTransitionContentExportArray(transitionID, content, name) {
   const transition = _transitions.find(
       (transition) => transition.id === transitionID);
   transition.content = content;
+  transition.name = name;
 }
 
 
@@ -128,23 +155,14 @@ export function updateTransitionContentExportArray(transitionID, content) {
  * @param {String} toId - Id where to connect
  * @param {String} type - Type of the edge
  */
-export function addEdgesExportArray(edgeID, fromId, toId, type) {
+export function addEdgesExportArray(edgeID, fromId, toId, type, label) {
   const edge = {
     id: edgeID,
     fromId,
     toId,
+    type,
+    label,
   };
-  console.log(edge);
-  if (type === 'presetEdge') {
-    edge['label'] ={
-      mode: 'delete',
-      filter: "",
-    };
-  } else {
-    edge['label'] = {
-      'data': {},
-    };
-  }
 
   _edges.push(edge);
 }

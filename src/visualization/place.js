@@ -56,7 +56,7 @@ export function Place(x, y, {id, name}) {
       updateInspector(INSPECTOR_MODE_PLACE, id);
     } else if (getMode() === MODE_REMOVE) {
       removePlace(id);
-      // removePlacesExportArray(id);
+      removePlacesExportArray(id);
     }
   });
 

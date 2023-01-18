@@ -10,8 +10,8 @@ import {validate} from '../util/validator.js';
  * @param {Transition} transition Transition to read data from.
  * @param {Place} place Place to create or modify documents in.
  */
-export function PostsetEdge(transition, place) {
-  this.id = uuid();
+export function PostsetEdge(transition, place, id) {
+  this.id = id;
   this.type = 'postset';
   this.transition = transition;
   this.place = place;

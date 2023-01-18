@@ -15,7 +15,7 @@ export function PostsetEdge(transition, place) {
   this.type = 'postset';
   this.transition = transition;
   this.place = place;
-  this.label = '';
+  this.label = '{}';
 }
 
 /**

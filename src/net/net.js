@@ -97,6 +97,7 @@ export function setPlaceContent(placeID, content, placeName) {
         {placeID, num: place.content.data.length, name: name});
   }
 };
+
 /**
  * Set the content of a transition (expected to be of type jsonnet)
  * @param {String} transitionID
@@ -104,12 +105,7 @@ export function setPlaceContent(placeID, content, placeName) {
  */
 export function setTransitionContent(transitionID, content) {
   const transition = findTransition(transitionID);
-  // const transition = _transitions.find(
-  //    (transition) => transition.id === transitionID);
   transition.content = content;
-  // console.log(_transitions);
-  // TODO: Only for testing. Remove later.
-  // transition.evaluate();
 }
 
 /**
@@ -247,17 +243,6 @@ export function setEdgeLabel(edgeID, label) {
   edge.label = label;
 };
 
-/**
- * Fire a given edge
- * @param {PresetEdge|PostsetEdge} edge The edge to fire.
- */
-export function fireEdge(edge) {
-  edge.fire();
-  notify(EVENT_CHANGE_PLACE_CONTENT, {
-    placeID: edge.place.id,
-    num: edge.place.content.data.length,
-  });
-};
 
 /**
  * Fire the id with given id
@@ -265,43 +250,54 @@ export function fireEdge(edge) {
  */
 export function fire(id) {
   const transition = findTransition(id);
-  // alert('Transitoin ' + transition.id + 'will fire');
   if (!transition.isAlive()) {
     alert('The transition is not enabled.');
   } else {
-    //alert('The transition is enabled.');
     transition.fire();
+    transition.preset.forEach((edge) =>
+      notify(EVENT_CHANGE_PLACE_CONTENT, {
+        placeID: edge.place.id,
+        num: edge.place.content.data.length,
+        name: edge.place.name,
+      }));
+    transition.postset.forEach((edge) =>
+      notify(EVENT_CHANGE_PLACE_CONTENT, {
+        placeID: edge.place.id,
+        num: edge.place.content.data.length,
+        name: edge.place.name,
+      }));
   }
 }
+
 /**
  * Step through the simulation.
  */
-export function step() {
-  const alifeTransitions = [];
-  _transitions.forEach((transition) => {
-    transition.state = {};
-    let isAlive = true;
-    if (transition.preset.length < 1) {
-      isAlive = false;
-    }
-    if (transition.preset.some((edge) => !edge.canFire())) {
-      isAlive = false;
-    }
-    if (isAlive) {
-      alifeTransitions.push(transition);
-    }
-  });
-  alifeTransitions.forEach((transition) => {
-    // TODO ... conflicts still possible?
-    // let hadConflict = false;
-    transition.preset.forEach((edge) => {
-      fireEdge(edge);
-    });
-    transition.postset.forEach((edge) => {
-      fireEdge(edge);
-    });
-  });
-};
+// export function step() {
+//   const alifeTransitions = [];
+//   _transitions.forEach((transition) => {
+//     transition.state = {};
+//     let isAlive = true;
+//     if (transition.preset.length < 1) {
+//       isAlive = false;
+//     }
+//     if (transition.preset.some((edge) => !edge.canFire())) {
+//       isAlive = false;
+//     }
+//     if (isAlive) {
+//       alifeTransitions.push(transition);
+//     }
+//   });
+//   alifeTransitions.forEach((transition) => {
+//     // TODO ... conflicts still possible?
+//     // let hadConflict = false;
+//     transition.preset.forEach((edge) => {
+//       fireEdge(edge);
+//     });
+//     transition.postset.forEach((edge) => {
+//       fireEdge(edge);
+//     });
+//   });
+// };
 
 /**
  * Notifies the registered observer of events

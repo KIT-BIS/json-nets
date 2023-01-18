@@ -28,13 +28,9 @@ export function Edge(points, fromID, toID, id) {
   this.on('click', () => {
     if (getMode() === MODE_INSPECT) {
       const edge = findEdge(id);
-      console.log('clicked on edge');
-      console.log(edge.type);
       if (edge.type === 'preset') {
-        console.log('preset')
         updateInspector(INSPECTOR_MODE_PRESET_EDGE, id);
       } else if (edge.type === 'postset') {
-        console.log('postset')
         updateInspector(INSPECTOR_MODE_POSTSET_EDGE, id);
       }
     } else if (getMode() === MODE_REMOVE) {

@@ -47,33 +47,14 @@ PresetEdge.prototype.applyFilter = function() {
  * Assigns the properties of a valid document in the connected place
  * to the connected transtion's state
  * @method
+ * @param {Object} document
  * @name PresetEdge#fire
  */
-PresetEdge.prototype.fire = function() {
-  const document = findValidDocument(this.place.content.data,
-      this.label.filter);
-  if (this.label.mode === PRESET_EDGE_TYPE_DELETE) {
-    this.place.content.data = this.place.content.data.filter((doc) => {
-      return doc !== document;
-    });
+PresetEdge.prototype.fire = function(document) {
+  if (this.label.type === PRESET_EDGE_TYPE_DELETE) {
+    console.log('Document to be removed:');
+    console.log(document);
+    const index = this.place.content.data.indexOf(document);
+    this.place.content.data.splice(index, 1);
   }
-  // state is assumed to be one object
-  // WARNING/TODO: currently overwrites values of previously fired edges
-  // Is this a problem or intended behavior?
-  Object.assign(this.transition.state, document);
 };
-
-// /**
-//  * Checks whether this edge can fire (i.e. the connected place has a
-//  * valid document)
-//  * @method
-//  * @name PresetEdge#canFire
-//  * @return {Boolean}
-//  */
-// PresetEdge.prototype.canFire = function() {
-//   const document = findValidDocument(this.place.content.data, this.label);
-//
-//   return Boolean(document);
-// };
-
-

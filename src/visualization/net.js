@@ -54,13 +54,13 @@ export function setPanable(toggle) {
  */
 export function toggleDraggable(toggle) {
   // TODO: I could store and cycle through my transitions
-  const transitions = _layer.find('Rect');
-  transitions.each((t) => {
-    t.draggable(toggle);
-  });
-  const places = _layer.find('Group');
-  places.each((p) => {
-    p.draggable(toggle);
+  // const transitions = _layer.find('Rect');
+  // transitions.each((t) => {
+  //   t.draggable(toggle);
+  // });
+  const elements = _layer.find('Group');
+  elements.each((e) => {
+    e.draggable(toggle);
   });
 }
 
@@ -161,19 +161,27 @@ export function receiveNotification(event, payload) {
     const points = _calculatePoints(from, to);
 
     const edge = new Edge(points, payload.from, payload.to, payload.edgeID);
+    // TODO handle ids with konva ... this seems a bit weird
+    edge.id(payload.edgeID);
+    console.log('drawing edge ' + edge.id());
     _connectors.push(edge);
 
     _layer.add(edge);
     _layer.batchDraw();
   } else if (event === EVENT_DISCONNECT) {
+    const connector = _stage.findOne('#' + payload);
+    console.log('destroying edge ' + payload);
+    console.log(connector);
+    const internalID = connector.id();
     _connectors = _connectors.filter((connector) => {
-      if (connector.id() === payload) {
-        connector.destroy();
+      if (connector.id() === internalID) {
         return false;
       } else {
         return true;
       }
     });
+
+    connector.destroy();
     _layer.batchDraw();
   } else if (event === EVENT_CHANGE_PLACE_CONTENT) {
     const place = _stage.findOne('#' + payload.placeID);

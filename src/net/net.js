@@ -1,4 +1,5 @@
 import {Place} from './place';
+import {v4 as uuidv4} from 'uuid';
 import {Transition} from './transition';
 import {PresetEdge} from './presetEdge';
 import {PostsetEdge} from './postsetEdge';
@@ -35,9 +36,9 @@ export function findPlace(placeID) {
  * @param {Object} content - content of the place
  * @return {Place} The new place.
  */
-export function addPlace() {
+export function addPlace(id = uuidv4()) {
   const name = 'place' + _places.length;
-  const newPlace = new Place(name);
+  const newPlace = new Place(id, name);
   _places.push(newPlace);
   notify(EVENT_ADD_PLACE, {id: newPlace.id, name});
   return newPlace;
@@ -133,8 +134,8 @@ export function findTransition(transitionID) {
  * @param {Object} state - state of the transition
  * @return {Transition} The new transition.
  */
-export function addTransition() {
-  const newTransition = new Transition('transition');
+export function addTransition(id = uuidv4()) {
+  const newTransition = new Transition(id, 'transition');
   _transitions.push(newTransition);
   notify(EVENT_ADD_TRANSITION, {id: newTransition.id,
     name: newTransition.name});
@@ -173,20 +174,17 @@ export function removeTransition(transitionID) {
  * @param {String} toID ID of the incoming node.
  * @return {String} ID of the created edge.
  */
-export function connect(fromID, toID) {
+export function connect(fromID, toID, edgeID = uuidv4()) {
   const nodes = _places.concat(_transitions);
   const from = nodes.find((node) => node.id === fromID);
   const to = nodes.find((node) => node.id === toID);
-  let edgeID = '';
   if (from instanceof Place) {
     if (to instanceof Place) {
       console.log('Can\'t connect Place with Place.');
     } else if (to instanceof Transition) {
-      const presetEdge = new PresetEdge(from, to);
-      edgeID = presetEdge.id;
+      const presetEdge = new PresetEdge(from, to, edgeID);
       _edges.push(presetEdge);
       to.preset.push(presetEdge);
-      addEdgesExportArray(edgeID, fromID, toID, 'presetEdge');
     } else {
       console.log('Can only connect Places and Transitions.');
     }
@@ -194,15 +192,16 @@ export function connect(fromID, toID) {
     if (to instanceof Transition) {
       console.log('Can\'t connect Transition with Transition.');
     } else if (to instanceof Place) {
-      const postsetEdge = new PostsetEdge(from, to);
-      edgeID = postsetEdge.id;
+      const postsetEdge = new PostsetEdge(from, to, edgeID);
       _edges.push(postsetEdge);
       from.postset.push(postsetEdge);
-      addEdgesExportArray(edgeID, fromID, toID, 'postsetEdge');
+      // addEdgesExportArray(edgeID, fromID, toID, postsetEdge.type,
+      //     postsetEdge.label);
     } else {
       console.log('Can only connect Places and Transitions.');
     }
   }
+  console.log('Notification about edge ' + edgeID);
   notify(EVENT_CONNECT, {from: from.id, to: to.id, edgeID});
   return edgeID;
 };
@@ -223,6 +222,7 @@ export function disconnect(edgeID) {
         });
       });
       // remove from all transitions preset
+      console.log('removing edge ' + edgeID);
       notify(EVENT_DISCONNECT, edgeID);
 
       return false;

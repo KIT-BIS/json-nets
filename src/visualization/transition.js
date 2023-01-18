@@ -5,6 +5,7 @@ import {getMode, setMode, updateInspector, MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE, MODE_REMOVE,
   MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_FIRE} from '../ui/ui';
 import {connect, fire, removeTransition} from '../net/net';
+import {removeTransitionExportArray} from '../util/exportNet';
 
 /**
  * Creates a new visualization for a transition by extending
@@ -50,6 +51,7 @@ export function Transition(x, y, {id, name}) {
       setMode(MODE_CONNECT_START);
     } else if (getMode() === MODE_REMOVE) {
       removeTransition(id);
+      removeTransitionExportArray(id);
     } else if (getMode() === MODE_INSPECT) {
       updateInspector(INSPECTOR_MODE_TRANSITION, id);
     } else if (getMode() === MODE_FIRE) {

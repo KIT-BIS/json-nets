@@ -11,7 +11,7 @@ import {addPlacesExportArray,
   exportNet, updatePlaceContentExportArray,
   updateTransitionContentExportArray,
   updateEdgeLabelExportArray} from '../util/exportNet';
-// import {importNet, uploadNet} from '../util/importNet';
+import {importNet, uploadNet} from '../util/importNet';
 import {registerJsonnet, changeLang} from '../util/editor';
 
 export const MODE_NONE = 'MODE_NONE';
@@ -53,29 +53,11 @@ function updateEditor(model) {
 }
 
 /*
-   ${button('file-arrow-down', () => {
-    setMode(MODE_NONE);
-    exportNet();
-  })}
   ${button('file-arrow-up', () => {
     setMode(MODE_NONE);
     importNet();
   })}
-  <div class="file">
-  <label class="file-label">
-    <input class="file-input" type="file" name="resume" @change=${(event)=>{
-    uploadNet(event);
-  }}>
-    <span class="file-cta">
-      <span class="file-icon">
-        <i class="fas fa-upload"></i>
-      </span>
-      <span class="file-label">
-        Choose a file…
-      </span>
-    </span>
-  </label>
-</div>
+
  */
 const main = (model) => html`
 ${ (_initalized) ? updateEditor(model): ''}
@@ -110,6 +92,20 @@ ${ (_initalized) ? updateEditor(model): ''}
   ${button('play-circle', _mode === MODE_FIRE ? '' : 'is-outlined', () => {
     setMode(MODE_FIRE);
   })}
+  ${button('file-arrow-down', 'is-outlined', () => {
+    setMode(MODE_NONE);
+    exportNet();
+  })}
+  <input class="button is-primary is-outlined" 
+    type="file" name="resume" @change=${(event)=>{
+    uploadNet(event);
+  }}>
+  <button @click=${(event) => {
+    importNet();
+    event.stopPropagation();
+  }} class="button is-primary is-outlined">
+  Load Example
+  </button>
 
 </div>
 <div class="modal ${_modalState}">
@@ -146,16 +142,17 @@ ${ (_initalized) ? updateEditor(model): ''}
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
       const name = document.getElementById('itemName').value;
       setPlaceContent(_lastSelectedID, JSON.parse(content), name);
-      updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content));
+      updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content), name);
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
       const name = document.getElementById('itemName').value;
       setTransitionContent(_lastSelectedID, content, name);
-      updateTransitionContentExportArray(_lastSelectedID, content);
+      updateTransitionContentExportArray(_lastSelectedID, content, name);
     } else if (_inspectorMode === INSPECTOR_MODE_PRESET_EDGE) {
       setEdgeLabel(_lastSelectedID, JSON.parse(content));
       updateEdgeLabelExportArray(_lastSelectedID, JSON.parse(content));
     } else if (_inspectorMode === INSPECTOR_MODE_POSTSET_EDGE) {
       setEdgeLabel(_lastSelectedID, content);
+      updateEdgeLabelExportArray(_lastSelectedID, content);
     }
   }}> Save changes</button >
   <button class="button" @click=${() => {
@@ -215,14 +212,15 @@ export function init() {
       const y = event.clientY - stagePosition.y;
       setClickPosition(x, y);
       const place = addPlace();
-      addPlacesExportArray(x, y, place.data, place.id);
+      addPlacesExportArray(x, y, place.id, place.name, place.content);
     } else if (_mode === MODE_ADD_TRANSITION) {
       const stagePosition = getStagePosition();
       const x = event.clientX - stagePosition.x;
       const y = event.clientY - stagePosition.y;
       setClickPosition(x, y);
       const transition = addTransition();
-      addTransitionsExportArray(x, y, transition.id);
+      addTransitionsExportArray(x, y, transition.id, transition.name,
+          transition.content);
     }
   });
   _editor = monaco.editor.create(document.getElementById('editor'), {

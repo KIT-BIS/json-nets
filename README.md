@@ -2,7 +2,7 @@
 
 ## Usage
 
-You can select different editor modes:
+This editor is available to try at https://kit-bis.github.io/json-nets/. You can select different editor modes:
 - Create place: Click on the canvas to create a new place.
 - Create transition: Click on the canvas to create  a new transition.
 - Create arc: Click on two elements to connect them with an arc.

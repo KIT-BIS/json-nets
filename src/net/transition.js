@@ -13,37 +13,8 @@ export function Transition(id=uuidv4()) {
   this.id = id;
   this.preset = [];
   this.postset = [];
-  // TODO: Delete dummy
-  this.state = {
-    'request': {
-      'requestId': 1,
-      'studentId': 'student-1',
-      'foreignUniversity': 'university-1',
-      'foreignLecture': 'Software Engineering and Technology',
-      'homeLecture': 'Software Engineering',
-      'grade': 1.3,
-    },
-    'student': {
-      'studentId': 'student-1',
-      'level': 'Master',
-      'studyProgram': 'Information Systems',
-      'email': 'student@uni.edu',
-    },
-    'lecture': {
-      'name': 'Software Engineering 1',
-      'levels': ['Bachelor'],
-      'studyPrograms': ['Information Systems', 'Computer Science'],
-      'recognizableLectures': [{
-        'universityId': 'university-1',
-        'lecture': 'Software Engineering and Technology',
-      }],
-    },
-  }; // Save each document with placeName as key
-  this.content = `
-  local checkLecture = lecture.name == request.homeLecture;
-  local checkStudent = student.studentId == request.studentId;
-  checkLecture && checkStudent
-  `;
+  this.state = {}; // Save each document with placeName as key
+  this.content = 'true';
 };
 
 /**
@@ -54,57 +25,97 @@ export function Transition(id=uuidv4()) {
  * @return {Boolean}
  */
 Transition.prototype.isAlive = function() {
-  isAlive = true;
-  this.preset.forEach((edge) => {
-    if (!edge.canFire()) {
-      isAlive = false;
+  // check if each preset-edge filter finds documents
+  for (let i = 0; i < this.preset.length; i++) {
+    const filteredDocuments = this.preset[i].applyFilter();
+    if (filteredDocuments.length == 0) {
+      console.log('Filter found no documents.');
+      return false;
     }
-  });
-  return isAlive;
+  }
+
+  // check if there is a valid assignment
+  const assignment = this.findAssignment();
+  if (assignment) {
+    this.state = assignment;
+  } else {
+    console.log('No valid assignment found');
+    return false;
+  }
+
+  // check if creation functions create a valid document
+  for (let i = 0; i < this.postset.length; i++) {
+    const document = this.postset[i].createDocument();
+    if (document === undefined) {
+      console.log('Could not create valid document');
+      return false;
+    } else {
+      console.log('Created document is:');
+      console.log(document);
+      return true;
+    }
+  }
+};
+
+Transition.prototype.fire = function() {
+  for (let i = 0; i < this.preset.length; i++) {
+    this.preset[i].fire(this.state[this.preset[i].place.name.toLowerCase()]);
+  }
+  this.postset.forEach((edge) => edge.fire());
 };
 
 /**
- * Finds all possible assignments and writes them to
- * transition state
+ * Finds an assignments and writes it
  * @method
+ * @return {Object|Boolean}
  */
-Transition.prototype.findAssignments = function() {
-  // const documents = [
-  //  [{'a': 1}, {'b': 1}, {'c': 1}],
-  //  [{'x': 2}, {'y': 2}],
-  //  [{'p': 'bla'}],
-  // ];
+Transition.prototype.findAssignment = function() {
   const keys = [];
   const documents = [];
   for (let i = 0; i < this.preset.length; i++) {
     const filteredDocuments = this.preset[i].applyFilter();
     if (filteredDocuments.length == 0) {
       this.state = {};
-      break;
+      return undefined;
     } else {
       documents.push(filteredDocuments);
       keys.push(this.preset[i].place.name);
     }
   }
 
-  this.state = {
-    keys,
-    assignments: combineArrays(documents),
-  };
+  const combinations = combineArrays(documents);
+
+  for (let i = 0; i < combinations.length; i++) {
+    const combination = combinations[i];
+    const documents = {};
+    for (let j = 0; j < combination.length; j++) {
+      documents[keys[j]] = combination[j];
+    }
+    if (this.evaluate(documents)) {
+      return documents;
+    } else {
+      return false;
+    }
+  }
 };
+
 /**
  * Evaluates the transistions documents with Jsonnet
  * @method
+ * @param {Object} documents
  * @name Transition#evaluate
  * @return {Boolean} true if the transition can fire, false otherwise
  */
-Transition.prototype.evaluate = function() {
+Transition.prototype.evaluate = function(documents) {
   // get documents and convert them to jsonnet format for evaluation
   // combine documents with content
   // Evaluate
-  const documents = this.state;
+  // const documents = this.state;
   let jsonnetString = variablifyDocuments(documents);
   jsonnetString += this.content;
+
+  console.log('Jsonnet string is:');
+  console.log(jsonnetString);
 
   // Convert string to Boolean
   const evaluateDocuments = evaluate(jsonnetString);

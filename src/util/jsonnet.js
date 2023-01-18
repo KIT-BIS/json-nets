@@ -1,4 +1,5 @@
 require('./libraries/jsonnet.js');
+
 /**
  * Evaluate a document with Jsonnet.
  * @param {Object} data

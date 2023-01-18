@@ -1,7 +1,8 @@
 /** @typedef {import('./transition').Transition} Transition */
 /** @typedef {import('./place').Place} Place */
 import {v4 as uuid} from 'uuid';
-import {evaluate} from '../util/jsonnet.js';
+import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
+import {validate} from '../util/validator.js';
 
 /**
  * Creates a new postset-edge that can modify or create documents in a place
@@ -11,11 +12,10 @@ import {evaluate} from '../util/jsonnet.js';
  */
 export function PostsetEdge(transition, place) {
   this.id = uuid();
+  this.type = 'postset';
   this.transition = transition;
   this.place = place;
-  this.label = {
-    'creationFunction': {},
-  };
+  this.label = '{}';
 }
 
 /**
@@ -25,18 +25,25 @@ export function PostsetEdge(transition, place) {
  * @return {*}
  */
 PostsetEdge.prototype.createDocument = function() {
-  const documents = this.transition.state;
-  let jsonnetString = variablifyDocuments(documents);
-  jsonnetString += this.content;
+  const inputDocuments = this.transition.state;
+  let jsonnetString = variablifyDocuments(inputDocuments);
+  jsonnetString += this.label;
+
+  console.log('Jsonnet string is:');
+  console.log(jsonnetString);
 
   // Convert string to Boolean
   const evaluateDocuments = evaluate(jsonnetString);
-  const result = JSON.parse(evaluateDocuments.data);
+  const outputDocument = JSON.parse(evaluateDocuments.data);
   if (!evaluateDocuments.success) {
     // throw new Error(evaluateDocuments.data);
     return undefined;
   } else {
-    return result;
+    if (validate(outputDocument, this.place.content.schema).isValid) {
+      return outputDocument;
+    } else {
+      return undefined;
+    }
   }
 };
 

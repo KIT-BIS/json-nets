@@ -11,7 +11,7 @@ import {addPlacesExportArray,
   exportNet, updatePlaceContentExportArray,
   updateTransitionContentExportArray,
   updateEdgeLabelExportArray} from '../util/exportNet';
-import {importNet, uploadNet} from '../util/importNet';
+// import {importNet, uploadNet} from '../util/importNet';
 import {registerJsonnet, changeLang} from '../util/editor';
 
 export const MODE_NONE = 'MODE_NONE';
@@ -24,10 +24,12 @@ export const MODE_CONNECT_START = 'MODE_CONNECT_START';
 export const MODE_CONNECT_FROM_PLACE = 'MODE_CONNECT_FROM_PLACE';
 export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION';
 export const MODE_INSPECT = 'MODE_INSPECT';
+export const MODE_FIRE = 'MODE_FIRE';
 
 export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
 export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
-export const INSPECTOR_MODE_EDGE = 'INSPECTOR_MODE_EDGE';
+export const INSPECTOR_MODE_PRESET_EDGE = 'INSPECTOR_MODE_PRESET_EDGE';
+export const INSPECTOR_MODE_POSTSET_EDGE = 'INSPECTOR_MODE_POSTSET_EDGE';
 
 let _mode = MODE_NONE;
 let _lastSelectedID = null;
@@ -48,6 +50,32 @@ function updateEditor(model) {
     document.getElementById('itemName').value = model.itemName;
   }
 }
+
+/*
+   ${button('file-arrow-down', () => {
+    setMode(MODE_NONE);
+    exportNet();
+  })}
+  ${button('file-arrow-up', () => {
+    setMode(MODE_NONE);
+    importNet();
+  })}
+  <div class="file">
+  <label class="file-label">
+    <input class="file-input" type="file" name="resume" @change=${(event)=>{
+    uploadNet(event);
+  }}>
+    <span class="file-cta">
+      <span class="file-icon">
+        <i class="fas fa-upload"></i>
+      </span>
+      <span class="file-label">
+        Choose a file…
+      </span>
+    </span>
+  </label>
+</div>
+ */
 const main = (model) => html`
 ${ (_initalized) ? updateEditor(model): ''}
 
@@ -75,33 +103,8 @@ ${ (_initalized) ? updateEditor(model): ''}
     setMode(MODE_INSPECT);
   })}
   ${button('play-circle', () => {
-    setMode(MODE_NONE);
-    step();
+    setMode(MODE_FIRE);
   })}
-  ${button('file-arrow-down', () => {
-    setMode(MODE_NONE);
-    exportNet();
-  })}
-  ${button('file-arrow-up', () => {
-    setMode(MODE_NONE);
-    importNet();
-  })}
- 
-  <div class="file">
-  <label class="file-label">
-    <input class="file-input" type="file" name="resume" @change=${(event)=>{
-    uploadNet(event);
-  }}>
-    <span class="file-cta">
-      <span class="file-icon">
-        <i class="fas fa-upload"></i>
-      </span>
-      <span class="file-label">
-        Choose a file…
-      </span>
-    </span>
-  </label>
-</div>
 </div>
 <div class="modal ${_modalState}">
   <div class="modal-background"></div>
@@ -141,9 +144,11 @@ ${ (_initalized) ? updateEditor(model): ''}
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
       setTransitionContent(_lastSelectedID, content);
       updateTransitionContentExportArray(_lastSelectedID, content);
-    } else if (_inspectorMode === INSPECTOR_MODE_EDGE) {
+    } else if (_inspectorMode === INSPECTOR_MODE_PRESET_EDGE) {
       setEdgeLabel(_lastSelectedID, JSON.parse(content));
       updateEdgeLabelExportArray(_lastSelectedID, JSON.parse(content));
+    } else if (_inspectorMode === INSPECTOR_MODE_POSTSET_EDGE) {
+      setEdgeLabel(_lastSelectedID, content);
     }
   }}> Save changes</button >
   <button class="button" @click=${() => {
@@ -279,10 +284,15 @@ export function updateInspector(entityType, entityID) {
     const transition = findTransition(entityID);
     console.log(transition.content);
     _inspectorContent = String(transition.content);
-  } else if (entityType === INSPECTOR_MODE_EDGE) {
+  } else if (entityType === INSPECTOR_MODE_PRESET_EDGE) {
     changeLang('json', _editor);
     const edge = findEdge(entityID);
     _inspectorContent = JSON.stringify(edge.label);
+  } else if (entityType === INSPECTOR_MODE_POSTSET_EDGE) {
+    console.log('update inspector for postset edge');
+    changeLang('jsonnet', _editor);
+    const edge = findEdge(entityID);
+    _inspectorContent = String(edge.label);
   }
   toggleModal(true);
 };

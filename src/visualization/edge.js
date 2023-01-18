@@ -1,7 +1,7 @@
 import Konva from 'konva';
-import {MODE_INSPECT, MODE_REMOVE, INSPECTOR_MODE_EDGE,
-  getMode, updateInspector} from '../ui/ui';
-import {disconnect} from '../net/net';
+import {MODE_INSPECT, MODE_REMOVE, INSPECTOR_MODE_PRESET_EDGE,
+  INSPECTOR_MODE_POSTSET_EDGE, getMode, updateInspector} from '../ui/ui';
+import {disconnect, findEdge} from '../net/net';
 import {removeEdgesExportArray} from '../util/exportNet';
 
 /**
@@ -27,7 +27,12 @@ export function Edge(points, fromID, toID, id) {
 
   this.on('click', () => {
     if (getMode() === MODE_INSPECT) {
-      updateInspector(INSPECTOR_MODE_EDGE, id);
+      const edge = findEdge(id);
+      if (edge.type === 'preset') {
+        updateInspector(INSPECTOR_MODE_PRESET_EDGE, id);
+      } else if (edge.type === 'postset') {
+        updateInspector(INSPECTOR_MODE_POSTSET_EDGE, id);
+      }
     } else if (getMode() === MODE_REMOVE) {
       disconnect(id);
       removeEdgesExportArray(id);

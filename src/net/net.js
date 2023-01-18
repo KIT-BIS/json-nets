@@ -30,14 +30,14 @@ export function findPlace(placeID) {
 
 /**
  * Creates a new place and adds it to the net.
- * @param {String} id - id of the place
  * @param {Object} content - content of the place
  * @return {Place} The new place.
  */
-export function addPlace(id) {
-  const newPlace = new Place(id);
+export function addPlace() {
+  const name = 'place' + _places.length;
+  const newPlace = new Place(name);
   _places.push(newPlace);
-  notify(EVENT_ADD_PLACE, newPlace.id);
+  notify(EVENT_ADD_PLACE, {id: newPlace.id, name});
   return newPlace;
 };
 
@@ -48,6 +48,7 @@ export function addPlace(id) {
  * @param {String} placeID The ID of the place to remove.
  */
 export function removePlace(placeID) {
+  console.log(placeID);
   _places = _places.filter((place) => {
     return place.id !== placeID;
   });
@@ -96,18 +97,15 @@ export function setPlaceContent(placeID, content, placeName) {
         {placeID, num: place.content.data.length, name: name});
   }
 };
+
 /**
  * Set the content of a transition (expected to be of type jsonnet)
  * @param {String} transitionID
  * @param {Object} content
  */
 export function setTransitionContent(transitionID, content) {
-  const transition = _transitions.find(
-      (transition) => transition.id === transitionID);
+  const transition = findTransition(transitionID);
   transition.content = content;
-  console.log(_transitions);
-  // TODO: Only for testing. Remove later.
-  transition.evaluate();
 }
 
 /**
@@ -245,47 +243,61 @@ export function setEdgeLabel(edgeID, label) {
   edge.label = label;
 };
 
+
 /**
- * Fire a given edge
- * @param {PresetEdge|PostsetEdge} edge The edge to fire.
+ * Fire the id with given id
+ * @param {String} id
  */
-export function fireEdge(edge) {
-  edge.fire();
-  notify(EVENT_CHANGE_PLACE_CONTENT, {
-    placeID: edge.place.id,
-    num: edge.place.content.data.length,
-  });
-};
+export function fire(id) {
+  const transition = findTransition(id);
+  if (!transition.isAlive()) {
+    alert('The transition is not enabled.');
+  } else {
+    transition.fire();
+    transition.preset.forEach((edge) =>
+      notify(EVENT_CHANGE_PLACE_CONTENT, {
+        placeID: edge.place.id,
+        num: edge.place.content.data.length,
+        name: edge.place.name,
+      }));
+    transition.postset.forEach((edge) =>
+      notify(EVENT_CHANGE_PLACE_CONTENT, {
+        placeID: edge.place.id,
+        num: edge.place.content.data.length,
+        name: edge.place.name,
+      }));
+  }
+}
 
 /**
  * Step through the simulation.
  */
-export function step() {
-  const alifeTransitions = [];
-  _transitions.forEach((transition) => {
-    transition.state = {};
-    let isAlive = true;
-    if (transition.preset.length < 1) {
-      isAlive = false;
-    }
-    if (transition.preset.some((edge) => !edge.canFire())) {
-      isAlive = false;
-    }
-    if (isAlive) {
-      alifeTransitions.push(transition);
-    }
-  });
-  alifeTransitions.forEach((transition) => {
-    // TODO ... conflicts still possible?
-    // let hadConflict = false;
-    transition.preset.forEach((edge) => {
-      fireEdge(edge);
-    });
-    transition.postset.forEach((edge) => {
-      fireEdge(edge);
-    });
-  });
-};
+// export function step() {
+//   const alifeTransitions = [];
+//   _transitions.forEach((transition) => {
+//     transition.state = {};
+//     let isAlive = true;
+//     if (transition.preset.length < 1) {
+//       isAlive = false;
+//     }
+//     if (transition.preset.some((edge) => !edge.canFire())) {
+//       isAlive = false;
+//     }
+//     if (isAlive) {
+//       alifeTransitions.push(transition);
+//     }
+//   });
+//   alifeTransitions.forEach((transition) => {
+//     // TODO ... conflicts still possible?
+//     // let hadConflict = false;
+//     transition.preset.forEach((edge) => {
+//       fireEdge(edge);
+//     });
+//     transition.postset.forEach((edge) => {
+//       fireEdge(edge);
+//     });
+//   });
+// };
 
 /**
  * Notifies the registered observer of events

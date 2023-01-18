@@ -1,0 +1,22 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "studentId": {
+                "type": "string"
+            },
+            "lecture": {
+                "type": "string"
+            },
+            "grade": {
+                "type": "number"
+            }
+        },
+        "required": [
+            "studentId",
+            "lecture",
+            "grade"
+        ]
+    },
+    "data": []
+}

@@ -36,12 +36,14 @@ PostsetEdge.prototype.createDocument = function() {
   const evaluateDocuments = evaluate(jsonnetString);
   const outputDocument = JSON.parse(evaluateDocuments.data);
   if (!evaluateDocuments.success) {
+    console.log('Jsonnet expression produced errors.');
     // throw new Error(evaluateDocuments.data);
     return undefined;
   } else {
     if (validate(outputDocument, this.place.content.schema).isValid) {
       return outputDocument;
     } else {
+      console.log('Created document is not valid to schema.');
       return undefined;
     }
   }

@@ -3,7 +3,7 @@
  * @param {Array} docErrors
  */
 export function showConsole(docErrors) {
-  console.log(error);
+  // console.log(error);
   const node = document.getElementById('modal-card-body');
   console.log(node);
   const consoleElement = document.getElementById('console');

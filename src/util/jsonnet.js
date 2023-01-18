@@ -40,7 +40,8 @@ export function variablifyDocuments(documents) {
   let jsonnetString = '';
   for (const [key, value] of Object.entries(documents)) {
     console.log(key, value);
-    jsonnetString += `local ${key} = ${JSON.stringify(value)}; \n`;
+    jsonnetString +=
+      `local ${key.toLowerCase()} = ${JSON.stringify(value)}; \n`;
   }
 
   return jsonnetString;

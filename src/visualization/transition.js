@@ -13,20 +13,33 @@ import {connect, fire, removeTransition} from '../net/net';
  * @param {Number} y
  * @param {String} id
  */
-export function Transition(x, y, id) {
-  Konva.Rect.call(this, {
+export function Transition(x, y, {id, name}) {
+  console.log('new transition ' + name);
+  Konva.Group.call(this, {
     x,
     y,
+    id,
+  });
+
+  const rect = new Konva.Rect({
     width: 60,
     offsetX: 35,
     offsetY: 25,
     height: 50,
-    fill: '#63A46C',
+    fill: '#FFFFFF',
+    stroke: '#000000',
     shadowBlur: 2,
     shadowOffset: {x: 3, y: 3},
     shadowOpacity: 0.5,
-    id,
   });
+  const nameText = new Konva.Text({
+    name: 'name',
+    text: name,
+    x: -30,
+    y: 35,
+  });
+  this.add(rect);
+  this.add(nameText);
 
   this.on('click', () => {
     if (getMode() === MODE_CONNECT_START) {
@@ -50,7 +63,7 @@ export function Transition(x, y, id) {
 }
 
 // TODO: This is fluff to properly set up inheritance ... I don't like it.
-Transition.prototype = Object.create(Konva.Rect.prototype);
+Transition.prototype = Object.create(Konva.Group.prototype);
 Object.defineProperty(Transition.prototype, 'constructor', {
   value: Transition,
   enumerable: false,

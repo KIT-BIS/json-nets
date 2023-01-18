@@ -15,8 +15,6 @@ import {removePlacesExportArray} from '../util/exportNet';
  * @param {String} name
  */
 export function Place(x, y, {id, name}) {
-  console.log(id);
-  console.log(name);
   Konva.Group.call(this, {
     x,
     y,
@@ -31,7 +29,8 @@ export function Place(x, y, {id, name}) {
   });
   const circle = new Konva.Circle({
     radius: 35,
-    fill: '#C7CEDB',
+    fill: '#FFFFFF',
+    stroke: '#000000',
     shadowBlur: 2,
     shadowOpacity: 0.5,
     shadowOffset: {x: 3, y: 3},
@@ -57,7 +56,7 @@ export function Place(x, y, {id, name}) {
       updateInspector(INSPECTOR_MODE_PLACE, id);
     } else if (getMode() === MODE_REMOVE) {
       removePlace(id);
-      removePlacesExportArray(id);
+      // removePlacesExportArray(id);
     }
   });
 

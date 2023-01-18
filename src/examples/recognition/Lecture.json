@@ -1,0 +1,84 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "levels": {
+                "type": "array",
+                "items": {
+                    "type": "string",
+                    "enum": [
+                        "Bachelor",
+                        "Master"
+                    ]
+                }
+            },
+            "studyPrograms": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "recognizableLectures": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "universityId": {
+                            "type": "string"
+                        },
+                        "lecture": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "universityId",
+                        "lecture"
+                    ]
+                }
+            }
+        },
+        "required": [
+            "name",
+            "levels",
+            "studyPrograms",
+            "recognizableLectures"
+        ]
+    },
+    "data": [
+        {
+            "name": "Software Engineering",
+            "levels": [
+                "Bachelor"
+            ],
+            "studyPrograms": [
+                "Information Systems",
+                "Computer Science"
+            ],
+            "recognizableLectures": [
+                {
+                    "universityId": "university-1",
+                    "lecture": "Software Engineering and Technology"
+                }
+            ]
+        },
+        {
+            "name": "Advanced Database Systems",
+            "levels": [
+                "Master"
+            ],
+            "studyPrograms": [
+                "Information Systems",
+                "Computer Science"
+            ],
+            "recognizableLectures": [
+                {
+                    "universityId": "university-1",
+                    "lecture": "Big Data and NoSQL"
+                }
+            ]
+        }
+    ]
+}

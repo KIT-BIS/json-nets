@@ -4,7 +4,8 @@ import {EVENT_ADD_PLACE, EVENT_ADD_TRANSITION,
   EVENT_CHANGE_PLACE_CONTENT,
   EVENT_REMOVE_PLACE,
   EVENT_REMOVE_TRANSITION,
-  EVENT_DISCONNECT} from '../net/net';
+  EVENT_DISCONNECT,
+  EVENT_CHANGE_TRANSITION_CONTENT} from '../net/net';
 import {Transition} from './transition';
 import {Place} from './place';
 import {Edge} from './edge';
@@ -179,6 +180,11 @@ export function receiveNotification(event, payload) {
     const text = place.findOne('.counter');
     const name = place.findOne('.name');
     text.text(payload.num);
+    name.text(payload.name);
+    _layer.batchDraw();
+  } else if (event === EVENT_CHANGE_TRANSITION_CONTENT) {
+    const transition = _stage.findOne('#' + payload.transitionID);
+    const name = transition.findOne('.name');
     name.text(payload.name);
     _layer.batchDraw();
   } else if (event === EVENT_REMOVE_PLACE) {

@@ -1,5 +1,5 @@
 import {
-  step, addPlace, addTransition, setPlaceContent, setEdgeLabel,
+  addPlace, addTransition, setPlaceContent, setEdgeLabel,
   findPlace, findTransition, findEdge, setTransitionContent} from '../net/net';
 import {setClickPosition, toggleDraggable,
   setPanable, getStagePosition} from '../visualization/net';
@@ -46,7 +46,8 @@ let _initalized = false;
  */
 function updateEditor(model) {
   _editor.setValue(model.inspectorContent);
-  if (_inspectorMode === INSPECTOR_MODE_PLACE) {
+  if (_inspectorMode === INSPECTOR_MODE_PLACE ||
+    _inspectorMode === INSPECTOR_MODE_TRANSITION) {
     document.getElementById('itemName').value = model.itemName;
   }
 }
@@ -81,30 +82,35 @@ ${ (_initalized) ? updateEditor(model): ''}
 
 <div id="container"></div>
 <div id="menu">
-  ${button('circle', () => {
+  ${button('circle', _mode===MODE_ADD_PLACE?'':'is-outlined', () => {
     setMode(MODE_ADD_PLACE);
   })}
-  ${button('square', () => {
+
+  ${button('square', _mode===MODE_ADD_TRANSITION?'':'is-outlined', () => {
     setMode(MODE_ADD_TRANSITION);
   })}
-  ${button('arrow-right', () => {
-    setMode(MODE_CONNECT_START);
-  })}
-  ${button('trash', () => {
+  ${button('arrow-right', _mode===MODE_CONNECT_START ||
+  _mode === MODE_CONNECT_FROM_PLACE ||
+  _mode === MODE_CONNECT_FROM_TRANSITION ?'':'is-outlined',
+() => {
+  setMode(MODE_CONNECT_START);
+})}
+  ${button('trash', _mode === MODE_REMOVE ?'':'is-outlined', () => {
     setMode(MODE_REMOVE);
   })}
-  ${button('mouse-pointer', () => {
+  ${button('mouse-pointer', _mode === MODE_MOVE ?'':'is-outlined', () => {
     setMode(MODE_MOVE);
   })}
-  ${button('expand-arrows-alt', () => {
+  ${button('expand-arrows-alt', _mode === MODE_PAN ? '' : 'is-outlined', () => {
     setMode(MODE_PAN);
   })}
-  ${button('edit', () => {
+  ${button('edit', _mode === MODE_INSPECT ? '' : 'is-outlined', () => {
     setMode(MODE_INSPECT);
   })}
-  ${button('play-circle', () => {
+  ${button('play-circle', _mode === MODE_FIRE ? '' : 'is-outlined', () => {
     setMode(MODE_FIRE);
   })}
+
 </div>
 <div class="modal ${_modalState}">
   <div class="modal-background"></div>
@@ -124,7 +130,7 @@ ${ (_initalized) ? updateEditor(model): ''}
         <div class="field">
           <p class="control">
             <input id="itemName" class="input" type="text" 
-            placeholder="Name of the place">
+            placeholder="Name of the element">
           </p>
           <p id="itemNameReturn" class="help is-danger">
           </p>
@@ -138,11 +144,12 @@ ${ (_initalized) ? updateEditor(model): ''}
     const content = _editor.getValue();
     // _editorLanguage = 'json';
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
-      const name = document.getElementById('itemName').value.toLowerCase();
+      const name = document.getElementById('itemName').value;
       setPlaceContent(_lastSelectedID, JSON.parse(content), name);
       updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content));
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
-      setTransitionContent(_lastSelectedID, content);
+      const name = document.getElementById('itemName').value;
+      setTransitionContent(_lastSelectedID, content, name);
       updateTransitionContentExportArray(_lastSelectedID, content);
     } else if (_inspectorMode === INSPECTOR_MODE_PRESET_EDGE) {
       setEdgeLabel(_lastSelectedID, JSON.parse(content));
@@ -170,13 +177,18 @@ function toggleModal(toggle) {
     // Format current content
     _editor.getAction('editor.action.formatDocument').run();
     const itemNameContainer = document.getElementById('itemNameContainer');
-    if (_inspectorMode === INSPECTOR_MODE_PLACE) {
+    if (_inspectorMode === INSPECTOR_MODE_PLACE ||
+      _inspectorMode === INSPECTOR_MODE_TRANSITION) {
       itemNameContainer.classList.remove('is-hidden');
     } else {
       itemNameContainer.classList.add('is-hidden');
     }
   } else {
     _modalState = '';
+    const console = document.getElementById('console');
+    if (console) {
+      console.remove();
+    }
   }
   update();
 }
@@ -256,6 +268,7 @@ export function setMode(mode) {
     setPanable(false);
   }
   _mode = mode;
+  update();
 }
 
 /**
@@ -282,8 +295,11 @@ export function updateInspector(entityType, entityID) {
   } else if (entityType === INSPECTOR_MODE_TRANSITION) {
     changeLang('jsonnet', _editor);
     const transition = findTransition(entityID);
+    console.log('inspect transition');
     console.log(transition.content);
+    console.log(transition.name);
     _inspectorContent = String(transition.content);
+    _itemName = transition.name;
   } else if (entityType === INSPECTOR_MODE_PRESET_EDGE) {
     changeLang('json', _editor);
     const edge = findEdge(entityID);

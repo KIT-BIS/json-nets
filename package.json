@@ -2,11 +2,16 @@
     "name": "json-nets",
     "version": "1.0.0",
     "description": "",
+    "repository": {
+        "url": "git+https://github.com/KIT-BIS/json-nets.git"
+    },
     "private": true,
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build": "webpack",
-        "start": "webpack-dev-server --open"
+        "build": "webpack --mode=development",
+        "start": "webpack-dev-server --open",
+        "predeploy": "npm run build",
+        "deploy": "gh-pages -d dist"
     },
     "keywords": [],
     "author": "",
@@ -28,6 +33,7 @@
         "eslint-config-google": "^0.14.0",
         "eslint-plugin-lit": "^1.8.0",
         "file-loader": "^6.2.0",
+        "gh-pages": "^4.0.0",
         "html-loader": "^4.1.0",
         "html-webpack-plugin": "^5.5.0",
         "mini-css-extract-plugin": "^2.7.2",

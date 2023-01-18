@@ -9,8 +9,9 @@ import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
  * @param {Array} postset - array of postset edges
  * @param {Object} state - state of the transition
  */
-export function Transition(id=uuidv4()) {
-  this.id = id;
+export function Transition(name = 'transition') {
+  this.id = uuidv4();
+  this.name = name;
   this.preset = [];
   this.postset = [];
   this.state = {}; // Save each document with placeName as key
@@ -25,6 +26,7 @@ export function Transition(id=uuidv4()) {
  * @return {Boolean}
  */
 Transition.prototype.isAlive = function() {
+  this.state = {};
   // check if each preset-edge filter finds documents
   for (let i = 0; i < this.preset.length; i++) {
     const filteredDocuments = this.preset[i].applyFilter();
@@ -79,7 +81,7 @@ Transition.prototype.findAssignment = function() {
       return undefined;
     } else {
       documents.push(filteredDocuments);
-      keys.push(this.preset[i].place.name);
+      keys.push(this.preset[i].place.name.toLowerCase());
     }
   }
 
@@ -93,10 +95,9 @@ Transition.prototype.findAssignment = function() {
     }
     if (this.evaluate(documents)) {
       return documents;
-    } else {
-      return false;
     }
   }
+  return false;
 };
 
 /**

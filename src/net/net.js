@@ -9,6 +9,8 @@ import {showConsole} from '../ui/console';
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
 export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
+export const EVENT_CHANGE_TRANSITION_CONTENT =
+  'EVENT_CHANGE_TRANSITION_CONTENT';
 export const EVENT_CONNECT = 'EVENT_CONNECT';
 export const EVENT_DISCONNECT = 'EVENT_DISCONNECT';
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE';
@@ -87,6 +89,8 @@ export function setPlaceContent(placeID, content, placeName) {
   validatePlaceName(place.id, name, _places);
 
   if (docErrors.length > 0 ) {
+    console.log('Schema validation errors.');
+    console.log(docErrors);
     showConsole(docErrors);
   }
 
@@ -103,9 +107,12 @@ export function setPlaceContent(placeID, content, placeName) {
  * @param {String} transitionID
  * @param {Object} content
  */
-export function setTransitionContent(transitionID, content) {
+export function setTransitionContent(transitionID, content, name) {
   const transition = findTransition(transitionID);
   transition.content = content;
+  transition.name = name;
+  notify(EVENT_CHANGE_TRANSITION_CONTENT,
+      {transitionID, name});
 }
 
 /**
@@ -126,10 +133,11 @@ export function findTransition(transitionID) {
  * @param {Object} state - state of the transition
  * @return {Transition} The new transition.
  */
-export function addTransition(id) {
-  const newTransition = new Transition(id);
+export function addTransition() {
+  const newTransition = new Transition('transition');
   _transitions.push(newTransition);
-  notify(EVENT_ADD_TRANSITION, newTransition.id);
+  notify(EVENT_ADD_TRANSITION, {id: newTransition.id,
+    name: newTransition.name});
   return newTransition;
 };
 

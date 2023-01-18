@@ -13,6 +13,7 @@ import {removeEdgesExportArray} from '../util/exportNet';
  * @param {STring} id
  */
 export function Edge(points, fromID, toID, id) {
+  
   Konva.Arrow.call(this, {
     id,
     fill: '#2E3532',

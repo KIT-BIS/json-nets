@@ -69,10 +69,12 @@ module.exports = {
       use: ['style-loader', 'css-loader'],
     },
 
-    {
-      test: /\.ttf$/,
-      use: ['file-loader'],
-    },
+    // This seems to create problems with Monaco,
+    // but apparently, it also isn't needed?
+    //    {
+    //      test: /\.ttf$/,
+    //      use: ['file-loader'],
+    //    },
     {
       test: /\.html$/i,
       loader: 'html-loader',

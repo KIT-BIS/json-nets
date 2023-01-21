@@ -1,13 +1,10 @@
-import {v4 as uuidv4} from 'uuid';
 import {combineArrays} from '../util/util';
 import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
 
 /**
  * Creates a new Transition object.
- * @param {String} id - id of the transition
- * @param {Array} preset - array of preset edges
- * @param {Array} postset - array of postset edges
- * @param {Object} state - state of the transition
+ * @param {String} id ID of the transition.
+ * @param {String} name Name of the transition.
  */
 export function Transition(id, name) {
   this.id = id;
@@ -19,15 +16,16 @@ export function Transition(id, name) {
 };
 
 /**
- * Checks whether all connected preset edges can fire (i.e. have
- * valid documents in their connected places)
+ * Checks whether all connected preset arcs have
+ * valid documents in their connected places
+ * And all connected postset arc can create valid documents.
  * @method
  * @name Transition#isAlive
  * @return {Boolean}
  */
-Transition.prototype.isAlive = function() {
+Transition.prototype.isEnabled = function() {
   this.state = {};
-  // check if each preset-edge filter finds documents
+  // check if each preset arc filter finds documents
   for (let i = 0; i < this.preset.length; i++) {
     const filteredDocuments = this.preset[i].applyFilter();
     if (filteredDocuments.length == 0) {
@@ -59,15 +57,16 @@ Transition.prototype.isAlive = function() {
   }
 };
 
-Transition.prototype.fire = function() {
+Transition.prototype.occur = function() {
   for (let i = 0; i < this.preset.length; i++) {
-    this.preset[i].fire(this.state[this.preset[i].place.name.toLowerCase()]);
+    this.preset[i].occur(this.state[this.preset[i].place.name.toLowerCase()]);
   }
-  this.postset.forEach((edge) => edge.fire());
+  this.postset.forEach((arc) => arc.occur());
 };
 
 /**
- * Finds an assignments and writes it
+ * Finds a valid assignment of documents to filters.
+ * Based on filter expressions and transition inscriptions.
  * @method
  * @return {Object|Boolean}
  */
@@ -77,6 +76,7 @@ Transition.prototype.findAssignment = function() {
   for (let i = 0; i < this.preset.length; i++) {
     const filteredDocuments = this.preset[i].applyFilter();
     if (filteredDocuments.length == 0) {
+      // TODO: is resetting state required here?
       this.state = {};
       return undefined;
     } else {
@@ -101,28 +101,26 @@ Transition.prototype.findAssignment = function() {
 };
 
 /**
- * Evaluates the transistions documents with Jsonnet
+ * Evaluates the inscribed Jsonnet expression with the given documents.
+ * Returns true if the transition can occur, false otherwise.
  * @method
  * @param {Object} documents
  * @name Transition#evaluate
- * @return {Boolean} true if the transition can fire, false otherwise
+ * @return {Boolean}
  */
 Transition.prototype.evaluate = function(documents) {
-  // get documents and convert them to jsonnet format for evaluation
   // combine documents with content
-  // Evaluate
-  // const documents = this.state;
   let jsonnetString = variablifyDocuments(documents);
   jsonnetString += this.content;
-
-  console.log('Jsonnet string is:');
-  console.log(jsonnetString);
 
   // Convert string to Boolean
   const evaluateDocuments = evaluate(jsonnetString);
   const result = JSON.parse(evaluateDocuments.data);
   if (!evaluateDocuments.success) {
     // throw new Error(evaluateDocuments.data);
+    console.log('Could not evaluate transition inscription.');
+    console.log('Jsonnet string is:');
+    console.log(jsonnetString);
     return false;
   } else if (result !== true) {
     return false;

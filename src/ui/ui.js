@@ -1,16 +1,16 @@
 import {
-  addPlace, addTransition, setPlaceContent, setEdgeLabel,
-  findPlace, findTransition, findEdge, setTransitionContent} from '../net/net';
+  addPlace, addTransition, setPlaceContent, setArcLabel,
+  findPlace, findTransition, findArc, setTransitionContent} from '../net/net';
 import {setClickPosition, toggleDraggable,
   setPanable, getStagePosition} from '../visualization/net';
 import {html, render} from 'lit-html';
 import {button} from './button';
 import * as monaco from 'monaco-editor';
-import {addPlacesExportArray,
-  addTransitionsExportArray,
-  exportNet, updatePlaceContentExportArray,
-  updateTransitionContentExportArray,
-  updateEdgeLabelExportArray} from '../util/exportNet';
+import {addPlaceToExportArray,
+  addTransitionToExportArray,
+  exportNet, updatePlaceContentInExportArray,
+  updateTransitionContentInExportArray,
+  updateArcLabelInExportArray} from '../util/exportNet';
 import {importNet, uploadNet} from '../util/importNet';
 import {registerJsonnet, changeLang} from '../util/editor';
 
@@ -24,12 +24,12 @@ export const MODE_CONNECT_START = 'MODE_CONNECT_START';
 export const MODE_CONNECT_FROM_PLACE = 'MODE_CONNECT_FROM_PLACE';
 export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION';
 export const MODE_INSPECT = 'MODE_INSPECT';
-export const MODE_FIRE = 'MODE_FIRE';
+export const MODE_OCCUR = 'MODE_OCCUR';
 
 export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
 export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
-export const INSPECTOR_MODE_PRESET_EDGE = 'INSPECTOR_MODE_PRESET_EDGE';
-export const INSPECTOR_MODE_POSTSET_EDGE = 'INSPECTOR_MODE_POSTSET_EDGE';
+export const INSPECTOR_MODE_PRESET_ARC = 'INSPECTOR_MODE_PRESET_ARC';
+export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
 
 let _mode = MODE_NONE;
 let _lastSelectedID = null;
@@ -39,26 +39,8 @@ let _itemName = '';
 let _modalState = '';
 let _editor = '';
 let _initalized = false;
-/**
- * Changes the current value of the editor and applies the json schema
- * if node is of type place
- * @param {Object} model The model to update the editor with.
- */
-function updateEditor(model) {
-  _editor.setValue(model.inspectorContent);
-  if (_inspectorMode === INSPECTOR_MODE_PLACE ||
-    _inspectorMode === INSPECTOR_MODE_TRANSITION) {
-    document.getElementById('itemName').value = model.itemName;
-  }
-}
 
-/*
-  ${button('file-arrow-up', () => {
-    setMode(MODE_NONE);
-    importNet();
-  })}
 
- */
 const main = (model) => html`
 ${ (_initalized) ? updateEditor(model): ''}
 
@@ -89,8 +71,8 @@ ${ (_initalized) ? updateEditor(model): ''}
   ${button('edit', _mode === MODE_INSPECT ? '' : 'is-outlined', () => {
     setMode(MODE_INSPECT);
   })}
-  ${button('play-circle', _mode === MODE_FIRE ? '' : 'is-outlined', () => {
-    setMode(MODE_FIRE);
+  ${button('play-circle', _mode === MODE_OCCUR ? '' : 'is-outlined', () => {
+    setMode(MODE_OCCUR);
   })}
   ${button('file-arrow-down', 'is-outlined', () => {
     setMode(MODE_NONE);
@@ -142,17 +124,18 @@ ${ (_initalized) ? updateEditor(model): ''}
     if (_inspectorMode === INSPECTOR_MODE_PLACE) {
       const name = document.getElementById('itemName').value;
       setPlaceContent(_lastSelectedID, JSON.parse(content), name);
-      updatePlaceContentExportArray(_lastSelectedID, JSON.parse(content), name);
+      updatePlaceContentInExportArray(_lastSelectedID,
+          JSON.parse(content), name);
     } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
       const name = document.getElementById('itemName').value;
       setTransitionContent(_lastSelectedID, content, name);
-      updateTransitionContentExportArray(_lastSelectedID, content, name);
-    } else if (_inspectorMode === INSPECTOR_MODE_PRESET_EDGE) {
-      setEdgeLabel(_lastSelectedID, JSON.parse(content));
-      updateEdgeLabelExportArray(_lastSelectedID, JSON.parse(content));
-    } else if (_inspectorMode === INSPECTOR_MODE_POSTSET_EDGE) {
-      setEdgeLabel(_lastSelectedID, content);
-      updateEdgeLabelExportArray(_lastSelectedID, content);
+      updateTransitionContentInExportArray(_lastSelectedID, content, name);
+    } else if (_inspectorMode === INSPECTOR_MODE_PRESET_ARC) {
+      setArcLabel(_lastSelectedID, JSON.parse(content));
+      updateArcLabelInExportArray(_lastSelectedID, JSON.parse(content));
+    } else if (_inspectorMode === INSPECTOR_MODE_POSTSET_ARC) {
+      setArcLabel(_lastSelectedID, content);
+      updateArcLabelInExportArray(_lastSelectedID, content);
     }
   }}> Save changes</button >
   <button class="button" @click=${() => {
@@ -190,6 +173,18 @@ function toggleModal(toggle) {
   update();
 }
 
+/**
+ * Changes the current value of the editor and applies the json schema
+ * if node is of type place
+ * @param {Object} model The model to update the editor with.
+ */
+function updateEditor(model) {
+  _editor.setValue(model.inspectorContent);
+  if (_inspectorMode === INSPECTOR_MODE_PLACE ||
+    _inspectorMode === INSPECTOR_MODE_TRANSITION) {
+    document.getElementById('itemName').value = model.itemName;
+  }
+}
 
 /**
  * Triggers a new render of UI.
@@ -212,14 +207,14 @@ export function init() {
       const y = event.clientY - stagePosition.y;
       setClickPosition(x, y);
       const place = addPlace();
-      addPlacesExportArray(x, y, place.id, place.name, place.content);
+      addPlaceToExportArray(x, y, place.id, place.name, place.content);
     } else if (_mode === MODE_ADD_TRANSITION) {
       const stagePosition = getStagePosition();
       const x = event.clientX - stagePosition.x;
       const y = event.clientY - stagePosition.y;
       setClickPosition(x, y);
       const transition = addTransition();
-      addTransitionsExportArray(x, y, transition.id, transition.name,
+      addTransitionToExportArray(x, y, transition.id, transition.name,
           transition.content);
     }
   });
@@ -293,20 +288,16 @@ export function updateInspector(entityType, entityID) {
   } else if (entityType === INSPECTOR_MODE_TRANSITION) {
     changeLang('jsonnet', _editor);
     const transition = findTransition(entityID);
-    console.log('inspect transition');
-    console.log(transition.content);
-    console.log(transition.name);
     _inspectorContent = String(transition.content);
     _itemName = transition.name;
-  } else if (entityType === INSPECTOR_MODE_PRESET_EDGE) {
+  } else if (entityType === INSPECTOR_MODE_PRESET_ARC) {
     changeLang('json', _editor);
-    const edge = findEdge(entityID);
-    _inspectorContent = JSON.stringify(edge.label);
-  } else if (entityType === INSPECTOR_MODE_POSTSET_EDGE) {
-    console.log('update inspector for postset edge');
+    const arc = findArc(entityID);
+    _inspectorContent = JSON.stringify(arc.label);
+  } else if (entityType === INSPECTOR_MODE_POSTSET_ARC) {
     changeLang('jsonnet', _editor);
-    const edge = findEdge(entityID);
-    _inspectorContent = String(edge.label);
+    const arc = findArc(entityID);
+    _inspectorContent = String(arc.label);
   }
   toggleModal(true);
 };

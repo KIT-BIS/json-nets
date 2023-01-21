@@ -3,9 +3,10 @@ import {updateLines, setLastClickedTransition,
   getLastClickedPlace} from './net';
 import {getMode, setMode, updateInspector, MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE, MODE_REMOVE,
-  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_FIRE} from '../ui/ui';
-import {connect, fire, removeTransition} from '../net/net';
-import {removeTransitionExportArray} from '../util/exportNet';
+  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_OCCUR} from '../ui/ui';
+import {connect, occur, removeTransition} from '../net/net';
+import {removeTransitionFromExportArray,
+  addArcToExportArray} from '../util/exportNet';
 
 /**
  * Creates a new visualization for a transition by extending
@@ -15,7 +16,6 @@ import {removeTransitionExportArray} from '../util/exportNet';
  * @param {String} id
  */
 export function Transition(x, y, {id, name}) {
-  console.log('new transition ' + name);
   Konva.Group.call(this, {
     x,
     y,
@@ -47,15 +47,16 @@ export function Transition(x, y, {id, name}) {
       setLastClickedTransition(id);
       setMode(MODE_CONNECT_FROM_TRANSITION);
     } else if (getMode() === MODE_CONNECT_FROM_PLACE) {
-      connect(getLastClickedPlace(), id);
+      const arc = connect(getLastClickedPlace(), id);
+      addArcToExportArray(arc.id, arc.place.id, id, 'preset', arc.label);
       setMode(MODE_CONNECT_START);
     } else if (getMode() === MODE_REMOVE) {
       removeTransition(id);
-      removeTransitionExportArray(id);
+      removeTransitionFromExportArray(id);
     } else if (getMode() === MODE_INSPECT) {
       updateInspector(INSPECTOR_MODE_TRANSITION, id);
-    } else if (getMode() === MODE_FIRE) {
-      fire(id);
+    } else if (getMode() === MODE_OCCUR) {
+      occur(id);
     }
   });
 

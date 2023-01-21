@@ -314,14 +314,14 @@ export const importData = {
             "content": "true"
         }
     ],
-    "edges": [
+    "arcs": [
         {
             "id": "bccd1686-bed4-4ae9-a6c2-18628a877a20",
             "fromId": "167d54d6-3a73-40f7-b317-0aa3580a44ac",
             "toId": "1952db8b-764c-45da-b2d4-8b1537400377",
             "type": "preset",
             "label": {
-                "type": "delete",
+                "type": "consume",
                 "filter": ""
             }
         },
@@ -358,7 +358,7 @@ export const importData = {
             "toId": "0e1c227f-c03b-4969-be2b-9b151898a35c",
             "type": "preset",
             "label": {
-                "type": "delete",
+                "type": "consume",
                 "filter": "@.accepted == true"
             }
         },
@@ -368,7 +368,7 @@ export const importData = {
             "toId": "82ca126e-1b63-40ad-9f92-d156da6823b8",
             "type": "preset",
             "label": {
-                "type": "delete",
+                "type": "consume",
                 "filter": "@.accepted == false"
             }
         },

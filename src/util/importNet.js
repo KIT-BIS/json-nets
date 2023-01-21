@@ -1,9 +1,9 @@
 import {importData} from '../examples/recognition/net';
 import {addPlace, addTransition, connect, setPlaceContent,
-  setEdgeLabel,
+  setArcLabel,
   setTransitionContent} from '../net/net';
 import {setClickPosition} from '../visualization/net';
-import {setPlaces, setTransisions, setEdges, addEdgesExportArray} from './exportNet';
+import {setPlaces, setTransisions, addArcToExportArray} from './exportNet';
 /**
  * Imports a net into the frame.
  * @param {Boolean} upload
@@ -11,12 +11,12 @@ import {setPlaces, setTransisions, setEdges, addEdgesExportArray} from './export
  */
 export function importNet(upload=false, uploadData) {
   const data = (upload) ? uploadData : importData;
-  //const data = uploadData;
 
   // Set the places, transitions and edges for later export.
   setPlaces(data.places);
   setTransisions(data.transitions);
   // setEdges(data.edges);
+
   // Add all places to the net.
   data.places.forEach((place) => {
     setClickPosition(place.x, place.y);
@@ -29,12 +29,13 @@ export function importNet(upload=false, uploadData) {
     addTransition(transition.id);
     setTransitionContent(transition.id, transition.content, transition.name);
   });
-  // Connect all edges.And set their labels.
-  data.edges.forEach((edge) => {
-    const edgeID = connect(edge.fromId, edge.toId, edge.id);
-    setEdgeLabel(edgeID, edge.label);
-    addEdgesExportArray(edgeID, edge.fromId, edge.toId, edge.type,
-        edge.label);
+  // Connect all arcs. And set their labels.
+  data.arcs.forEach((importArc) => {
+    connect(importArc.fromId, importArc.toId, importArc.id);
+    setArcLabel(importArc.id, importArc.label);
+    addArcToExportArray(importArc.id, importArc.fromId, importArc.toId,
+        importArc.type,
+        importArc.label);
   } );
 }
 /**

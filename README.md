@@ -10,9 +10,14 @@ This editor is available to try at https://kit-bis.github.io/json-nets/. You can
 - Move: Click and drag an element to move it.
 - Pan: Click and drag the canvas.
 - Inspect: Click on an element to change its inscription or marking.
-- Step: Click on a transition to fire.
+- Play: Click on a transition to make it occur.
 
 Different JSON technologies can be used for inscriptions:
 - Places are inscribed with [JSON-Schema](https://json-schema.org/).
 - Arcs from places to transitions are inscribed with a [JSONPath-filter](https://github.com/dchester/jsonpath).
 - Transitions and arcs from transitions to places are inscribed with [Jsonnet](https://jsonnet.org/).
+
+
+## Known issues
+
+Email format is currently not supported for the JSON schema implementation.

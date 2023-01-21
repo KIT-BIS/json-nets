@@ -1,8 +1,7 @@
-import {v4 as uuidv4} from 'uuid';
-
 /**
- * Create a new Place object.
- * @param {String} name - name of the place
+ * Create a new place.
+ * @param {String} id ID of the place.
+ * @param {String} name Name of the place.
  */
 export function Place(id, name) {
   this.id = id; // id of the place
@@ -12,6 +11,5 @@ export function Place(id, name) {
     schema: {},
     data: [],
   };
-  console.log(this);
 };
 

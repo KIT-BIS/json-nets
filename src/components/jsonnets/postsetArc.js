@@ -1,7 +1,7 @@
 /** @typedef {import('./transition').Transition} Transition */
 /** @typedef {import('./place').Place} Place */
-import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
-import {validate} from '../util/validator.js';
+import {evaluate, variablifyDocuments} from '@/util/jsonnet.js';
+import {validate} from '@/util/validator.js';
 
 /**
  * Creates a new postset arc that can create a document in a place

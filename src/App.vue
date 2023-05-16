@@ -6,7 +6,10 @@ import ModeButton from './components/ModeButton.vue';
 import { useUiStateStore } from '@/stores/uiState';
 // TODO: proper typescript modularisation
 // @ts-ignore
-import { addPlace } from '@/components/jsonnets/net.js'
+import { addPlaceToExportArray, addTransitionToExportArray } from '@/util/exportNet';
+// TODO: proper typescript modularisation
+// @ts-ignore
+import { addPlace, addTransition } from '@/components/jsonnets/net.js'
 // TODO: proper typescript modularisation
 // @ts-ignore
 import { init as initCanvas, getStagePosition, setClickPosition } from '@/components/canvas/net.js'
@@ -54,7 +57,7 @@ onMounted(() => {
 })
 
 function onCanvasClick(event: MouseEvent) {
-  console.log(event);
+  console.log("hi:)");
   if (uiState.mode === uiState.MODE_ADD_PLACE) {
     const stagePosition = getStagePosition();
     const x = event.clientX - stagePosition.x;
@@ -63,14 +66,44 @@ function onCanvasClick(event: MouseEvent) {
     const place = addPlace();
     addPlaceToExportArray(x, y, place.id, place.name, place.content);
   } else if (uiState.mode === uiState.MODE_ADD_TRANSITION) {
-    //const stagePosition = getStagePosition();
-    //const x = event.clientX - stagePosition.x;
-    //const y = event.clientY - stagePosition.y;
-    //setClickPosition(x, y);
-    //const transition = addTransition();
-    //addTransitionToExportArray(x, y, transition.id, transition.name,
-    //  transition.content);
+    const stagePosition = getStagePosition();
+    const x = event.clientX - stagePosition.x;
+    const y = event.clientY - stagePosition.y;
+    setClickPosition(x, y);
+    const transition = addTransition();
+    addTransitionToExportArray(x, y, transition.id, transition.name,
+      transition.content);
   }
+}
+</script>
+<script lang="ts">
+export const MODE_NONE = 'MODE_NONE';
+export const MODE_ADD_PLACE = 'MODE_ADD_PLACE';
+export const MODE_ADD_TRANSITION = 'MODE_ADD_TRANSITION';
+export const MODE_REMOVE = 'MODE_REMOVE';
+export const MODE_MOVE = 'MODE_MOVE';
+export const MODE_PAN = 'MODE_PAN';
+export const MODE_CONNECT_START = 'MODE_CONNECT_START';
+export const MODE_CONNECT_FROM_PLACE = 'MODE_CONNECT_FROM_PLACE';
+export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION';
+export const MODE_INSPECT = 'MODE_INSPECT';
+export const MODE_OCCUR = 'MODE_OCCUR';
+
+export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
+export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
+export const INSPECTOR_MODE_PRESET_ARC = 'INSPECTOR_MODE_PRESET_ARC';
+export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
+
+export function getMode(){
+
+}
+
+export function setMode() {
+
+}
+
+export function updateInspector() {
+  
 }
 </script>
 

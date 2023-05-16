@@ -3,10 +3,10 @@ import {updateLines, setLastClickedTransition,
   getLastClickedPlace} from './net';
 import {getMode, setMode, updateInspector, MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE, MODE_REMOVE,
-  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_OCCUR} from '../ui/ui';
-import {connect, occur, removeTransition} from '../net/net';
+  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_OCCUR} from '@/App.vue';
+import {connect, occur, removeTransition} from '../jsonnets/net';
 import {removeTransitionFromExportArray,
-  addArcToExportArray} from '../util/exportNet';
+  addArcToExportArray} from '@/util/exportNet';
 
 /**
  * Creates a new visualization for a transition by extending

@@ -1,5 +1,5 @@
-import {combineArrays} from '../util/util';
-import {evaluate, variablifyDocuments} from '../util/jsonnet.js';
+import {combineArrays} from '@/util/util';
+import {evaluate, variablifyDocuments} from '@/util/jsonnet.js';
 
 /**
  * Creates a new Transition object.

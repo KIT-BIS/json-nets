@@ -1,6 +1,6 @@
 /** @typedef {import('./transition').Transition} Transition */
 /** @typedef {import('./place').Place} Place */
-import {query} from '../util/jsonPath';
+import {query} from '@/util/jsonPath';
 
 export const PRESET_ARC_TYPE_CONSUME = 'consume';
 export const PRESET_ARC_TYPE_READ = 'read';

@@ -1,8 +1,8 @@
 import Konva from 'konva';
 import {MODE_INSPECT, MODE_REMOVE, INSPECTOR_MODE_PRESET_ARC,
-  INSPECTOR_MODE_POSTSET_ARC, getMode, updateInspector} from '../ui/ui';
-import {disconnect, findArc} from '../net/net';
-import {removeArcFromExportArray} from '../util/exportNet';
+  INSPECTOR_MODE_POSTSET_ARC, getMode, updateInspector} from '@/App.vue';
+import {disconnect, findArc} from '../jsonnets/net';
+import {removeArcFromExportArray} from '@/util/exportNet';
 
 /**
  * Creates a new visualization of an arc

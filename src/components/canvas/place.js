@@ -1,12 +1,12 @@
 import Konva from 'konva';
 import {getMode, setMode, updateInspector, MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE,
-  MODE_INSPECT, INSPECTOR_MODE_PLACE, MODE_REMOVE} from '../ui/ui';
-import {connect, removePlace} from '../net/net';
+  MODE_INSPECT, INSPECTOR_MODE_PLACE, MODE_REMOVE} from '@/App.vue';
+import {connect, removePlace} from '../jsonnets/net';
 import {updateLines, setLastClickedPlace,
   getLastClickedTransition} from './net';
 import {addArcToExportArray,
-  removePlaceFromExportArray} from '../util/exportNet';
+  removePlaceFromExportArray} from '@/util/exportNet';
 
 /**
  * Creates a new visualization for a Place by extending

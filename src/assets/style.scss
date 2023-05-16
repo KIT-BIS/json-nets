@@ -1,0 +1,28 @@
+@charset "utf-8";
+@import "../../node_modules/bulma/bulma.sass";
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #f0f0f0;
+}
+
+#menu {
+  position: absolute;
+  left: 30px;
+  top: 30px;
+  padding: 5px;
+  background-color: white;
+  border-radius: 3px;
+}
+
+button,input {
+  margin-left: 15px;
+}
+.console {
+  background-color: #000;
+  color: #ff0000;
+  padding: 8px;
+  font-family: courier new;
+}

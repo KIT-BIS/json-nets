@@ -1,5 +1,5 @@
 import Konva from 'konva';
-import {getMode, setMode, updateInspector, MODE_CONNECT_START,
+import {MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE,
   MODE_INSPECT, INSPECTOR_MODE_PLACE, MODE_REMOVE} from '@/App.vue';
 import {connect, removePlace} from '../jsonnets/net';
@@ -7,6 +7,7 @@ import {updateLines, setLastClickedPlace,
   getLastClickedTransition} from './net';
 import {addArcToExportArray,
   removePlaceFromExportArray} from '@/util/exportNet';
+import { useUiStateStore } from '@/stores/uiState';
 
 /**
  * Creates a new visualization for a Place by extending
@@ -48,16 +49,17 @@ export function Place(x, y, {id, name}) {
   this.add(nameText);
 
   circle.on('click', () => {
-    if (getMode() === MODE_CONNECT_START) {
+    const currentMode = useUiStateStore().mode;
+    if (currentMode === MODE_CONNECT_START) {
       setLastClickedPlace(id);
-      setMode(MODE_CONNECT_FROM_PLACE);
-    } else if (getMode() === MODE_CONNECT_FROM_TRANSITION) {
+      useUiStateStore().setMode(MODE_CONNECT_FROM_PLACE);
+    } else if (currentMode === MODE_CONNECT_FROM_TRANSITION) {
       const arc = connect(getLastClickedTransition(), id);
       addArcToExportArray(arc.id, arc.transition.id, id, 'postset', arc.label);
-      setMode(MODE_CONNECT_START);
-    } else if (getMode() === MODE_INSPECT) {
-      updateInspector(INSPECTOR_MODE_PLACE, id);
-    } else if (getMode() === MODE_REMOVE) {
+      useUiStateStore().setMode(MODE_CONNECT_START);
+    } else if (currentMode === MODE_INSPECT) {
+      useUiStateStore().updateInspector(INSPECTOR_MODE_PLACE, id);
+    } else if (currentMode === MODE_REMOVE) {
       removePlace(id);
       removePlaceFromExportArray(id);
     }

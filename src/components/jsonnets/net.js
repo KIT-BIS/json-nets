@@ -21,15 +21,15 @@ let _transitions = [];
 let _places = [];
 let _arcs = [];
 
-///**
-// * Finds a place by given ID.
-// * @param {String} placeID The ID of the place to find.
-// * @return {Place} The found place.
-// */
-//export function findPlace(placeID) {
-//  return _places.find((place) => place.id === placeID);
-//};
-//
+/**
+ * Finds a place by given ID.
+ * @param {String} placeID The ID of the place to find.
+ * @return {Place} The found place.
+ */
+export function findPlace(placeID) {
+  return _places.find((place) => place.id === placeID);
+};
+
 /**
  * Creates a new place and adds it to the net.
  * If you don't pass an ID, a new one will be created.

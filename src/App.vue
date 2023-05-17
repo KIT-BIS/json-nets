@@ -1,7 +1,7 @@
 <script setup lang="ts">
 //import { RouterLink, RouterView } from 'vue-router'
 import { onMounted } from 'vue';
-import type Inspector from './components/Inspector.vue';
+import Inspector from './components/Inspector.vue';
 import ModeButton from './components/ModeButton.vue';
 import { useUiStateStore } from '@/stores/uiState';
 // TODO: proper typescript modularisation
@@ -29,43 +29,17 @@ const uiState = useUiStateStore();
 onMounted(() => {
   //TODO: some of this stuff can probably happen earlier
   initCanvas();
-  //_editor = monaco.editor.create(document.getElementById('editor'), {
-  //  // value: '',
-  //  language: 'json',
-  //  roundedSelection: true,
-  //  autoIndent: true,
-  //  automaticLayout: true,
-  //  theme: 'vs-dark',
-  //  features: {
-  //    toggleTabFocusMode: true,
-  //    linesOperations: false,
-  //  },
-  //  minimap: {
-  //    enabled: false,
-  //  },
-
-  //});
-  // NOTE: double out-commented probably not needed, was like this in pre-vue version
-  //// setTimeout(function() {
-  ////   _editor.updateOptions({
-  ////     lineNumbers: 'on',
-  ////   });
-  ////   _editor.getAction('editor.action.formatDocument').run();
-  //// }, 2000);
-  //_initalized = true;
-  //registerJsonnet();
 })
 
 function onCanvasClick(event: MouseEvent) {
-  console.log("hi:)");
-  if (uiState.mode === uiState.MODE_ADD_PLACE) {
+  if (uiState.mode === MODE_ADD_PLACE) {
     const stagePosition = getStagePosition();
     const x = event.clientX - stagePosition.x;
     const y = event.clientY - stagePosition.y;
     setClickPosition(x, y);
     const place = addPlace();
     addPlaceToExportArray(x, y, place.id, place.name, place.content);
-  } else if (uiState.mode === uiState.MODE_ADD_TRANSITION) {
+  } else if (uiState.mode === MODE_ADD_TRANSITION) {
     const stagePosition = getStagePosition();
     const x = event.clientX - stagePosition.x;
     const y = event.clientY - stagePosition.y;
@@ -93,33 +67,21 @@ export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
 export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
 export const INSPECTOR_MODE_PRESET_ARC = 'INSPECTOR_MODE_PRESET_ARC';
 export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
-
-export function getMode(){
-
-}
-
-export function setMode() {
-
-}
-
-export function updateInspector() {
-  
-}
 </script>
 
 <template>
   <div id="container" @click="onCanvasClick"></div>
   <div id="menu">
-    <ModeButton icon="fas fa-circle" :mode="uiState.MODE_ADD_PLACE" />
-    <ModeButton icon="fas fa-square" :mode="uiState.MODE_ADD_TRANSITION" />
-    <ModeButton icon="fas fa-arrow-right" :mode="uiState.MODE_CONNECT_START" />
+    <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
+    <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
+    <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
     <!--TODO: FROM_PLACE and FROM_TRANSITION also outlined-->
-    <ModeButton icon="fas fa-trash" :mode="uiState.MODE_REMOVE" />
-    <ModeButton icon="fas fa-mouse-pointer" :mode="uiState.MODE_MOVE" />
-    <ModeButton icon="fas fa-expand-arrows-alt" :mode="uiState.MODE_PAN" />
-    <ModeButton icon="fas fa-edit" :mode="uiState.MODE_INSPECT" />
-    <ModeButton icon="fas fa-play-circle" :mode="uiState.MODE_OCCUR" />
-    <ModeButton icon="fas fa-file-arrow-down" :mode="uiState.MODE_NONE" /><!--TODO exportNet(); -->
+    <ModeButton icon="fas fa-trash" :mode="MODE_REMOVE" />
+    <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
+    <ModeButton icon="fas fa-expand-arrows-alt" :mode="MODE_PAN" />
+    <ModeButton icon="fas fa-edit" :mode="MODE_INSPECT" />
+    <ModeButton icon="fas fa-play-circle" :mode="MODE_OCCUR" />
+    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_NONE" /><!--TODO exportNet(); -->
     <!--
     <input class="button is-primary is-outlined" type="file" name="resume" @change=${ (event) =>{
     uploadNet(event);

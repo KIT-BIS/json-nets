@@ -24,7 +24,6 @@ let _stage = null;
  * Initialize the vizualisation of the net
  */
 export function init() {
-  console.log("hello from konva")
   _stage = new Konva.Stage({
     container: 'container',
     width: _width,
@@ -33,6 +32,7 @@ export function init() {
   _layer = new Konva.Layer();
   _stage.add(_layer);
 }
+
 
 /**
  * Returns position of conva stage

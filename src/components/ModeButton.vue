@@ -19,17 +19,10 @@ export default defineComponent({
     },
     methods: {
         setMode() {
-            console.log("setting mode " + this.mode)
             this.uiState.setMode(this.mode);
-            //callback();
-            //event.stopPropagation()
         }
     }
 })
-//    @click=${ (event)  => {
-//        callback();
-//        event.stopPropagation();
-//      }}
 </script>
 
 <template>

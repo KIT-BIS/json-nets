@@ -1,13 +1,14 @@
 <script lang="ts">
 import { INSPECTOR_MODE_PLACE, INSPECTOR_MODE_TRANSITION, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_POSTSET_ARC } from '@/App.vue';
 import { useUiStateStore } from '@/stores/uiState';
-import * as monaco from 'monaco-editor';
 // TODO: proper modularisation
 // @ts-ignore
-import { findPlace, findTransition, findArc } from '@/components/jsonnets/net.js';
+import { findPlace, findTransition, findArc, setPlaceContent, setTransitionContent, setArcLabel } from '@/components/jsonnets/net.js';
 import { defineComponent } from 'vue';
+// TODO: proper modularisation
+//@ts-ignore
+import { updateArcLabelInExportArray, updateTransitionContentInExportArray, updatePlaceContentInExportArray } from '@/util/exportNet.js'
 // @ts-ignore
-import { registerJsonnet, changeLang } from '@/util/editor';
 
 export default defineComponent({
   setup() {
@@ -16,33 +17,6 @@ export default defineComponent({
     return { uiState, editor };
   },
   mounted() {
-    // TODO: proper monaco integration
-    // @ts-ignore
-    this.editor = monaco.editor.create(document.getElementById('editor'), {
-      // value: '',
-      language: 'json',
-      roundedSelection: true,
-      autoIndent: true,
-      automaticLayout: true,
-      theme: 'vs-dark',
-      features: {
-        toggleTabFocusMode: true,
-        linesOperations: false,
-      },
-      minimap: {
-        enabled: false,
-      },
-
-    });
-    //// NOTE: double out-commented probably not needed, was like this in pre-vue version
-    //// setTimeout(function() {
-    ////   _editor.updateOptions({
-    ////     lineNumbers: 'on',
-    ////   });
-    ////   _editor.getAction('editor.action.formatDocument').run();
-    //// }, 2000);
-    //_initalized = true;
-    registerJsonnet();
 
     this.uiState.$subscribe((mutation, state) => {
       // @ts-ignore
@@ -50,21 +24,17 @@ export default defineComponent({
         return;
       }
       if (state.inspectorMode === INSPECTOR_MODE_PLACE) {
-        //changeLang('json', _editor);
         const place = findPlace(state.lastSelectedID);
         this.uiState.setInspectorContent(JSON.stringify(place.content));
         this.uiState.setItemName(place.name);
       } else if (state.inspectorMode === INSPECTOR_MODE_TRANSITION) {
-        //changeLang('jsonnet', _editor);
         const transition = findTransition(state.lastSelectedID);
         this.uiState.setInspectorContent(String(transition.content));
         this.uiState.setItemName(transition.name);
       } else if (state.inspectorMode === INSPECTOR_MODE_PRESET_ARC) {
-        //changeLang('json', _editor);
         const arc = findArc(state.lastSelectedID);
         this.uiState.setInspectorContent(JSON.stringify(arc.label));
       } else if (state.inspectorMode === INSPECTOR_MODE_POSTSET_ARC) {
-        //changeLang('jsonnet', _editor);
         const arc = findArc(state.lastSelectedID);
         this.uiState.setInspectorContent(String(arc.label));
       }
@@ -83,52 +53,39 @@ export default defineComponent({
   },
   methods: {
     toggleModal(toggle: boolean) {
+      this.uiState.setNameError("");
+      this.uiState.setValidationError("");
       if (toggle) {
         this.uiState.setShowInspector(true);
-        // Format current content
-        //_editor.getAction('editor.action.formatDocument').run();
       } else {
         this.uiState.setShowInspector(false);
-        const console = document.getElementById('console');
-        if (console) {
-          console.remove();
-        }
       }
-      //update();
     },
     saveChanges() {
-//          const content = _editor.getValue();
-//          // _editorLanguage = 'json';
-//          if (_inspectorMode === INSPECTOR_MODE_PLACE) {
-//          const name = document.getElementById('itemName').value;
-//          setPlaceContent(_lastSelectedID, JSON.parse(content), name);
-//          updatePlaceContentInExportArray(_lastSelectedID,
-//          JSON.parse(content), name);
-//          } else if (_inspectorMode === INSPECTOR_MODE_TRANSITION) {
-//          const name = document.getElementById('itemName').value;
-//          setTransitionContent(_lastSelectedID, content, name);
-//          updateTransitionContentInExportArray(_lastSelectedID, content, name);
-//          } else if (_inspectorMode === INSPECTOR_MODE_PRESET_ARC) {
-//          setArcLabel(_lastSelectedID, JSON.parse(content));
-//          updateArcLabelInExportArray(_lastSelectedID, JSON.parse(content));
-//          } else if (_inspectorMode === INSPECTOR_MODE_POSTSET_ARC) {
-//          setArcLabel(_lastSelectedID, content);
-//          updateArcLabelInExportArray(_lastSelectedID, content);
-//          }
+      this.uiState.setNameError("");
+      this.uiState.setValidationError("");
 
+      if (this.uiState.inspectorMode === INSPECTOR_MODE_PLACE) {
+        // @ts-ignore
+        setPlaceContent(this.uiState.lastSelectedID, JSON.parse(this.uiState.inspectorContent), this.uiState.itemName);
+        updatePlaceContentInExportArray(this.uiState.lastSelectedID,
+          this.uiState.inspectorContent, this.uiState.itemName);
+      } else if (this.uiState.inspectorMode === INSPECTOR_MODE_TRANSITION) {
+        setTransitionContent(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
+        updateTransitionContentInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
+      } else if (this.uiState.inspectorMode === INSPECTOR_MODE_PRESET_ARC) {
+        // @ts-ignore
+        setArcLabel(this.uiState.lastSelectedID, JSON.parse(this.uiState.inspectorContent));
+        // @ts-ignore
+        updateArcLabelInExportArray(this.uiState.lastSelectedID, JSON.parse(this.uiState.inspectorContent));
+      } else if (this.uiState.inspectorMode === INSPECTOR_MODE_POSTSET_ARC) {
+        setArcLabel(this.uiState.lastSelectedID, this.uiState.inspectorContent);
+        updateArcLabelInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent);
+      }
+      if (this.uiState.nameError === "" && this.uiState.validationError === "") {
+        this.toggleModal(false);
+      }
     }
-///**
-// * Changes the current value of the editor and applies the json schema
-// * if node is of type place
-// * @param {Object} model The model to update the editor with.
-// */
-//function updateEditor(model) {
-//  _editor.setValue(model.inspectorContent);
-//  if (_inspectorMode === INSPECTOR_MODE_PLACE ||
-//    _inspectorMode === INSPECTOR_MODE_TRANSITION) {
-//    document.getElementById('itemName').value = model.itemName;
-//  }
-//}
   }
 })
 
@@ -152,24 +109,29 @@ export function updateInspector(entityType: string) {
         <button class="delete" aria-label="close" @click="toggleModal(false)"></button>
       </header>
       <section id="modal-card-body" class="modal-card-body">
-        <div id="itemNameContainer" class="field is-horizontal" :class="{ 'is-hidden': !showName }">
-          <div class="field-label is-normal">
-            <label class="label">Name</label>
+        <div id="itemNameContainer" class="field" :class="{ 'is-hidden': !showName }">
+          <label class="label">Name</label>
+          <div class="control">
+            <input id="itemName" class="input" type="text" placeholder="Name of the element" v-model="uiState.itemName" >
           </div>
-          <div class="field-body">
-            <div class="field">
-              <p class="control">
-                <input id="itemName" class="input" type="text" placeholder="Name of the element">
-              </p>
-              <p id="itemNameReturn" class="help is-danger">
-              </p>
-            </div>
-          </div>
+          <p class="help is-danger">{{ uiState.nameError }}
+          </p>
         </div>
-        <div id="editor" style="min-height: 350px"></div>
+        <div class="field" >
+          <label class="label">Inscription</label>
+          <div class="control">
+            <textarea id="editor" class="editor textarea has-fixed-size" v-model="uiState.inspectorContent"></textarea>
+          </div>
+          <p class="help is-danger">{{ uiState.validationError }}
+          </p>
+        </div>
+        <!--<div>
+          <textarea id="console" class="console textarea has-fixed-size" v-model="uiState.validationError"  readonly>
+          </textarea>
+        </div>-->
       </section>
-      <footer class="modal-card-foot">      
-        <button class="button is-success" @click="saveChanges"> Save changes</button>
+      <footer class="modal-card-foot">
+        <button class="button is-success" @click="saveChanges">Save changes</button>
         <button class="button" @click="toggleModal(false)">Cancel</button>
       </footer>
     </div>

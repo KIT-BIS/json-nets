@@ -1,0 +1,37 @@
+{
+    "schema": {
+        "type": "object",
+        "properties": {
+            "studentId": {
+                "type": "string"
+            },
+            "level": {
+                "type": "string",
+                "enum": [
+                    "Bachelor",
+                    "Master"
+                ]
+            },
+            "studyProgram": {
+                "type": "string"
+            },
+            "email": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "studentId",
+            "level",
+            "studyProgram",
+            "email"
+        ]
+    },
+    "data": [
+        {
+            "studentId": "student-1",
+            "level": "Master",
+            "studyProgram": "Information Systems",
+            "email": "student@uni.edu"
+        }
+    ]
+}

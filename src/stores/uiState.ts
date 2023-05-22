@@ -13,7 +13,9 @@ export const useUiStateStore = defineStore('uiState', {
       inspectorMode: '' as string | undefined,
       lastSelectedID: '' as string | undefined,
       inspectorContent: '' as string | undefined,
-      itemName: '' as string | undefined
+      itemName: '' as string | undefined,
+      nameError: '' as string | undefined,
+      validationError: '' as string | undefined
       // todo: probably not the smartest way, as these are actually constants
 //      MODE_NONE: 'MODE_NONE' as string,
 //      MODE_ADD_PLACE: 'MODE_ADD_PLACE' as string,
@@ -62,6 +64,12 @@ export const useUiStateStore = defineStore('uiState', {
     },
     setItemName(name: string) {
       this.itemName = name;
+    },
+    setNameError(error: string) {
+      this.nameError = error;
+    },
+    setValidationError(error: string) {
+      this.validationError = error;
     }
   }
 });

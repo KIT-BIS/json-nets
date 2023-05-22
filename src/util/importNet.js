@@ -1,8 +1,8 @@
-import {importData} from '../examples/recognition/net';
+import {importData} from '@/examples/recognition/net';
 import {addPlace, addTransition, connect, setPlaceContent,
   setArcLabel,
-  setTransitionContent} from '../net/net';
-import {setClickPosition} from '../visualization/net';
+  setTransitionContent} from '@/components/jsonnets/net';
+import {setClickPosition} from '@/components/canvas/net';
 import {setPlaces, setTransisions, addArcToExportArray} from './exportNet';
 /**
  * Imports a net into the frame.

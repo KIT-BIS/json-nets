@@ -17,12 +17,18 @@ body {
   border-radius: 3px;
 }
 
-button,input {
-  margin-left: 15px;
-}
-.console {
+
+
+.editor {
   background-color: #000;
-  color: #ff0000;
-  padding: 8px;
   font-family: courier new;
+  padding: 8px;
+  color: white;
 }
+
+//.console {
+//  background-color: #000;
+//  color: #ff0000;
+//  padding: 8px;
+//  font-family: courier new;
+//}

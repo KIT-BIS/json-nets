@@ -4,17 +4,46 @@ import { useUiStateStore } from '@/stores/uiState';
 // TODO: proper modularisation
 // @ts-ignore
 import { findPlace, findTransition, findArc, setPlaceContent, setTransitionContent, setArcLabel } from '@/components/jsonnets/net.js';
-import { defineComponent } from 'vue';
 // TODO: proper modularisation
 //@ts-ignore
 import { updateArcLabelInExportArray, updateTransitionContentInExportArray, updatePlaceContentInExportArray } from '@/util/exportNet.js'
 // @ts-ignore
 
+import { defineComponent, ref, shallowRef } from 'vue'
+import { Codemirror } from 'vue-codemirror'
+import { json } from '@codemirror/lang-json'
+import { oneDark } from '@codemirror/theme-one-dark'
+
 export default defineComponent({
   setup() {
+    const code = ref(`true`)
+    const extensions = [json(), oneDark]
     const uiState = useUiStateStore();
-    let editor = null;
-    return { uiState, editor };
+
+    // Codemirror EditorView instance ref
+    const view = shallowRef()
+    // @ts-ignore
+    const handleReady = (payload) => {
+      view.value = payload.view
+      console.log(view);
+    }
+
+    // Status is available at all times via Codemirror EditorView
+    //const getCodemirrorStates = () => {
+    //  const state = view.value.state
+    //  
+    //  const ranges = state.selection.ranges
+    //  const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
+    //  const cursor = ranges[0].anchor
+    //  const length = state.doc.length
+    //  const lines = state.doc.lines
+    //  // more state info ...
+    //  // return ...
+    //}
+    return { uiState, code, extensions, handleReady, log: console.log };
+  },
+  components: {
+    Codemirror
   },
   mounted() {
 
@@ -43,12 +72,12 @@ export default defineComponent({
   },
   computed: {
     showName(): boolean {
-        if (this.uiState.inspectorMode === INSPECTOR_MODE_PLACE ||
-          this.uiState.inspectorMode === INSPECTOR_MODE_TRANSITION) {
-            return true;
-        } else {
-          return false;
-        }
+      if (this.uiState.inspectorMode === INSPECTOR_MODE_PLACE ||
+        this.uiState.inspectorMode === INSPECTOR_MODE_TRANSITION) {
+        return true;
+      } else {
+        return false;
+      }
     }
   },
   methods: {
@@ -112,28 +141,44 @@ export function updateInspector(entityType: string) {
         <div id="itemNameContainer" class="field" :class="{ 'is-hidden': !showName }">
           <label class="label">Name</label>
           <div class="control">
-            <input id="itemName" class="input" type="text" placeholder="Name of the element" v-model="uiState.itemName" >
+            <input id="itemName" class="input" type="text" placeholder="Name of the element" v-model="uiState.itemName">
           </div>
           <p class="help is-danger">{{ uiState.nameError }}
           </p>
         </div>
-        <div class="field" >
+        <div class="field">
           <label class="label">Inscription</label>
           <div class="control">
+            <!--
             <textarea id="editor" class="editor textarea has-fixed-size" v-model="uiState.inspectorContent"></textarea>
+            -->
+            <codemirror
+              v-model="uiState.inspectorContent"
+              placeholder="Code goes here..."
+              :style="{ height: '400px' }"
+              :autofocus="true"
+              :indent-with-tab="true"
+              :tab-size="2"
+              :extensions="extensions"
+              @ready="handleReady"
+              @change="log('change', $event)"
+              @focus="log('focus', $event)"
+              @blur="log('blur', $event)"
+            />
+
           </div>
           <p class="help is-danger">{{ uiState.validationError }}
           </p>
         </div>
-        <!--<div>
+          <!--<div>
           <textarea id="console" class="console textarea has-fixed-size" v-model="uiState.validationError"  readonly>
           </textarea>
         </div>-->
-      </section>
-      <footer class="modal-card-foot">
-        <button class="button is-success" @click="saveChanges">Save changes</button>
-        <button class="button" @click="toggleModal(false)">Cancel</button>
-      </footer>
+        </section>
+        <footer class="modal-card-foot">
+          <button class="button is-success" @click="saveChanges">Save changes</button>
+          <button class="button" @click="toggleModal(false)">Cancel</button>
+        </footer>
+      </div>
     </div>
-  </div>
 </template>

@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import * as beautify from  'js-beautify';
 // TODO: proper modularisation
 // @ts-ignore
 import { toggleDraggable, setPanable } from '@/components/canvas/net.js';
@@ -60,7 +61,7 @@ export const useUiStateStore = defineStore('uiState', {
 
     },
     setInspectorContent(content: string) {
-      this.inspectorContent = content;
+      this.inspectorContent = beautify.js_beautify(content);
     },
     setItemName(name: string) {
       this.itemName = name;

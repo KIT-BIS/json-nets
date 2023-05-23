@@ -18,21 +18,11 @@ import { addPlace, addTransition } from '@/components/jsonnets/net.js'
 // TODO: proper typescript modularisation
 // @ts-ignore
 import { init as initCanvas, getStagePosition, setClickPosition } from '@/components/canvas/net.js'
-//export default {
-//  setup() {
-// I actually like the syntax with export and setup() better,
+
+// I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore();
-//    return { uiState } 
-//  },
-//  methods: {
-//    setMode() {
-//
-//    }
-//  }
-//}
 onMounted(() => {
-  //TODO: some of this stuff can probably happen earlier
   initCanvas();
 })
 
@@ -87,7 +77,7 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
     <ModeButton icon="fas fa-expand-arrows-alt" :mode="MODE_PAN" />
     <ModeButton icon="fas fa-edit" :mode="MODE_INSPECT" />
     <ModeButton icon="fas fa-play-circle" :mode="MODE_OCCUR" />
-    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_UPLOAD" :callback="exportNet"/><!--TODO exportNet(); -->
+    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_UPLOAD" :callback="exportNet"/>
     <input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="resume" @change="(event) =>{
     uploadNet(event);
     }">

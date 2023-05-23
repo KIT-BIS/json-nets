@@ -15,10 +15,6 @@ export default defineComponent({
     },
     computed: {
         notActive() {
-            // TODO: I want upload button to never be active - this is a hacky solution
-            //if (this.callback !== undefined) {
-            //    return true;
-            //}
             return this.mode !== this.uiState.mode;
         }
     },

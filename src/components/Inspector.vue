@@ -20,27 +20,7 @@ export default defineComponent({
     const extensions = [json(), oneDark]
     const uiState = useUiStateStore();
 
-    // Codemirror EditorView instance ref
-    const view = shallowRef()
-    // @ts-ignore
-    const handleReady = (payload) => {
-      view.value = payload.view
-      console.log(view);
-    }
-
-    // Status is available at all times via Codemirror EditorView
-    //const getCodemirrorStates = () => {
-    //  const state = view.value.state
-    //  
-    //  const ranges = state.selection.ranges
-    //  const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
-    //  const cursor = ranges[0].anchor
-    //  const length = state.doc.length
-    //  const lines = state.doc.lines
-    //  // more state info ...
-    //  // return ...
-    //}
-    return { uiState, code, extensions, handleReady, log: console.log };
+    return { uiState, code, extensions, log: console.log };
   },
   components: {
     Codemirror
@@ -160,12 +140,7 @@ export function updateInspector(entityType: string) {
               :indent-with-tab="true"
               :tab-size="2"
               :extensions="extensions"
-              @ready="handleReady"
-              @change="log('change', $event)"
-              @focus="log('focus', $event)"
-              @blur="log('blur', $event)"
             />
-
           </div>
           <p class="help is-danger">{{ uiState.validationError }}
           </p>

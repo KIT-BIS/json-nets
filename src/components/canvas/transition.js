@@ -1,12 +1,13 @@
 import Konva from 'konva';
 import {updateLines, setLastClickedTransition,
   getLastClickedPlace} from './net';
-import {getMode, setMode, updateInspector, MODE_CONNECT_START,
+import {MODE_CONNECT_START,
   MODE_CONNECT_FROM_TRANSITION, MODE_CONNECT_FROM_PLACE, MODE_REMOVE,
-  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_OCCUR} from '../ui/ui';
-import {connect, occur, removeTransition} from '../net/net';
+  MODE_INSPECT, INSPECTOR_MODE_TRANSITION, MODE_OCCUR} from '@/App.vue';
+import {connect, occur, removeTransition} from '../jsonnets/net';
 import {removeTransitionFromExportArray,
-  addArcToExportArray} from '../util/exportNet';
+  addArcToExportArray} from '@/util/exportNet';
+import { useUiStateStore } from '@/stores/uiState';
 
 /**
  * Creates a new visualization for a transition by extending
@@ -43,19 +44,22 @@ export function Transition(x, y, {id, name}) {
   this.add(nameText);
 
   this.on('click', () => {
-    if (getMode() === MODE_CONNECT_START) {
+    const currentMode = useUiStateStore().mode;
+    if (currentMode === MODE_CONNECT_START) {
       setLastClickedTransition(id);
-      setMode(MODE_CONNECT_FROM_TRANSITION);
-    } else if (getMode() === MODE_CONNECT_FROM_PLACE) {
+      useUiStateStore().setMode(MODE_CONNECT_FROM_TRANSITION)
+      //setMode(MODE_CONNECT_FROM_TRANSITION);
+    } else if (currentMode === MODE_CONNECT_FROM_PLACE) {
       const arc = connect(getLastClickedPlace(), id);
       addArcToExportArray(arc.id, arc.place.id, id, 'preset', arc.label);
-      setMode(MODE_CONNECT_START);
-    } else if (getMode() === MODE_REMOVE) {
+      useUiStateStore().setMode(MODE_CONNECT_START)
+      //setMode(MODE_CONNECT_START);
+    } else if (currentMode === MODE_REMOVE) {
       removeTransition(id);
       removeTransitionFromExportArray(id);
-    } else if (getMode() === MODE_INSPECT) {
-      updateInspector(INSPECTOR_MODE_TRANSITION, id);
-    } else if (getMode() === MODE_OCCUR) {
+    } else if (currentMode === MODE_INSPECT) {
+      useUiStateStore().updateInspector(INSPECTOR_MODE_TRANSITION, id);
+    } else if (currentMode === MODE_OCCUR) {
       occur(id);
     }
   });

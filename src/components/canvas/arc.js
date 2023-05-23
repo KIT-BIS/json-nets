@@ -1,8 +1,9 @@
 import Konva from 'konva';
 import {MODE_INSPECT, MODE_REMOVE, INSPECTOR_MODE_PRESET_ARC,
-  INSPECTOR_MODE_POSTSET_ARC, getMode, updateInspector} from '../ui/ui';
-import {disconnect, findArc} from '../net/net';
-import {removeArcFromExportArray} from '../util/exportNet';
+  INSPECTOR_MODE_POSTSET_ARC } from '@/App.vue';
+import {disconnect, findArc} from '../jsonnets/net';
+import {removeArcFromExportArray} from '@/util/exportNet';
+import { useUiStateStore } from '@/stores/uiState';
 
 /**
  * Creates a new visualization of an arc
@@ -26,14 +27,16 @@ export function Arc(points, fromID, toID, id) {
   this.toID = toID;
 
   this.on('click', () => {
-    if (getMode() === MODE_INSPECT) {
+    const currentMode = useUiStateStore().mode;
+    if (currentMode === MODE_INSPECT) {
       const arc = findArc(id);
       if (arc.type === 'preset') {
-        updateInspector(INSPECTOR_MODE_PRESET_ARC, id);
+
+        useUiStateStore().updateInspector(INSPECTOR_MODE_PRESET_ARC, id);
       } else if (arc.type === 'postset') {
-        updateInspector(INSPECTOR_MODE_POSTSET_ARC, id);
+        useUiStateStore().updateInspector(INSPECTOR_MODE_POSTSET_ARC, id);
       }
-    } else if (getMode() === MODE_REMOVE) {
+    } else if (currentMode === MODE_REMOVE) {
       disconnect(id);
       removeArcFromExportArray(id);
     }

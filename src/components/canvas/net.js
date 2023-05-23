@@ -5,7 +5,7 @@ import {EVENT_ADD_PLACE, EVENT_ADD_TRANSITION,
   EVENT_REMOVE_PLACE,
   EVENT_REMOVE_TRANSITION,
   EVENT_DISCONNECT,
-  EVENT_CHANGE_TRANSITION_CONTENT} from '../net/net';
+  EVENT_CHANGE_TRANSITION_CONTENT} from '../jsonnets/net';
 import {Transition} from './transition';
 import {Place} from './place';
 import {Arc} from './arc';
@@ -32,6 +32,7 @@ export function init() {
   _layer = new Konva.Layer();
   _stage.add(_layer);
 }
+
 
 /**
  * Returns position of conva stage

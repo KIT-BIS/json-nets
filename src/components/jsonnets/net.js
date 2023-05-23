@@ -3,9 +3,10 @@ import {v4 as uuidv4} from 'uuid';
 import {Transition} from './transition';
 import {PresetArc} from './presetArc';
 import {PostsetArc} from './postsetArc';
-import {receiveNotification} from '../visualization/net';
-import {validate} from '../util/validator';
-import {showConsole} from '../ui/console';
+import {receiveNotification} from '../canvas/net';
+import {validate} from '@/util/validator';
+import { useUiStateStore } from '@/stores/uiState';
+
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
 export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
@@ -77,6 +78,7 @@ export function setPlaceContent(placeID, content, placeName) {
   const schema = content.schema;
   const data = content.data;
   let allValid = true;
+  const errors = { nameError: "", validationError: "" };
   const docErrors = [];
   data.forEach((doc) => {
     const {isValid, errors} = validate(doc, schema);
@@ -88,22 +90,24 @@ export function setPlaceContent(placeID, content, placeName) {
     }
   });
 
-  const itemNameReturn = document.getElementById('itemNameReturn');
-  const itemName = document.getElementById('itemName');
+  //const itemNameReturn = document.getElementById('itemNameReturn');
+  //const itemName = document.getElementById('itemName');
   if (!validatePlaceName(placeName, placeID)) {
-    itemNameReturn.classList.remove('is-hidden');
-    itemName.classList.add('is-danger');
-    itemNameReturn.innerHTML = 'Name already exists and must be unique.';
+    //itemNameReturn.classList.remove('is-hidden');
+    //itemName.classList.add('is-danger');
+    errors.nameError = 'Name already exists and must be unique.';
     allValid = false;
-  } else {
-    itemNameReturn.classList.add('is-hidden');
-    itemName.classList.remove('is-danger');
-  }
+  } 
+  //else {
+  //  itemNameReturn.classList.add('is-hidden');
+  //  itemName.classList.remove('is-danger');
+  //}
 
   if (docErrors.length > 0 ) {
     console.log('Schema validation errors.');
     console.log(docErrors);
-    showConsole(docErrors);
+    errors.validationError = "Validation error: " + JSON.stringify(docErrors);
+    //showConsole(namedocErrors);
   }
 
   if (allValid) {
@@ -111,6 +115,10 @@ export function setPlaceContent(placeID, content, placeName) {
     place.name = placeName;
     notify(EVENT_CHANGE_PLACE_CONTENT,
         {placeID, num: place.content.data.length, name: placeName});
+  } else {
+    //TODO: vue and jsonnets implementation should be untangled ... make ui subscribe to an event
+    useUiStateStore().setValidationError(errors.validationError); 
+    useUiStateStore().setNameError(errors.nameError); 
   }
 };
 

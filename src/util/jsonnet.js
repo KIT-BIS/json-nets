@@ -1,4 +1,5 @@
-require('./libraries/jsonnet.js');
+//require('./libraries/jsonnet.js');
+import './libraries/jsonnet'
 
 /**
  * Evaluate a document with Jsonnet.

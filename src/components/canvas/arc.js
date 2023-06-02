@@ -11,7 +11,7 @@ import { useUiStateStore } from '@/stores/uiState';
  * @param {Array} points
  * @param {String} fromID
  * @param {String} toID
- * @param {STring} id
+ * @param {String} id
  */
 export function Arc(points, fromID, toID, id) {
   Konva.Arrow.call(this, {

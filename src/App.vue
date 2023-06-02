@@ -2,6 +2,7 @@
 //import { RouterLink, RouterView } from 'vue-router'
 import { onMounted } from 'vue';
 import Inspector from './components/Inspector.vue';
+import InboundArcModal from './components/InboundArcModal.vue';
 import ModeButton from './components/ModeButton.vue';
 import { useUiStateStore } from '@/stores/uiState';
 // TODO: proper typescript modularisation
@@ -86,5 +87,6 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
     </button>
   </div>
   <Inspector />
+  <InboundArcModal v-if="uiState.showPresetModal"/>
   <!-- <RouterView /> -->
 </template>

@@ -1,4 +1,4 @@
-import './assets/style.scss'
+import './assets/style.scss';
 /* import the fontawesome core */
 import { library } from "@fortawesome/fontawesome-svg-core";
 /* import font awesome icon component */
@@ -12,7 +12,10 @@ import {
   faExpandArrowsAlt,
   faEdit,
   faPlayCircle,
-  faFileArrowDown
+  faFileArrowDown,
+  faInfoCircle,
+  faPlusCircle,
+  faMinusCircle
 } from "@fortawesome/free-solid-svg-icons";
 
 
@@ -22,7 +25,7 @@ import { createPinia } from 'pinia'
 /* add icons to the library */
 library.add(faCircle,faSquare,faArrowRight,
     faTrash,faMousePointer,faExpandArrowsAlt,
-    faEdit,faPlayCircle,faFileArrowDown);
+    faEdit,faPlayCircle,faFileArrowDown,faInfoCircle,faPlusCircle,faMinusCircle);
 
 
 import App from './App.vue'

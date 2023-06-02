@@ -39,7 +39,8 @@ export default defineComponent({
 </span>
 </button>
 </template>
-<style scoped>
+
+<style lang="scss" scoped>
 button,input {
   margin-left: 15px;
 }

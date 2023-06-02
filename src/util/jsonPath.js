@@ -1,4 +1,4 @@
-import jsonpath from 'jsonpath';
+import { JSONPath } from 'jsonpath-plus'
 
 /**
  * Filters a list of documents based on a JSONPath-predicate.
@@ -7,6 +7,21 @@ import jsonpath from 'jsonpath';
  * @return {*}
  */
 export function query(documents, expression) {
-  const jsonPathString = '$..[?(' + expression + ')]';
-  return jsonpath.query(documents, jsonPathString);
+  let jsonPathString = '';
+  
+  if (expression === '') {
+    jsonPathString = '$.*'
+  } else {
+    jsonPathString = '$.[' + expression + ']';
+
+  }  
+
+  return JSONPath({
+        //@ts-ignore
+          path: jsonPathString,
+          //@ts-ignore
+          json: documents
+
+        })
+  //return jsonpath.query(documents, jsonPathString);
 }

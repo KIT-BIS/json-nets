@@ -359,7 +359,7 @@
             "type": "preset",
             "label": {
                 "type": "delete",
-                "filter": "@.accepted == true"
+                "filter": "?(@.accepted == true)"
             }
         },
         {
@@ -369,7 +369,7 @@
             "type": "preset",
             "label": {
                 "type": "delete",
-                "filter": "@.accepted == false"
+                "filter": "?(@.accepted == false)"
             }
         },
         {

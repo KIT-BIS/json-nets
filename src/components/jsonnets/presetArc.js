@@ -19,7 +19,7 @@ export function PresetArc(place, transition, id) {
   this.transition = transition;
   this.label = {
     type: PRESET_ARC_TYPE_CONSUME,
-    filter: '',
+    filter: ''
   };
 }
 
@@ -32,6 +32,7 @@ export function PresetArc(place, transition, id) {
  */
 PresetArc.prototype.applyFilter = function() {
   const documents = this.place.content.data;
+  //TODO: jsonPath query functin was updated, this if condition may not be necessary any more
   if (this.label.filter === '') {
     return documents;
   } else {

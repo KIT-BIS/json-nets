@@ -56,96 +56,102 @@
                         </p>
                         <!--          <p class="help is-danger">{{ uiState.nameError }} </p>-->
                     </div>
-                        <div class="notification is-info">
-                            <div v-if="expanded == false" >
-                                <span @click="expand" class="icon" style="cursor: pointer"><font-awesome-icon icon="fas fa-plus-circle"/></span>
-                                <span>Expand templates for JSONPath expressions</span>
-                            </div>
-                            <div v-if="expanded == true">
-                                <span @click="expand" class="icon" style="cursor: pointer"><font-awesome-icon icon="fas fa-minus-circle"/></span>
-                                <span>Minimize templates for JSONPath expressions</span>
-                                <div>
-                                    <table class="table">
-                                        <tbody>
-                                            <tr>
-                                                <th>Example JSON document</th>
-                                                <th>Filter command</th>
-                                                <th style="width: 35%">
-                                                    JSONPath expression
-    <div class="dropdown is-hoverable is-right">
-                                    <div class="dropdown-trigger">
-                                    <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle"/></span>
-                            </div>
-                            <div class="dropdown-menu">
-                                <div class="dropdown-content">
-                                    <div class="dropdown-item">
-                                            <p>Click on expressions to insert in input field.</p>
-                                    </div>
-                                </div>
+                    <div class="notification is-info">
+                        <div v-if="expanded == false" >
+                            <div class="block">
+                            <span @click="expand" class="icon" style="cursor: pointer"><font-awesome-icon icon="fas fa-plus-circle"/></span>
+                            <span>Expand templates for JSONPath expressions</span>
                             </div>
                         </div>
-                                                </th>
-                                            </tr>
-                                            <tr>
-                                                <td rowspan="9"><code> [
-                                                    {<br>
-                                                    "name": "Alice",<br>
-                                                    "age": 23,<br>
-                                                    "studentID": 2567<br>
-                                                    },<br>
-                                                    { <br>
-                                                    "name": "Marco", <br>
-                                                    "age": 17, <br>
-                                                    "studentID": 2544 <br>
-                                                    }, <br>
-                                                    { <br>
-                                                    "age": 21, <br>
-                                                    "studentID": 2063 <br>
-                                                    }
-                                                    ]</code></td>
-                                                <td>Return all objects (apply no filter)</td>
-                                                <!--<td><button class="button is-white" @click="uiState.setJsonPathQuery('$.*')"><code>$.*</code></button></td>-->
-                                                <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$.*')">$.*</code></td> -->
-                                                <td><span class="is-clickable" @click="uiState.setJsonPathQuery('')"><i>(leave empty)</i></span></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter the first object</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('0')">$.[0]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter the first two objects</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('0,1')">$.[0,1]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter the last object</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('-1:')">$.[-1:]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter until the third object</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery(':2')">$.[:2]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter all objects with a specific property</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.name)')">$.[?(@.name)]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter all objects where the property is equal to a specific value</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.name == \'Alice\')')">$.[?(@.name=="Alice")]</code></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Filter all objects where a property is greater than a specific value</td>
-                                                <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.age > 18)')">$.[?(@.age >
-                                                        18)]</code></td>
-                                            </tr>
-                                            <!-- <tr> -->
-                                                <!-- <td>Filter for all objects the values of a property</td> -->
-                                                <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$..name')">$..name</code></td> -->
-                                            <!-- </tr> -->
+                        <div v-if="expanded == true">
+                            <div class="block">
+                            <span @click="expand" class="icon" style="cursor: pointer"><font-awesome-icon icon="fas fa-minus-circle"/></span>
+                            <span>Minimize templates for JSONPath expressions</span>
+                            </div>
+                            <div class="block">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Example JSON document</th>
+                                            <th>Filter command</th>
+                                            <th style="width: 35%">
+                                                    JSONPath expression
+                                                <div class="dropdown is-hoverable is-right">
+                                                        <div class="dropdown-trigger">
+                                                        <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle"/></span>
+                                                </div>
+                                                <div class="dropdown-menu">
+                                                    <div class="dropdown-content">
+                                                        <div class="dropdown-item">
+                                                                <p>Click on expressions to insert in input field.</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td rowspan="9"><code> [
+                                                {<br>
+                                                "name": "Alice",<br>
+                                                "age": 23,<br>
+                                                "studentID": 2567<br>
+                                                },<br>
+                                                { <br>
+                                                "name": "Marco", <br>
+                                                "age": 17, <br>
+                                                "studentID": 2544 <br>
+                                                }, <br>
+                                                { <br>
+                                                "age": 21, <br>
+                                                "studentID": 2063 <br>
+                                                }
+                                                ]</code></td>
+                                            <td>Return all objects (apply no filter)</td>
+                                            <!--<td><button class="button is-white" @click="uiState.setJsonPathQuery('$.*')"><code>$.*</code></button></td>-->
+                                            <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$.*')">$.*</code></td> -->
+                                            <td><span class="is-clickable" @click="uiState.setJsonPathQuery('')"><i>(leave empty)</i></span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter the first object</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('0')">$.[0]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter the first two objects</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('0,1')">$.[0,1]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter the last object</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('-1:')">$.[-1:]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter until the third object</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery(':2')">$.[:2]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter all objects with a specific property</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.name)')">$.[?(@.name)]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter all objects where the property is equal to a specific value</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.name == \'Alice\')')">$.[?(@.name=="Alice")]</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filter all objects where a property is greater than a specific value</td>
+                                            <td><code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.age > 18)')">$.[?(@.age >
+                                                    18)]</code></td>
+                                        </tr>
+                                        <!-- <tr> -->
+                                            <!-- <td>Filter for all objects the values of a property</td> -->
+                                            <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$..name')">$..name</code></td> -->
+                                        <!-- </tr> -->
                                         </tbody>
                                     </table>
-                                </div>
                             </div>
                         </div>
+                    </div>
                         <!--
                     <div v-if="bindSource == 'default'">
                         <h2> Input tokens</h2>

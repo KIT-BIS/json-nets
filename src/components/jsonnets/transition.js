@@ -113,18 +113,19 @@ Transition.prototype.evaluate = function(documents) {
   let jsonnetString = variablifyDocuments(documents);
   jsonnetString += this.content;
 
+
   // Convert string to Boolean
   const evaluateDocuments = evaluate(jsonnetString);
-  const result = JSON.parse(evaluateDocuments.data);
+  // Todo: give better evaluation feedback
   if (!evaluateDocuments.success) {
     // throw new Error(evaluateDocuments.data);
-    console.log('Could not evaluate transition inscription.');
-    console.log('Jsonnet string is:');
-    console.log(jsonnetString);
-    return false;
-  } else if (result !== true) {
     return false;
   } else {
-    return result;
+    const result = JSON.parse(evaluateDocuments.data);
+    if (result !== true) {
+      return false;
+    } else {
+      return result;
+    }
   }
 };

@@ -356,9 +356,7 @@
 
 /* Styling for the accordion, inspired by: Katherine Kato (https://codepen.io/kathykato/pen/MoZJom) */
 
-.accordion .accordion-item {
-    border-bottom: 1px solid lightgray;
-}
+
 
 .accordion button {
     position: relative;
@@ -431,41 +429,9 @@
     will-change: opacity, max-height;
 }
 
-.accordion .accordion-content {
-    opacity: 0;
-    max-height: 0;
-    overflow: hidden;
-    transition: opacity 100ms linear, max-height 100ms linear;
-    will-change: opacity, max-height;
-}
 
-.accordion .accordion-content .answer {
-    font-family: monospace;
-    background-color: #282C34;
-    color: #ABB2BF;
-    padding: 5px 10px;
-}
-
-.accordion .accordion-content p {
-    font-weight: 300;
-    margin: 10px 0;
-}
 
 
 /* Result styling */
 
-.green-background {
-    background-color: green;
-    color: white;
-    text-align: center;
-    flex-grow: 1;
-    margin-left: 15px;
-}
 
-.red-background {
-    background-color: #e20505;
-    color: white;
-    text-align: center;
-    flex-grow: 1;
-    margin-left: 15px;
-}

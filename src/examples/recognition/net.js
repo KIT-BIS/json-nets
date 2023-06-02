@@ -359,7 +359,7 @@ export const importData = {
             "type": "preset",
             "label": {
                 "type": "consume",
-                "filter": "@.accepted == true"
+                "filter": "?(@.accepted == true)"
             }
         },
         {
@@ -369,7 +369,7 @@ export const importData = {
             "type": "preset",
             "label": {
                 "type": "consume",
-                "filter": "@.accepted == false"
+                "filter": "?(@.accepted == false)"
             }
         },
         {

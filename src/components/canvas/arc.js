@@ -34,6 +34,7 @@ export function Arc(points, fromID, toID, id) {
 
         useUiStateStore().updateInspector(INSPECTOR_MODE_PRESET_ARC, id);
       } else if (arc.type === 'postset') {
+        console.log('clicked on postset arc')
         useUiStateStore().updateInspector(INSPECTOR_MODE_POSTSET_ARC, id);
       }
     } else if (currentMode === MODE_REMOVE) {

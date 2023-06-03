@@ -3,6 +3,7 @@
 import { onMounted } from 'vue';
 import Inspector from './components/Inspector.vue';
 import InboundArcModal from './components/InboundArcModal.vue';
+import OutboundArcModal from './components/OutboundArcModal.vue';
 //@ts-ignore
 import TransitionModal from './components/TransitionModal.vue';
 import ModeButton from './components/ModeButton.vue';
@@ -90,6 +91,7 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
   </div>
   <Inspector />
   <InboundArcModal v-if="uiState.showPresetModal"/>
+  <OutboundArcModal v-if="uiState.showPostsetModal" />
   <TransitionModal v-if="uiState.showTransitionModal" />
   <!-- <RouterView /> -->
 </template>

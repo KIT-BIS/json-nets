@@ -3,17 +3,11 @@
         <div class="modal-background"></div>
         <div class="modal-card" style="width: 80%">
             <header class="modal-card-head">
-            <p class="modal-card-title">Transition inscription</p>
+            <p class="modal-card-title">Outbound arc inscription</p>
             <button class="delete" aria-label="close" @click="close"></button>
             </header>
 
             <section class="modal-card-body">
-            <div class="field">
-                <label class="label">Name of the transition</label>
-                <div class="control">
-                    <input class="input" type="text" v-model="uiState.itemName"  />
-                </div>
-            </div>
             <label class="label">Assignment selection
 
                 <div class="dropdown is-hoverable is-right">
@@ -116,8 +110,7 @@
                             <div class="dropdown-menu">
                                 <div class="dropdown-content">
                                     <div class="dropdown-item">
-                                        <p>Note that jsonnet expressions in transition inscriptions must evaluate to true or false! For more
-                                            information about Jsonnet, please visit <a href="https://jsonnet.org/"
+                                        <p>For more information about Jsonnet, please visit <a href="https://jsonnet.org/"
                                                 target="_blank">https://jsonnet.org/</a>
                                         </p>
 
@@ -203,9 +196,9 @@
                                                 <div class="level-left">
                                                 <p class="level-item"> Inscription evaluates to:</p>
                                                 </div>
-                                                <p class="level-item" :class="{ 'green-background': item.evaluation === 'true', 'red-background': item.evaluation === 'false' }"
-                                                    style="margin-left: 15px">
-                                                    {{ item.evaluation }} </p>
+                                                <p class="level-item answer" 
+                                                    style="margin-left: 15px" v-html="insertLineBreak(item.evaluation)">
+                                                    </p>
                                             </div>
                                         </div>
                                     </div>
@@ -215,7 +208,7 @@
                     </div>
 
                     <div class="block">
-                    <Codemirror v-model="uiState.inspectorContent" placeholder="Define transition inscription in Jsonnet"
+                    <Codemirror v-model="uiState.inspectorContent" placeholder="Define arc inscription in Jsonnet"
                         :style="{ height: '200px' }" :autofocus="true" :indent-with-tab="true" :tab-size="2"
                         :extensions="extensions" @ready="handleReady" @update="handleCodeChange" />
                     </div>
@@ -223,13 +216,35 @@
                 <div class="block">
                     <div class="level">
                         <div class="level-left">
-                        <p class="level-item">Inscription evaluates to: </p>
+                        <p class="level-item" style="width: 200px">Evaluation of connected transition inscription: </p>
                         </div>
                         <p class="level-item"
                             :class="{ 'green-background': uiState.transitionInscriptionValid, 'red-background': !uiState.transitionInscriptionValid }">
                             {{ uiState.inscriptionEvaluationResult }}</p>
                     </div>
                 </div>
+                <div class="block">
+                    <div class="level">
+                        <div class="level-left">
+                        <p class="level-item" style="width: 200px">Evaluation of arc inscription: </p>
+                        </div>
+                        <p v-html="insertLineBreak(uiState.outboundEvaluationResult)" class="level-item"
+                            :class="{ 'answer': uiState.outboundEvaluation, 'red-background': !uiState.outboundEvaluation }">
+                            </p>
+                    </div>
+                </div>
+                <div class="block">
+                    <div class="level">
+                        <div class="level-left">
+                        <p class="level-item" style="width: 200px">Evaluation of token against connected place schema: </p>
+                        </div>
+                        <p v-html="insertLineBreak(uiState.outboundSchemaEvaluationResult)" class="level-item"
+                            :class="{ 'green-background': uiState.outboundSchemaEvaluation, 'red-background': !uiState.outboundSchemaEvaluation }">
+                            </p>
+                    </div>
+                </div>
+
+
                 </section>
 
                 <footer class="modal-card-foot">
@@ -248,13 +263,13 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { evaluate } from '../util/jsonnet.js'
 import { useUiStateStore } from '@/stores/uiState'
 //@ts-ignore
-import { updateTransitionContentInExportArray } from '@/util/exportNet.js'
+import { updateArcLabelInExportArray } from '@/util/exportNet.js'
 //@ts-ignore
-import {  setTransitionContent } from '@/components/jsonnets/net.js';
+import {  setArcLabel } from '@/components/jsonnets/net.js';
 
 
 export default {
-    name: 'TransitionModal',
+    name: 'OutboundArcModal',
     //props: ['modelValue', 'bindInput', 'bindJsonnet'],
     components: {
         Codemirror
@@ -320,33 +335,40 @@ export default {
             inscriptionEvaluated: false,
             accordionItems: [
                 {
-                    question: "Always evaluate to true (no check functionality)",
-                    answer: "true",
-                    evaluation: "true",
+                    question: "Pass token unchanged",
+                    answer: "request",
+                    evaluation: '{ "id": 1,\n "lecture": "Process Modeling" }',
                     isExpanded: false
                 },
                 {
-                    question: "Comparison of two attributes of different tokens",
-                    answer: "local check = student.id == request.id;\ncheck",
-                    evaluation: "true",
+                    question: "Add attributes to existing token",
+                    answer: "request\n{email: student.email}",
+                    evaluation: '{ "email": "alice@uni.edu",\n "id": 1,\n "lecture": "Process Modeling"}',
                     isExpanded: false
                 },
                 {
-                    question: "Comparison of an attribute with a value",
-                    answer: "local check = student.name == 'Tom';\ncheck",
-                    evaluation: "false",
+                    question: "Create new token",
+                    answer: '{email: student.email,\n message: "The request for " + request.lecture + " was accepted."}',
+                    evaluation: '{ "email": "alice@uni.edu",\n "message": "The request for Process Modeling was accepted."}',
                     isExpanded: false
                 },
                 {
-                    question: "Compare whether value is greater or smaller",
-                    answer: "local check = student.age > '18';\ncheck",
-                    evaluation: "true",
+                    question: "Definition of local variable and calculation",
+                    answer: 'local tuitionPerSemester = 400;\n local calculateTotalTuition(tuitionPerSemester, numberSemester) = tuitionPerSemester * numberSemester;\n student\n{totalTuition: calculateTotalTuition(tuitionPerSemester, student.semester)}',
+                    evaluation: '{"age": 25,\n"email": "alice@uni.edu",\n "id": 1,\n "name": "Alice",\n "semester": 4,\n "totalTuition": 1600}',
                     isExpanded: false
                 },
                 {
-                    question: "Two conditions have to be true",
-                    answer: "local checkLecture = request.lecture == 'Process Modeling';\nlocal checkStudent = request.id == student.id;\ncheckLecture && checkStudent",
-                    evaluation: "true",
+                    question: "Check whether an array contains a specific element",
+                    answer: 'request\n{accepted: std.member(student.lecturesNotYetDone, request.lecture)}',
+                    evaluation: '{"accepted": true,\n"id": 1,\n"lecture": "Process Modeling",\n"serviceFee": 15}',
+                    // \n Info: The function std.member(array, element) returns true if the array contains the element, otherwise false.',
+                    isExpanded: false
+                },
+                {
+                    question: "Calculation with self",
+                    answer: 'local tuitionPerSemester = 400;\n{semesterTuition: tuitionPerSemester,\ntotalCostThisSemester: self.semesterTuition + request.serviceFee}',
+                    evaluation: '{"semesterTuition": 400,\n "totalCostThisSemester": 415}',
                     isExpanded: false
                 },
             ]
@@ -381,6 +403,8 @@ export default {
         },
         handleCodeChange() {
             this.uiState.updateTransitionEvaluation();
+            this.uiState.updateOutboundEvaluation();
+            this.uiState.updateOutboundSchemaEvaluation();
         },
         adjustInput() {
             //this.bindInput.forEach(obj => {
@@ -492,14 +516,14 @@ export default {
             //    return
             //}
             //this.$emit('saveChanges', this.code, this.result)
-            setTransitionContent(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
-            updateTransitionContentInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
+            setArcLabel(this.uiState.lastSelectedID, this.uiState.inspectorContent);
+            updateArcLabelInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent);
 
             this.close()
 
         },
         close() {
-            this.uiState.setShowTransitionModal(false);
+            this.uiState.showPostsetModal = false;
         }
 
     }
@@ -512,28 +536,30 @@ export default {
 }
 
 .green-background {
+    font-family: monospace;
     background-color: green;
     color: white;
     text-align: center;
     flex-grow: 1;
     margin-left: 15px;
+    padding: 5px 10px;
 }
 
 .red-background {
+    font-family: monospace;
     background-color: #e20505;
     color: white;
     text-align: center;
     flex-grow: 1;
     margin-left: 15px;
+    padding: 5px 10px;
 }
 
-
-
-
-.accordion .accordion-content .answer {
+.answer {
     font-family: monospace;
     background-color: #282C34;
     color: #ABB2BF;
+    margin-left: 15px;
     padding: 5px 10px;
 }
 

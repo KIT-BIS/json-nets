@@ -5,9 +5,9 @@ import * as beautify from  'js-beautify';
 // TODO: proper modularisation
 // @ts-ignore
 import { toggleDraggable, setPanable } from '@/components/canvas/net.js';
-import { INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_TRANSITION, MODE_MOVE, MODE_NONE, MODE_PAN } from '@/App.vue';
+import { INSPECTOR_MODE_PLACE, INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_TRANSITION, MODE_MOVE, MODE_NONE, MODE_PAN } from '@/App.vue';
 // @ts-ignore
-import {  findArc, findTransition } from '@/components/jsonnets/net.js';
+import {  findArc, findTransition, findPlace } from '@/components/jsonnets/net.js';
 // @ts-ignore
 import { query } from '@/util/jsonPath.js';
 // @ts-ignore
@@ -46,6 +46,8 @@ export const useUiStateStore = defineStore('uiState', {
       outboundEvaluationResult: '' as string | undefined,
       outboundSchemaEvaluation: false as boolean,
       outboundSchemaEvaluationResult: '' as string | undefined,
+
+      showPlaceModal: false as boolean,
     }
   },
   actions: {
@@ -126,6 +128,13 @@ export const useUiStateStore = defineStore('uiState', {
         this.inscriptionEvaluationResult = "false";
         this.setInspectorContent(String(transition.content));
         this.setItemName(transition.name);
+
+      } else if (mode === INSPECTOR_MODE_PLACE) {
+
+        const place = findPlace(this.lastSelectedID);
+        this.showPlaceModal = true;
+        this.setItemName(place.name)
+        this.setInspectorContent(JSON.stringify(place.content.schema, null,2))
 
       } else {
         this.showInspector = true;

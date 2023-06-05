@@ -3,10 +3,10 @@ import { INSPECTOR_MODE_PLACE, INSPECTOR_MODE_TRANSITION, INSPECTOR_MODE_PRESET_
 import { useUiStateStore } from '@/stores/uiState';
 // TODO: proper modularisation
 // @ts-ignore
-import { findPlace, findTransition, findArc, setPlaceContent, setTransitionContent, setArcLabel } from '@/components/jsonnets/net.js';
+import { findPlace, validatePlaceName, setPlaceContent } from '@/components/jsonnets/net.js';
 // TODO: proper modularisation
 //@ts-ignore
-import { updateArcLabelInExportArray, updateTransitionContentInExportArray, updatePlaceContentInExportArray } from '@/util/exportNet.js'
+import { updatePlaceContentInExportArray } from '@/util/exportNet.js'
 // @ts-ignore
 
 import { defineComponent, ref, shallowRef } from 'vue'
@@ -275,6 +275,27 @@ export default defineComponent({
     },
     handleTokenChange() {
       this.uiState.updateCurrentToken();
+    },
+    insertLineBreak(text) { //TODO Ist wahrscheinlich auch hier und bei Outbound -> Component oder util (genauso bei expanded und toggleAccordion)
+        return text.replace(/\n/g, "<br>");
+    },
+    saveChanges() {
+      this.uiState.nameError = "";
+      let nameValid = validatePlaceName(this.uiState.itemName, this.uiState.lastSelectedID)
+      if (!nameValid) {
+        this.uiState.nameError = "Place name must be unique."
+      } else {
+        const placeContent = {
+          schema: {},
+          data: []
+        };
+        placeContent.schema = JSON.parse(this.uiState.generatedSchemaString);
+        placeContent.data = this.uiState.placeTokens;
+        setPlaceContent(this.uiState.lastSelectedID, placeContent, this.uiState.itemName);
+        updatePlaceContentInExportArray(this.uiState.lastSelectedID,
+          this.uiState.inspectorContent, this.uiState.itemName);
+        this.close();
+      }
     }
   },
   provide() {
@@ -301,6 +322,9 @@ export default defineComponent({
             <div class="control">
                 <input class="input" type="text" v-model="uiState.itemName"  />
             </div>
+          <p class="help is-danger">{{ uiState.nameError }}
+          </p>
+
         </div>
         <label class="label">
                         Structure of tokens (JSON Schema) 
@@ -358,6 +382,8 @@ export default defineComponent({
               </div>
 
             </label>
+
+          </div>
             <div class="block">
             <button @click="uiState.addToken()" class="array-list-add button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold" type="button"> + </button>
             </div>
@@ -370,12 +396,21 @@ export default defineComponent({
             <button class="delete is-small" @click.stop="uiState.deleteToken(index)"></button>
             </span>
             </div>
-            <Codemirror v-model="uiState.tokenString" placeholder="Output" :autofocus="true"
+            <div class="block">
+            <Codemirror v-model="uiState.tokenString" placeholder="Select token to edit content." :autofocus="true"
                     :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" @update="handleTokenChange" />
 
+            </div>
 
-
-          </div>
+            <div class="block">
+                    <div class="level">
+                        <div class="level-left">
+                        <p class="level-item">Result of schema validation: </p>
+                        </div>
+                        <p v-html="uiState.placeTokenValidationResult" class="level-item"
+                            :class="{ 'green-background': uiState.placeTokenValidation, 'red-background': !uiState.placeTokenValidation }"></p>
+                    </div>
+            </div>
           <!-- <div class="field">
           <label class="label">
             JSON forms data from form:
@@ -414,7 +449,7 @@ export default defineComponent({
         </section>
 
         <footer class="modal-card-foot">
-          <button class="button is-success" @click="">Save changes</button>
+          <button class="button is-success" @click="saveChanges">Save changes</button>
           <button class="button" @click="close()">Cancel</button>
         </footer>
       </div>
@@ -507,7 +542,21 @@ export default defineComponent({
   font-weight: 400;
   line-height: 1.5;
 }
+.green-background {
+    background-color: green;
+    color: white;
+    text-align: center;
+    flex-grow: 1;
+    margin-left: 15px;
+}
 
+.red-background {
+    background-color: #e20505;
+    color: white;
+    text-align: center;
+    flex-grow: 1;
+    margin-left: 15px;
+}
 /* #app { */
 /* font-family: Avenir, Helvetica, Arial, sans-serif; */
 /* -webkit-font-smoothing: antialiased; */

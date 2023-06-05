@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import {mock} from 'mock-json-schema';
 import {toRaw} from 'vue'
 // @ts-ignore
 import * as beautify from  'js-beautify';
@@ -14,6 +15,9 @@ import { query } from '@/util/jsonPath.js';
 import { variablifyDocuments, evaluate } from '@/util/jsonnet.js';
 // @ts-ignore
 import {validate} from '@/util/validator.js';
+// @ts-ignore
+import {transferSchemaToJsonFormsData, transferJsonFormsDataToSchema} from '@/util/jsonForms.js';
+import { threadId } from 'worker_threads';
 
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
@@ -48,6 +52,14 @@ export const useUiStateStore = defineStore('uiState', {
       outboundSchemaEvaluationResult: '' as string | undefined,
 
       showPlaceModal: false as boolean,
+      originalSchema: '' as string | undefined,
+      formsData: {},
+      formsDataString: '' as string | undefined,
+      formsDataFromOriginal: '' as string | undefined,
+      generatedSchemaString: '' as string | undefined,
+      placeTokens: [] as Array<Object> | undefined,
+      tokenString: '' as string | undefined,
+      selectedIndex: -1
     }
   },
   actions: {
@@ -134,12 +146,45 @@ export const useUiStateStore = defineStore('uiState', {
         const place = findPlace(this.lastSelectedID);
         this.showPlaceModal = true;
         this.setItemName(place.name)
-        this.setInspectorContent(JSON.stringify(place.content.schema, null,2))
+        this.originalSchema = JSON.stringify(place.content.schema, null,2);
+        this.formsData = transferSchemaToJsonFormsData(this.originalSchema);
+        // this.formsDataString = JSON.stringify(this.formsData, null, 2);
+        this.formsDataFromOriginal = JSON.stringify(this.formsData, null, 2);
+        this.placeTokens = place.content.data;
+        this.tokenString = '';
+        this.selectedIndex = -1;
 
       } else {
         this.showInspector = true;
       }
 
+    },
+    updateJsonSchema() {
+      this.generatedSchemaString = JSON.stringify(transferJsonFormsDataToSchema(this.formsDataString), null, 2)
+    },
+    selectToken(index) {
+      this.selectedIndex = index;
+      this.tokenString = JSON.stringify(this.placeTokens[index], null, 2);
+    },
+    addToken() {
+      let newDoc = mock(JSON.parse(this.generatedSchemaString))
+      this.placeTokens.push(newDoc);
+    },
+    deleteToken(index) {
+      this.placeTokens.splice(index,1);
+      this.selectedIndex = -1;
+      this.tokenString = '';
+    },
+    updateCurrentToken() {
+      try {
+        let newDoc = JSON.parse(this.tokenString);
+        if (newDoc) {
+          this.placeTokens[this.selectedIndex] = newDoc;
+        } 
+      } catch(e) {
+        
+      }
+      
     },
     addDocumentToTempAssignment(name: string, doc: object, index: number) {
       //@ts-ignore

@@ -21,10 +21,8 @@ import {
   vanillaRenderers,
 } from "@jsonforms/vue-vanilla";
 
-// mergeStyles combines all classes from both styles definitions into one
 
 const testStyle = { 
-  // control: { label: "mylabel" },
   arrayList: { 
     addButton: "button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold",
     label: "label level-item",
@@ -48,7 +46,6 @@ const testStyle = {
 const myStyles = mergeStyles(defaultStyles, testStyle); 
 const renderers = [
   ...vanillaRenderers,
-  // here you can add custom renderers
 ];
 
 
@@ -58,21 +55,10 @@ const schema = {
     properties: { 
       type: "array",
       items: { "$ref": "#/$defs/field"}
-//      items: {
-//        type: "object",
-//        properties: {
-//          name: {
-//             type: "string"
-//          },
-//          type: { "$ref": "#/$defs/type" },
-//          objectChildren: { "$ref": "#/$defs/objectChildren" }
-//        }
-//      }
     }
   },
 
   "$defs": {
-    // "testDef": { "$ref": "#/properties/objectChildren"}
     "field": {
       type: "object",
       properties: {
@@ -93,23 +79,6 @@ const schema = {
     },
   }
 };
-
-//const uischema = {
-//  type: "Categorization",
-//  elements: [
-//    {
-//      type: "Category",
-//      label: "Test Category",
-//      elements: [
-//        { 
-//          type: "Control",
-//          scope: "#/$defs/objectChildren",
-//        }
-//      ]
-//    }
-//  ]
-//};
-
 
 const nameAndTypeElements = {
   type: "HorizontalLayout",
@@ -133,39 +102,9 @@ const propertiesInArray = {
       type: "VerticalLayout",
       elements: [
         nameAndTypeElements,
-//        {
-//          type: "Control",
-//          scope: "#/properties/properties",
-//          options: {
-//            detail: {
-//              type: "VerticalLayout",
-//              elements: [
-//                nameAndTypeElements
-//              ]
-//            } 
-//          },
-//          rule: {
-//            effect: "SHOW",
-//            condition: {
-//              scope: "#/properties/items",
-//              schema: {
-//                const: "object"
-//              }
-//            }
-//          }
-//        },
       ]
     }
   },
-//  rule: {
-//    effect: "SHOW",
-//    condition: {
-//      scope: "#/properties/type",
-//      schema: {
-//        const: "object"
-//      }
-//    }
-//  }
 }
 
 const items = {
@@ -280,17 +219,18 @@ export default defineComponent({
 
     const code1 = ref('')
     const code2 = ref('')
+    const code3 = ref('')
     const extensions = [json(), oneDark]
     const view = shallowRef()
     const handleReady = (payload) => {
         view.value = payload.view
-        //view.value.state.readOnly.of(true);
     }
 
     console.log(myStyles);
     return { 
       code1,
       code2,
+      code3,
       extensions,
       handleReady,
       uiState
@@ -301,102 +241,15 @@ export default defineComponent({
     JsonForms, Codemirror
   },
   mounted() {
-//    this.uiState.inspectorContent = JSON.stringify({
-//  "properties": {
-//    "test": {
-//      "type": "array",
-//      "properties": {},
-//      "items": {
-//        "type": "boolean"
-//      }
-//    }
-//  },
-//  "type": "object"
-//}, null, 2
-//    )
-    const newData = JSON.parse(this.uiState.inspectorContent);
-
-    console.log("mounted, transfering content to uiforms")
-    //TODO: proceed from here, some logic is not quite right ... consider cleaning this whole mess up
-    function process(key,value) {
-        if (value.items){
-          console.log("found items")
-          console.log(value)
-          value.items = value.items.type;
-          if (value.items.properties) {
-            console.log("found object proerties in array")
-            console.log(value.name)
-            value.properties = value.items.properties;
-          }
-       }
-
-        if (value.properties) {
-          let newProps = [];
-          let keys = Object.keys(value.properties)
-          for (let i = 0; i < keys.length; i++) {
-            let newProp = value.properties[keys[i]];
-            newProp.name = keys[i];
-            //newProp.type = value.properties[keys[i]].type;
-            newProps.push(newProp);
-          }
-          value.properties = newProps;
-
-          //value.key = newProps;
-        }
-    }
-
-    function traverse(o,func) {
-        for (var i in o) {
-            func.apply(this,[i,o[i]]);  
-            if (o[i] !== null && typeof(o[i])=="object") {
-                //going one step down in the object tree!!
-                traverse(o[i],func);
-            }
-        }
-    }
-
-
-    traverse(newData,process);
-    
-    if (newData.properties) {
-    let newProps = [];
-    let keys = Object.keys(newData.properties)
-    for (let i = 0; i < keys.length; i++) {
-      // let newProp = {};
-
-      let newProp = newData.properties[keys[i]];
-      newProp.name = keys[i];
-      // newProp.type = newData.properties[keys[i]].type;
-      newProps.push(newProp);
-    }
-    newData.properties = newProps;
-
-    }
-
-
-    console.log(newData);
-    this.data = newData;
-
-
-
+    // const newData = transferSchemaToUiFormsData(this.uiState.inspectorContent);
+    //this.data = newData;
   },
   data() {
     return {
       // freeze renderers for performance gains
       renderers: Object.freeze(renderers),
-      dataString: '',
-      data: {
-//  "properties": [
-//    {
-//      "type": "array",
-//      "properties": [],
-//      "items": "boolean",
-//      "name": "test"
-//    }
-//  ],
-//  "type": "object"
-//
-},
+      // dataString: '',
+      // data: {},
       schema,
       uischema,
     };
@@ -405,120 +258,24 @@ export default defineComponent({
     close() {
       this.uiState.showPlaceModal = false;
     },
-    handleCodeChange() {
-      const newData = JSON.parse(this.uiState.inspectorContent);
-
-      function process(key,value) {
-          if (value.properties) {
-            let newProps = [];
-            let keys = Object.keys(value.properties)
-            for (let i = 0; i < keys.length; i++) {
-              let newProp = value.properties[keys[i]];
-              newProp.name = keys[i];
-              //newProp.type = value.properties[keys[i]].type;
-              newProps.push(newProp);
-            }
-            value.properties = newProps;
-
-            //value.key = newProps;
-          }
-          if (value.items){
-            value.items = value.items.type;
-         }
-      }
-
-      function traverse(o,func) {
-          for (var i in o) {
-              func.apply(this,[i,o[i]]);  
-              if (o[i] !== null && typeof(o[i])=="object") {
-                  //going one step down in the object tree!!
-                  traverse(o[i],func);
-              }
-          }
-      }
-
-
-      traverse(newData,process);
-
-      let newProps = [];
-      let keys = Object.keys(newData.properties)
-      for (let i = 0; i < keys.length; i++) {
-        // let newProp = {};
-
-        let newProp = newData.properties[keys[i]];
-        newProp.name = keys[i];
-        // newProp.type = newData.properties[keys[i]].type;
-        newProps.push(newProp);
-      }
-      newData.properties = newProps;
-
-
-      console.log(newData);
-      this.data = newData;
-
-    },
     onChange(event: JsonFormsChangeEvent) {
-      this.data = event.data;
-      // from https://stackoverflow.com/questions/722668/traverse-all-the-nodes-of-a-json-object-tree-with-javascript
-      //called with every property and its value
-      function process(key,value) {
-          console.log(key + " : "+value);
-          if (value.properties) {
-            console.log("found props")
-            let newProps = {}
-            for (let i = 0; i < value.properties.length; i++) {
-              if (value.properties[i].name) {
-                newProps[value.properties[i].name] = value.properties[i];
-                delete newProps[value.properties[i].name].name;
-              }
-              console.log(value.properties[i])
-            }
-            console.log(newProps);
-            value.properties = newProps;
-            //value.key = newProps;
-          }
-          if (value.type === "array" && value.items){
-            console.log("found an array")
-            if (value.items === "object" && value.properties) {
-              value.items = { type: value.items, properties: value.properties };
-              delete value.properties;
-            } else {
-              value.items = { type: value.items };
-            }
-          }
-      }
-
-      function traverse(o,func) {
-          for (var i in o) {
-              func.apply(this,[i,o[i]]);  
-              if (o[i] !== null && typeof(o[i])=="object") {
-                  //going one step down in the object tree!!
-                  traverse(o[i],func);
-              }
-          }
-      }
-
-      //that's all... no magic, no bloated framework
-      let processedData = JSON.parse(JSON.stringify(this.data));
-      traverse(processedData,process);
-      if (processedData.properties) {
-        let newProps = {}
-        for (let i = 0; i < processedData.properties.length; i++) {
-          if (processedData.properties[i].name) {
-            newProps[processedData.properties[i].name] = processedData.properties[i];
-            delete newProps[processedData.properties[i].name].name;
-          }
-          console.log(processedData.properties[i])
-        }
-        processedData.properties = newProps;
-        processedData.type = "object";
-
-      }
-
-
-      //this.uiState.inspectorContent = JSON.stringify(processedData, null, 2)
-      this.dataString = JSON.stringify(this.data, null, 2)
+      console.log("form changed")
+      // this.data = event.data;
+      this.uiState.formsData = event.data;
+      this.uiState.formsDataString = JSON.stringify(this.uiState.formsData, null, 2)
+      this.uiState.updateJsonSchema();
+      // this.uiState.updateJsonSchema(this.uiState.formsDataString);
     },
+    shorten(string) {
+        if (string.length <= 25) {
+            return string
+        } else {
+            return string.slice(0, 22) + "...";
+        }
+    },
+    handleTokenChange() {
+      this.uiState.updateCurrentToken();
+    }
   },
   provide() {
     return {
@@ -567,7 +324,7 @@ export default defineComponent({
           <div class="columns is-vcentered">
               <div class="column is-5">
           <div class="property-box">
-            <json-forms :uischema="uischema" :data="data" :renderers="renderers" :schema="schema" @change="onChange" />
+            <json-forms :uischema="uischema" :data="uiState.formsData" :renderers="renderers" :schema="schema" @change="onChange" />
           </div>
 
               </div>
@@ -575,14 +332,85 @@ export default defineComponent({
               <p style="width: 5%; align-self: center; text-align: center" class="arrow"> &#10093; </p>
               </div>
               <div class="column is-5">
-                <Codemirror :disabled="true" v-model="uiState.inspectorContent" placeholder="Output" :style="{ height: '600px' }" :autofocus="true"
+                <Codemirror :disabled="true" v-model="uiState.generatedSchemaString" placeholder="Output"  :autofocus="true"
                     :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" />
  
               </div>
           </div>
-                 <Codemirror :disabled="true" v-model="dataString" placeholder="Output" :style="{ height: '600px' }" :autofocus="true"
-                    :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" />
+          <div class="field">
+            <label class="label">
+              Tokens (JSON)
+              <div class="dropdown is-hoverable">
+                  <div class="dropdown-trigger">
+                      <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle"/></span>
+                  </div>
+                  <div class="dropdown-menu">
+                      <div class="dropdown-content">
+                          <div class="dropdown-item">
+                            <p>For more information about JSON, please visit 
+                                  <a href="https://www.json.org/json-en.html"
+                                      target="_blank">https://www.json.org/json-en.html</a>
+                              </p>
 
+                          </div>
+                      </div>
+                  </div>
+              </div>
+
+            </label>
+            <div class="block">
+            <button @click="uiState.addToken()" class="array-list-add button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold" type="button"> + </button>
+            </div>
+            <div class="tags block">
+            <!-- {{ JSON.stringify(place.documents, null, 2) }} -->
+            <span 
+              @click="uiState.selectToken(index)"
+                v-for="(doc, index) in uiState.placeTokens" :data-tooltip="JSON.stringify(doc, null, 2)" class="tag has-tooltip-bottom" :class="{ 'is-light': !(uiState.selectedIndex === index), 'is-primary': (uiState.selectedIndex === index) }">
+            {{ shorten(JSON.stringify(doc, null, 2)) }}
+            <button class="delete is-small" @click.stop="uiState.deleteToken(index)"></button>
+            </span>
+            </div>
+            <Codemirror v-model="uiState.tokenString" placeholder="Output" :autofocus="true"
+                    :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" @update="handleTokenChange" />
+
+
+
+          </div>
+          <!-- <div class="field">
+          <label class="label">
+            JSON forms data from form:
+          </label>
+          <div class="control">
+                 <Codemirror :disabled="true" v-model="uiState.formsDataString" placeholder="Output" :style="{ height: '600px' }" :autofocus="true"
+                    :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" />
+          </div>
+          </div>
+
+          <div class="columns is-vcentered">
+            <div class="column">
+            <div class="field">
+            <label class="label">
+              Original loaded schema:
+            </label>
+            <div class="control">
+                   <Codemirror :disabled="true" v-model="uiState.originalSchema" placeholder="Output" :style="{ height: '600px' }" :autofocus="true"
+                      :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" />
+            </div>
+            </div>
+            </div>
+            <div class="column">
+            <div class="field">
+            <label class="label">
+              JSON forms data from loaded schema:
+            </label>
+            <div class="control">
+                   <Codemirror :disabled="true" v-model="uiState.formsDataFromOriginal" placeholder="Output" :style="{ height: '600px' }" :autofocus="true"
+                      :indent-with-tab="true" :tab-size="2" :extensions="extensions" @ready="" />
+            </div>
+            </div>
+            </div>
+          </div>
+ -->
         </section>
 
         <footer class="modal-card-foot">

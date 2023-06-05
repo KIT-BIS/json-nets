@@ -115,11 +115,12 @@ export function setPlaceContent(placeID, content, placeName) {
     place.name = placeName;
     notify(EVENT_CHANGE_PLACE_CONTENT,
         {placeID, num: place.content.data.length, name: placeName});
-  } else {
-    //TODO: vue and jsonnets implementation should be untangled ... make ui subscribe to an event
-    useUiStateStore().setValidationError(errors.validationError); 
-    useUiStateStore().setNameError(errors.nameError); 
-  }
+  } 
+ // else {
+ //   //TODO: vue and jsonnets implementation should be untangled ... make ui subscribe to an event
+ //   useUiStateStore().setValidationError(errors.validationError); 
+ //   useUiStateStore().setNameError(errors.nameError); 
+ // }
 };
 
 /**
@@ -314,7 +315,7 @@ export function notify(event, payload) {
  * @param {String} id - ID of the place
  * @return {Boolean}
  */
-function validatePlaceName(name, id) {
+export function validatePlaceName(name, id) {
   const otherPlacesWithSameName = _places.filter((place) => {
     const isOtherPlaceWithSameName = place.name === name && place.id !== id;
     return isOtherPlaceWithSameName;

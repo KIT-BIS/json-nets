@@ -288,29 +288,6 @@ export default {
             //   insertText
         }
     },
-    //mounted() {
-    //    if (this.bindJsonnet !== 'default') {
-    //        this.code = this.bindJsonnet
-    //    }
-    //    this.adjustInput()
-    //    this.showInputVariables()
-    //    //To make sure that the result is updated when the modal opens (in case a token was changed, the result should be updated instead of loading the old result)
-    //    if (this.code != 'default' && this.code != '') {
-    //        this.validate()
-    //    }
-    //},
-    // watch: {
-    //     code: function (val) {
-    //         var interimsResult = evaluate(this.input + val)
-    //         this.result = interimsResult.data.trim()
-    //     },
-    // },
-    //watch: {
-    //    code: function () {
-    //        this.inscriptionEvaluated = false
-    //    },
-    //},
-    // TODO Was ist intuitiver?? Schließen wenn geändert wird oder neu laden? Aber result sollte auch gespeichert werden, wenn code gespeichert wird aber vorher nicht auf validierungsbutton geklickt wurde. Brauch eevtl den Button gar nicht?
     data() {
         return {
             result: false,

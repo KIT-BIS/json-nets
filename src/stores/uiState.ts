@@ -1,19 +1,23 @@
 import { defineStore } from 'pinia';
+import {mock} from 'mock-json-schema';
 import {toRaw} from 'vue'
 // @ts-ignore
 import * as beautify from  'js-beautify';
 // TODO: proper modularisation
 // @ts-ignore
 import { toggleDraggable, setPanable } from '@/components/canvas/net.js';
-import { INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_TRANSITION, MODE_MOVE, MODE_NONE, MODE_PAN } from '@/App.vue';
+import { INSPECTOR_MODE_PLACE, INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_TRANSITION, MODE_MOVE, MODE_NONE, MODE_PAN } from '@/App.vue';
 // @ts-ignore
-import {  findArc, findTransition } from '@/components/jsonnets/net.js';
+import {  findArc, findTransition, findPlace } from '@/components/jsonnets/net.js';
 // @ts-ignore
 import { query } from '@/util/jsonPath.js';
 // @ts-ignore
 import { variablifyDocuments, evaluate } from '@/util/jsonnet.js';
 // @ts-ignore
 import {validate} from '@/util/validator.js';
+// @ts-ignore
+import {transferSchemaToJsonFormsData, transferJsonFormsDataToSchema} from '@/util/jsonForms.js';
+import { threadId } from 'worker_threads';
 
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
@@ -46,6 +50,18 @@ export const useUiStateStore = defineStore('uiState', {
       outboundEvaluationResult: '' as string | undefined,
       outboundSchemaEvaluation: false as boolean,
       outboundSchemaEvaluationResult: '' as string | undefined,
+
+      showPlaceModal: false as boolean,
+      // originalSchema: '' as string | undefined,
+      formsData: {},
+      formsDataString: '' as string | undefined,
+      // formsDataFromOriginal: '' as string | undefined,
+      generatedSchemaString: '' as string | undefined,
+      placeTokens: [] as Array<Object> | undefined,
+      tokenString: '' as string | undefined,
+      placeTokenValidation: false as boolean,
+      placeTokenValidationResult: '' as string | undefined,
+      selectedIndex: -1
     }
   },
   actions: {
@@ -127,10 +143,88 @@ export const useUiStateStore = defineStore('uiState', {
         this.setInspectorContent(String(transition.content));
         this.setItemName(transition.name);
 
+      } else if (mode === INSPECTOR_MODE_PLACE) {
+
+        const place = findPlace(this.lastSelectedID);
+        this.showPlaceModal = true;
+        this.setItemName(place.name)
+        // this.json = JSON.stringify(place.content.schema, null,2);
+        this.formsData = transferSchemaToJsonFormsData(JSON.stringify(place.content.schema));
+        this.formsDataString = JSON.stringify(this.formsData, null, 2);
+        // this.formsDataFromOriginal = JSON.stringify(this.formsData, null, 2);
+        this.placeTokens = place.content.data;
+        this.tokenString = '';
+        this.selectedIndex = -1;
+        this.updateJsonSchema();
+        this.validateTokens();
+
       } else {
         this.showInspector = true;
       }
 
+    },
+    updateJsonSchema() {
+      this.generatedSchemaString = JSON.stringify(transferJsonFormsDataToSchema(this.formsDataString), null, 2)
+      this.validateTokens();
+    },
+    selectToken(index) {
+      this.selectedIndex = index;
+      this.tokenString = JSON.stringify(this.placeTokens[index], null, 2);
+    },
+    addToken() {
+      let newDoc = mock(JSON.parse(this.generatedSchemaString))
+      this.placeTokens.push(newDoc);
+      this.validateTokens();
+    },
+    deleteToken(index) {
+      this.placeTokens.splice(index,1);
+      this.selectedIndex = -1;
+      this.tokenString = '';
+    },
+    validateTokens() {
+      const docErrors = [];
+      let allValid = true;
+      console.log("valdating tokens")
+      console.log(this.placeTokens);
+      console.log(this.generatedSchemaString);
+      this.placeTokens.forEach((doc, index) => {
+        const {isValid, errors} = validate(doc, JSON.parse(this.generatedSchemaString));
+        if (!isValid) {
+          console.log('Invalid document:');
+          console.log(errors);
+          errors[0].errorIndex =  index;
+          docErrors.push(errors);
+          allValid = false;
+        }
+      });
+
+      if (!allValid) {
+        this.placeTokenValidation = false;
+        this.placeTokenValidationResult = "<ul>"
+        for (let i = 0; i < docErrors.length; i++) {
+          let error = docErrors[i][0];
+          this.placeTokenValidationResult += "<li>"
+          this.placeTokenValidationResult += "Token " + error.errorIndex + ": " + error.dataPath + " " + error.message;
+          this.placeTokenValidationResult += "</li>"
+        }
+        this.placeTokenValidationResult += "</ul>";
+
+      } else {
+        this.placeTokenValidation = true;
+        this.placeTokenValidationResult = "All tokens valid to schema.";
+      }
+    },
+    updateCurrentToken() {
+      try {
+        let newDoc = JSON.parse(this.tokenString);
+        if (newDoc) {
+          this.placeTokens[this.selectedIndex] = newDoc;
+          this.validateTokens();
+        } 
+      } catch(e) {
+
+      }
+      
     },
     addDocumentToTempAssignment(name: string, doc: object, index: number) {
       //@ts-ignore

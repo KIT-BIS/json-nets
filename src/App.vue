@@ -18,6 +18,8 @@ import { addPlaceToExportArray, addTransitionToExportArray } from '@/util/export
 import {importNet, uploadNet} from '@/util/importNet';
 // @ts-ignore
 import {exportNet} from '@/util/exportNet';
+
+import JointPaper from './components/JointPaper.vue';
 // TODO: proper typescript modularisation
 // @ts-ignore
 import { addPlace, addTransition } from '@/components/jsonnets/net.js'
@@ -29,26 +31,26 @@ import { init as initCanvas, getStagePosition, setClickPosition } from '@/compon
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore();
 onMounted(() => {
-  initCanvas();
+  //initCanvas();
 })
 
 function onCanvasClick(event: MouseEvent) {
-  if (uiState.mode === MODE_ADD_PLACE) {
-    const stagePosition = getStagePosition();
-    const x = event.clientX - stagePosition.x;
-    const y = event.clientY - stagePosition.y;
-    setClickPosition(x, y);
-    const place = addPlace();
-    addPlaceToExportArray(x, y, place.id, place.name, place.content);
-  } else if (uiState.mode === MODE_ADD_TRANSITION) {
-    const stagePosition = getStagePosition();
-    const x = event.clientX - stagePosition.x;
-    const y = event.clientY - stagePosition.y;
-    setClickPosition(x, y);
-    const transition = addTransition();
-    addTransitionToExportArray(x, y, transition.id, transition.name,
-      transition.content);
-  }
+//  if (uiState.mode === MODE_ADD_PLACE) {
+//    const stagePosition = getStagePosition();
+//    const x = event.clientX - stagePosition.x;
+//    const y = event.clientY - stagePosition.y;
+//    setClickPosition(x, y);
+//    const place = addPlace();
+//    addPlaceToExportArray(x, y, place.id, place.name, place.content);
+//  } else if (uiState.mode === MODE_ADD_TRANSITION) {
+//    const stagePosition = getStagePosition();
+//    const x = event.clientX - stagePosition.x;
+//    const y = event.clientY - stagePosition.y;
+//    setClickPosition(x, y);
+//    const transition = addTransition();
+//    addTransitionToExportArray(x, y, transition.id, transition.name,
+//      transition.content);
+//  }
 }
 </script>
 <script lang="ts">
@@ -73,7 +75,8 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
 </script>
 
 <template>
-  <div id="container" @click="onCanvasClick"></div>
+  <!-- <div id="container" @click="onCanvasClick"></div> -->
+  <JointPaper />
   <div id="menu">
     <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
     <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
@@ -91,7 +94,7 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
       Load Example
     </button>
   </div>
-  <Inspector />
+  <!-- <Inspector /> -->
   <InboundArcModal v-if="uiState.showPresetModal"/>
   <OutboundArcModal v-if="uiState.showPostsetModal" />
   <TransitionModal v-if="uiState.showTransitionModal" />

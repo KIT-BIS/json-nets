@@ -5,7 +5,7 @@ import {toRaw} from 'vue'
 import * as beautify from  'js-beautify';
 // TODO: proper modularisation
 // @ts-ignore
-import { toggleDraggable, setPanable } from '@/components/canvas/net.js';
+// import { toggleDraggable, setPanable } from '@/components/canvas/net.js';
 import { INSPECTOR_MODE_PLACE, INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, INSPECTOR_MODE_TRANSITION, MODE_MOVE, MODE_NONE, MODE_PAN } from '@/App.vue';
 // @ts-ignore
 import {  findArc, findTransition, findPlace } from '@/components/jsonnets/net.js';
@@ -67,15 +67,15 @@ export const useUiStateStore = defineStore('uiState', {
   actions: {
     setMode(mode: string | undefined) {
       if (mode === MODE_MOVE) {
-        toggleDraggable(true);
+        // toggleDraggable(true);
       } else {
-        toggleDraggable(false);
+        // toggleDraggable(false);
       }
 
       if (mode === MODE_PAN) {
-        setPanable(true);
+        // setPanable(true);
       } else {
-        setPanable(false);
+        // setPanable(false);
       }
       this.mode = mode;
     },

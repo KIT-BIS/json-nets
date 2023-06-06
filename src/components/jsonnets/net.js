@@ -3,9 +3,8 @@ import {v4 as uuidv4} from 'uuid';
 import {Transition} from './transition';
 import {PresetArc} from './presetArc';
 import {PostsetArc} from './postsetArc';
-import {receiveNotification} from '../canvas/net';
+// import {receiveNotification} from '../canvas/net';
 import {validate} from '@/util/validator';
-import { useUiStateStore } from '@/stores/uiState';
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
@@ -21,6 +20,7 @@ export const EVENT_REMOVE_ARC = 'EVENT_REMOVE_ARC';
 let _transitions = [];
 let _places = [];
 let _arcs = [];
+let _notificationReceivers = [];
 
 /**
  * Finds a place by given ID.
@@ -299,6 +299,9 @@ export function occur(transitionID) {
   }
 }
 
+export function register(notificationReceiver) {
+  _notificationReceivers.push(notificationReceiver);
+}
 
 /**
  * Notifies the registered observer of events
@@ -306,7 +309,10 @@ export function occur(transitionID) {
  * @param {Object} payload Message to send to the observer.
  */
 export function notify(event, payload) {
-  receiveNotification(event, payload);
+  for (let i = 0; i < _notificationReceivers.length; i++) {
+    _notificationReceivers[0](event, payload);
+  }
+  //receiveNotification(event, payload);
 };
 
 /**

@@ -470,7 +470,7 @@ export default {
             //}
             //this.$emit('saveChanges', this.code, this.result)
             setTransitionContent(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
-            updateTransitionContentInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
+            // updateTransitionContentInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent, this.uiState.itemName);
 
             this.close()
 

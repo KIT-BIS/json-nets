@@ -326,7 +326,12 @@ export const useUiStateStore = defineStore('uiState', {
     },
     updateQueryResult() {
       //@ts-ignore
-      this.queryResult = JSON.stringify(query(JSON.parse(this.inputTokens), this.jsonPathQuery), null, 2);
+      try {
+        this.queryResult = JSON.stringify(query(JSON.parse(this.inputTokens), this.jsonPathQuery), null, 2);
+      } catch (e) {
+        //TODO: properly handle error cases 
+        console.log('jsonpath query failed')
+      }
 
     },
     setInspectorContent(content: string) {

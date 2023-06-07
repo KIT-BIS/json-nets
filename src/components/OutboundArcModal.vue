@@ -517,7 +517,7 @@ export default {
             //}
             //this.$emit('saveChanges', this.code, this.result)
             setArcLabel(this.uiState.lastSelectedID, this.uiState.inspectorContent);
-            updateArcLabelInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent);
+            // updateArcLabelInExportArray(this.uiState.lastSelectedID, this.uiState.inspectorContent);
 
             this.close()
 

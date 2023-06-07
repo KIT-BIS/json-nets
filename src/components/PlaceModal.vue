@@ -292,8 +292,8 @@ export default defineComponent({
         placeContent.schema = JSON.parse(this.uiState.generatedSchemaString);
         placeContent.data = this.uiState.placeTokens;
         setPlaceContent(this.uiState.lastSelectedID, placeContent, this.uiState.itemName);
-        updatePlaceContentInExportArray(this.uiState.lastSelectedID,
-          this.uiState.inspectorContent, this.uiState.itemName);
+        // updatePlaceContentInExportArray(this.uiState.lastSelectedID,
+          // this.uiState.inspectorContent, this.uiState.itemName);
         this.close();
       }
     }

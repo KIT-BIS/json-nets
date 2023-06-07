@@ -265,7 +265,7 @@ export default {
             //@ts-ignore
             setArcLabel(this.uiState.lastSelectedID, arcLabel);
             //@ts-ignore
-            updateArcLabelInExportArray(this.uiState.lastSelectedID, arcLabel);
+            // updateArcLabelInExportArray(this.uiState.lastSelectedID, arcLabel);
             this.close();
         },
         close() {

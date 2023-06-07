@@ -12,6 +12,8 @@ export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
 export const EVENT_CHANGE_TRANSITION_CONTENT =
   'EVENT_CHANGE_TRANSITION_CONTENT';
 export const EVENT_CONNECT = 'EVENT_CONNECT';
+export const EVENT_OCCUR_REMOVE_TOKEN = 'EVENT_OCCUR_REMOVE_TOKEN';
+export const EVENT_OCCUR_ADD_TOKEN = 'EVENT_OCCUR_ADD_TOKEN';
 export const EVENT_DISCONNECT = 'EVENT_DISCONNECT';
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE';
 export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION';
@@ -197,6 +199,7 @@ export function removeTransition(transitionID) {
  * @return {String} ID of the created arc.
  */
 export function connect(fromID, toID, arcID = uuidv4()) {
+  console.log('connecting ' + fromID + ' with ' + toID)
   const nodes = _places.concat(_transitions);
   const from = nodes.find((node) => node.id === fromID);
   const to = nodes.find((node) => node.id === toID);
@@ -223,7 +226,7 @@ export function connect(fromID, toID, arcID = uuidv4()) {
     }
   }
   if (arc) {
-    notify(EVENT_CONNECT, {from: from.id, to: to.id, arcID});
+    notify(EVENT_CONNECT, {from: from.id, to: to.id, arcID, jsonnetsType: arc.type});
     return arc;
   }
 };
@@ -285,17 +288,27 @@ export function occur(transitionID) {
   } else {
     transition.occur();
     transition.preset.forEach((arc) =>
-      notify(EVENT_CHANGE_PLACE_CONTENT, {
+    notify(EVENT_OCCUR_REMOVE_TOKEN, {
+        arcID: arc.id,
         placeID: arc.place.id,
         num: arc.place.content.data.length,
-        name: arc.place.name,
-      }));
+     }));
+    //  notify(EVENT_CHANGE_PLACE_CONTENT, {
+//        placeID: arc.place.id,
+//        num: arc.place.content.data.length,
+//        name: arc.place.name,
+//      }));
     transition.postset.forEach((arc) =>
-      notify(EVENT_CHANGE_PLACE_CONTENT, {
-        placeID: arc.place.id,
-        num: arc.place.content.data.length,
-        name: arc.place.name,
-      }));
+      notify(EVENT_OCCUR_ADD_TOKEN, {
+          arcID: arc.id,
+          placeID: arc.place.id,
+          num: arc.place.content.data.length,
+       }));
+//      notify(EVENT_CHANGE_PLACE_CONTENT, {
+//        placeID: arc.place.id,
+//        num: arc.place.content.data.length,
+//        name: arc.place.name,
+//      }));
   }
 }
 

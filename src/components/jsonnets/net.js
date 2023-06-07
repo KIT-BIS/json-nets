@@ -3,9 +3,8 @@ import {v4 as uuidv4} from 'uuid';
 import {Transition} from './transition';
 import {PresetArc} from './presetArc';
 import {PostsetArc} from './postsetArc';
-import {receiveNotification} from '../canvas/net';
+// import {receiveNotification} from '../canvas/net';
 import {validate} from '@/util/validator';
-import { useUiStateStore } from '@/stores/uiState';
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE';
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION';
@@ -13,6 +12,8 @@ export const EVENT_CHANGE_PLACE_CONTENT = 'EVENT_CHANGE_PLACE_CONTENT';
 export const EVENT_CHANGE_TRANSITION_CONTENT =
   'EVENT_CHANGE_TRANSITION_CONTENT';
 export const EVENT_CONNECT = 'EVENT_CONNECT';
+export const EVENT_OCCUR_REMOVE_TOKEN = 'EVENT_OCCUR_REMOVE_TOKEN';
+export const EVENT_OCCUR_ADD_TOKEN = 'EVENT_OCCUR_ADD_TOKEN';
 export const EVENT_DISCONNECT = 'EVENT_DISCONNECT';
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE';
 export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION';
@@ -21,6 +22,7 @@ export const EVENT_REMOVE_ARC = 'EVENT_REMOVE_ARC';
 let _transitions = [];
 let _places = [];
 let _arcs = [];
+let _notificationReceivers = [];
 
 /**
  * Finds a place by given ID.
@@ -197,6 +199,7 @@ export function removeTransition(transitionID) {
  * @return {String} ID of the created arc.
  */
 export function connect(fromID, toID, arcID = uuidv4()) {
+  console.log('connecting ' + fromID + ' with ' + toID)
   const nodes = _places.concat(_transitions);
   const from = nodes.find((node) => node.id === fromID);
   const to = nodes.find((node) => node.id === toID);
@@ -223,7 +226,7 @@ export function connect(fromID, toID, arcID = uuidv4()) {
     }
   }
   if (arc) {
-    notify(EVENT_CONNECT, {from: from.id, to: to.id, arcID});
+    notify(EVENT_CONNECT, {from: from.id, to: to.id, arcID, jsonnetsType: arc.type});
     return arc;
   }
 };
@@ -285,20 +288,33 @@ export function occur(transitionID) {
   } else {
     transition.occur();
     transition.preset.forEach((arc) =>
-      notify(EVENT_CHANGE_PLACE_CONTENT, {
+    notify(EVENT_OCCUR_REMOVE_TOKEN, {
+        arcID: arc.id,
         placeID: arc.place.id,
         num: arc.place.content.data.length,
-        name: arc.place.name,
-      }));
+     }));
+    //  notify(EVENT_CHANGE_PLACE_CONTENT, {
+//        placeID: arc.place.id,
+//        num: arc.place.content.data.length,
+//        name: arc.place.name,
+//      }));
     transition.postset.forEach((arc) =>
-      notify(EVENT_CHANGE_PLACE_CONTENT, {
-        placeID: arc.place.id,
-        num: arc.place.content.data.length,
-        name: arc.place.name,
-      }));
+      notify(EVENT_OCCUR_ADD_TOKEN, {
+          arcID: arc.id,
+          placeID: arc.place.id,
+          num: arc.place.content.data.length,
+       }));
+//      notify(EVENT_CHANGE_PLACE_CONTENT, {
+//        placeID: arc.place.id,
+//        num: arc.place.content.data.length,
+//        name: arc.place.name,
+//      }));
   }
 }
 
+export function register(notificationReceiver) {
+  _notificationReceivers.push(notificationReceiver);
+}
 
 /**
  * Notifies the registered observer of events
@@ -306,7 +322,10 @@ export function occur(transitionID) {
  * @param {Object} payload Message to send to the observer.
  */
 export function notify(event, payload) {
-  receiveNotification(event, payload);
+  for (let i = 0; i < _notificationReceivers.length; i++) {
+    _notificationReceivers[0](event, payload);
+  }
+  //receiveNotification(event, payload);
 };
 
 /**

@@ -2,7 +2,7 @@ import {importData} from '@/examples/recognition/net';
 import {addPlace, addTransition, connect, setPlaceContent,
   setArcLabel,
   setTransitionContent} from '@/components/jsonnets/net';
-import {setClickPosition} from '@/components/canvas/net';
+// import {setClickPosition} from '@/components/canvas/net';
 import {setPlaces, setTransisions, addArcToExportArray} from './exportNet';
 /**
  * Imports a net into the frame.
@@ -19,13 +19,13 @@ export function importNet(upload=false, uploadData) {
 
   // Add all places to the net.
   data.places.forEach((place) => {
-    setClickPosition(place.x, place.y);
+    // setClickPosition(place.x, place.y);
     addPlace(place.id);
     setPlaceContent(place.id, place.content, place.name);
   });
   // Add all transitions to the net.
   data.transitions.forEach((transition) => {
-    setClickPosition(transition.x, transition.y);
+    // setClickPosition(transition.x, transition.y);
     addTransition(transition.id);
     setTransitionContent(transition.id, transition.content, transition.name);
   });

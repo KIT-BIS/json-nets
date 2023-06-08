@@ -61,7 +61,9 @@ export const useUiStateStore = defineStore('uiState', {
       tokenString: '' as string | undefined,
       placeTokenValidation: false as boolean,
       placeTokenValidationResult: '' as string | undefined,
-      selectedIndex: -1
+      selectedIndex: -1,
+
+      showHelpModal: false as boolean,
     }
   },
   actions: {

@@ -4,6 +4,7 @@ import { onMounted } from 'vue';
 import example from '@/examples/recognition/net.js';
 import Inspector from './components/Inspector.vue';
 import InboundArcModal from './components/InboundArcModal.vue';
+import HelpModal from './components/HelpModal.vue';
 //@ts-ignore
 import OutboundArcModal from './components/OutboundArcModal.vue';
 //@ts-ignore
@@ -71,6 +72,7 @@ export const MODE_OCCUR = 'MODE_OCCUR';
 export const MODE_UPLOAD = 'MODE_UPLOAD';
 export const MODE_EXAMPLE = 'MODE_EXAMPLE';
 export const MODE_PLAY = 'MODE_PLAY';
+export const MODE_HELP = 'MODE_HELP';
 
 export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
 export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
@@ -86,14 +88,14 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
     <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
     <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
     <!-- <ModeButton icon="fas fa-trash" :mode="MODE_REMOVE" /> -->
-    <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
     <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
+    <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
     <!-- <ModeButton icon="fas fa-expand-arrows-alt" :mode="MODE_PAN" /> -->
     <!-- <ModeButton icon="fas fa-edit" :mode="MODE_INSPECT" /> -->
     <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
     <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_UPLOAD" :callback="() =>  {
-      let jsonString = exportNet();
-      download(jsonString, 'export.json', 'application/json');
+      // let jsonString = exportNet();
+      download(exportNet(), 'export.json', 'application/json');
     }"/>
     <input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="resume" @change="(event) =>{
       readFile(event, importNet)
@@ -102,11 +104,13 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
     <button style="margin-left: 15px" @click.stop="() => {uiState.setMode(MODE_EXAMPLE); importNet('example', example);}" class="button is-primary is-outlined">
       Load Example
     </button>
+    <ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => { uiState.showHelpModal = true }"/>
   </div>
   <!-- <Inspector /> -->
   <InboundArcModal v-if="uiState.showPresetModal"/>
   <OutboundArcModal v-if="uiState.showPostsetModal" />
   <TransitionModal v-if="uiState.showTransitionModal" />
   <PlaceModal v-if="uiState.showPlaceModal" />
+  <HelpModal v-if="uiState.showHelpModal" />
   <!-- <RouterView /> -->
 </template>

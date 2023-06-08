@@ -16,7 +16,8 @@ import {
   faInfoCircle,
   faPlusCircle,
   faMinusCircle,
-  faWandMagicSparkles
+  faWandMagicSparkles,
+  faQuestion
 } from "@fortawesome/free-solid-svg-icons";
 
 
@@ -26,7 +27,7 @@ import { createPinia } from 'pinia'
 /* add icons to the library */
 library.add(faCircle,faSquare,faArrowRight,
     faTrash,faMousePointer,faExpandArrowsAlt,
-    faEdit,faPlayCircle,faFileArrowDown,faInfoCircle,faPlusCircle,faMinusCircle,faWandMagicSparkles);
+    faEdit,faPlayCircle,faFileArrowDown,faInfoCircle,faPlusCircle,faMinusCircle,faWandMagicSparkles,faQuestion);
 
 
 import App from './App.vue'

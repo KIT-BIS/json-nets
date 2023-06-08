@@ -248,7 +248,7 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { evaluate } from '../util/jsonnet.js'
 import { useUiStateStore } from '@/stores/uiState'
 //@ts-ignore
-import { updateTransitionContentInExportArray } from '@/util/exportNet.js'
+// import { updateTransitionContentInExportArray } from '@/util/exportNet.js'
 //@ts-ignore
 import {  setTransitionContent } from '@/components/jsonnets/net.js';
 

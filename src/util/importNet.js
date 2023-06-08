@@ -3,7 +3,7 @@ import {addPlace, addTransition, connect, setPlaceContent,
   setArcLabel,
   setTransitionContent} from '@/components/jsonnets/net';
 // import {setClickPosition} from '@/components/canvas/net';
-import {setPlaces, setTransisions, addArcToExportArray} from './exportNet';
+// import {setPlaces, setTransisions, addArcToExportArray} from './exportNet';
 /**
  * Imports a net into the frame.
  * @param {Boolean} upload
@@ -13,8 +13,8 @@ export function importNet(upload=false, uploadData) {
   const data = (upload) ? uploadData : importData;
 
   // Set the places, transitions and edges for later export.
-  setPlaces(data.places);
-  setTransisions(data.transitions);
+  // setPlaces(data.places);
+  // setTransisions(data.transitions);
   // setEdges(data.edges);
 
   // Add all places to the net.
@@ -33,24 +33,9 @@ export function importNet(upload=false, uploadData) {
   data.arcs.forEach((importArc) => {
     connect(importArc.fromId, importArc.toId, importArc.id);
     setArcLabel(importArc.id, importArc.label);
-    addArcToExportArray(importArc.id, importArc.fromId, importArc.toId,
-        importArc.type,
-        importArc.label);
+    // addArcToExportArray(importArc.id, importArc.fromId, importArc.toId,
+        // importArc.type,
+        // importArc.label);
   } );
 }
-/**
- * Upload a file for import.
- * @param {Event} event
- */
-export function uploadNet(event) {
-  const input = event.target;
 
-  const reader = new FileReader();
-  reader.onload = function() {
-    const text = reader.result;
-    const data = JSON.parse(text);
-    importNet(true, data);
-    console.log(JSON.parse(text));
-  };
-  reader.readAsText(input.files[0]);
-}

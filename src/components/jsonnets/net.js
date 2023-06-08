@@ -18,12 +18,116 @@ export const EVENT_DISCONNECT = 'EVENT_DISCONNECT';
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE';
 export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION';
 export const EVENT_REMOVE_ARC = 'EVENT_REMOVE_ARC';
+export const EVENT_NET_IMPORTED = 'EVENT_NET_IMPORTED';
 
 let _transitions = [];
 let _places = [];
 let _arcs = [];
 let _notificationReceivers = [];
 
+function clear() {
+  while (_transitions.length > 0) {
+    removeTransition(_transitions[0].id)
+  }
+
+  while (_places.length > 0) {
+    removePlace(_places[0].id)
+  }
+}
+
+export function importNet(jsonString, example) {
+  clear();
+
+  let data;
+  let isExample = false;
+  if(jsonString === 'example') {
+    isExample = true;
+    data = JSON.parse(JSON.stringify(example));
+  } else {
+    data = JSON.parse(jsonString);
+  }
+  console.log('importing')
+  console.log(data);
+
+  for (let i = 0; i < data.places.length; i++) {
+    let place = data.places[i];
+    addPlace(place.id);
+    setPlaceContent(place.id, place.content, place.name)
+  }
+
+  for (let i = 0; i < data.transitions.length; i++) {
+    let transition = data.transitions[i];
+    addTransition(transition.id);
+    setTransitionContent(transition.id, transition.content, transition.name);
+  }
+
+  for (let i = 0; i < data.arcs.length; i++) {
+    let arc = data.arcs[i];
+    connect(arc.fromId, arc.toId, arc.id);
+    setArcLabel(arc.id, arc.label);
+  }
+
+
+
+  notify(EVENT_NET_IMPORTED,{ isExample });
+}
+
+/**
+ * Exports the net as a JSON string
+ */
+export function exportNet() {
+  const placesExportArray = [];
+  const transitionsExportArray = [];
+  const arcsExportArray = [];
+
+  for (let i = 0; i < _places.length; i++) {
+    let place = _places[i];
+    placesExportArray.push({
+      id: place.id,
+      name: place.name,
+      content: place.content
+    })
+  }
+
+  for (let i = 0; i < _transitions.length; i++) {
+    let transition = _transitions[i];
+    transitionsExportArray.push({
+      id: transition.id,
+      name: transition.name,
+      content: transition.content
+    })
+  }
+
+  for (let i = 0; i < _arcs.length; i++) {
+    let arc = _arcs[i];
+    let fromId, toId;
+    if (arc.type === 'preset') {
+      fromId = arc.place.id;
+      toId = arc.transition.id;
+    } else if (arc.type === 'postset') {
+      fromId = arc.transition.id;
+      toId = arc.place.id;
+    }
+    
+    arcsExportArray.push({
+      id: arc.id,
+      // type: arc.type,
+      label: arc.label,
+      fromId,
+      toId
+    })
+
+  }
+  const exportData = {
+    places: placesExportArray,
+    transitions: transitionsExportArray,
+    arcs: arcsExportArray,
+  };
+
+  // Convert JSON string to BLOB.
+  const json = JSON.stringify(exportData);
+  return json;
+}
 /**
  * Finds a place by given ID.
  * @param {String} placeID The ID of the place to find.
@@ -275,6 +379,21 @@ export function setArcLabel(arcID, label) {
   arc.label = label;
 };
 
+
+export function occurAny() {
+  console.log('any occurs?')
+  for (let i = 0; i < _transitions.length; i++) {
+    let transition = _transitions[i];
+    // console.log('iterating')
+    // console.log(transition.name)
+    // console.log(transition.isEnabled());
+    if(transition.isEnabled()) {
+      // console.log('found enabled')
+      occur(transition.id);
+      break;
+    }
+  }
+}
 
 /**
  * Make a transition occur.

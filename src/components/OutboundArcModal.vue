@@ -263,7 +263,7 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { evaluate } from '../util/jsonnet.js'
 import { useUiStateStore } from '@/stores/uiState'
 //@ts-ignore
-import { updateArcLabelInExportArray } from '@/util/exportNet.js'
+// import { updateArcLabelInExportArray } from '@/util/exportNet.js'
 //@ts-ignore
 import {  setArcLabel } from '@/components/jsonnets/net.js';
 

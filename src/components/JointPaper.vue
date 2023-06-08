@@ -12,11 +12,17 @@
 //@ts-ignore
 import * as joint from 'jointjs/src/core.mjs';
 //@ts-ignore
+import * as layout from 'jointjs/src/layout/index.mjs';
+//@ts-ignore
 // import * as pn from 'jointjs/src/shapes/pn.mjs';
 import * as standard from 'jointjs/src/shapes/standard.mjs';
 
-import { MODE_ADD_PLACE, MODE_ADD_TRANSITION, MODE_CONNECT_START, MODE_MOVE, INSPECTOR_MODE_PLACE, INSPECTOR_MODE_TRANSITION, INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC } from '@/App.vue';
+import * as dagre from '@dagrejs/dagre';
+import * as graphlib from '@dagrejs/graphlib';
+
+import { MODE_PLAY, MODE_LAYOUT, MODE_ADD_PLACE, MODE_ADD_TRANSITION, MODE_CONNECT_START, MODE_MOVE, INSPECTOR_MODE_PLACE, INSPECTOR_MODE_TRANSITION, INSPECTOR_MODE_POSTSET_ARC, INSPECTOR_MODE_PRESET_ARC, MODE_NONE } from '@/App.vue';
 import {
+    EVENT_NET_IMPORTED,
     EVENT_OCCUR_ADD_TOKEN,
     EVENT_OCCUR_REMOVE_TOKEN,
 EVENT_ADD_PLACE, EVENT_ADD_TRANSITION,
@@ -25,7 +31,7 @@ EVENT_ADD_PLACE, EVENT_ADD_TRANSITION,
   EVENT_REMOVE_PLACE,
   EVENT_REMOVE_TRANSITION,
   EVENT_DISCONNECT,
-  EVENT_CHANGE_TRANSITION_CONTENT, occur, addPlace, addTransition, removePlace, removeTransition, disconnect, register, connect} from '@/components/jsonnets/net';
+  EVENT_CHANGE_TRANSITION_CONTENT, occur, occurAny, addPlace, addTransition, removePlace, removeTransition, disconnect, register, connect} from '@/components/jsonnets/net';
 
 
 import { useUiStateStore } from '@/stores/uiState';
@@ -59,8 +65,6 @@ export default {
             return (this.uiState.mode === MODE_ADD_PLACE || this.uiState.mode === MODE_ADD_TRANSITION);
         },
         isPannableMode() {
-            console.log('is panning')
-            console.log(this.isPanning)
             return (this.uiState.mode === MODE_MOVE && !this.isPanning)
         },
         isPanningMode() {
@@ -87,7 +91,52 @@ export default {
                 for (let i = 0; i < links.length; i++) {
                     this.addInteractionToolsForLinks(links[i]);
                 }
-            } 
+            }  else if (this.uiState.mode === MODE_LAYOUT) {
+                    this.updateGraphLayout();
+                    this.uiState.mode = MODE_NONE;
+            } else if (this.uiState.mode === MODE_PLAY) {
+                console.log('playing')
+                let play = setInterval(() => {
+                    if (this.uiState.mode !== MODE_PLAY) {
+                        console.log('stop playing')
+                        clearInterval(play)
+                    } else {
+                        console.log('should fire')
+                        occurAny();
+                    }
+                }, 1500);
+
+            }
+        },
+        updateGraphLayout() {
+
+            this.paper.freeze();
+            const layoutOptions = {
+                nodeSep: 100,
+                edgeSep: 100,
+                rankSep: 100,
+                rankDir: "LR",
+                dagre: dagre,
+                graphlib: graphlib
+            }
+            layout.DirectedGraph.layout(this.graph, layoutOptions);
+
+            // TODO: needed?
+            // if (this.graph.getCells().length === 0) {
+                // The graph could be empty at the beginning to avoid cells rendering
+                // and their subsequent update when elements are translated
+                // this.graph.resetCells(cells);
+            // }
+            // this.paper.fitToContent({
+                // padding: 50,
+                // allowNewOrigin: 'any',
+                // useModelGeometry: true
+            // })
+            this.paper.translate(100,200);
+
+            this.paper.unfreeze();
+
+
         },
         onDragStart(x, y) {
             if (this.uiState.mode === MODE_MOVE) {
@@ -143,6 +192,40 @@ export default {
                 let sec = 1;
                 link.findView(this.paper).sendToken(token, sec * 1000);
 
+            } else if (event === EVENT_NET_IMPORTED) {
+                this.updateGraphLayout();
+                // TODO: this is VERY HACKY, but I'd like to have the layout of the example a bit nicer
+                // could later add jointjs-specific positioning data to import/export functionality
+                if (payload.isExample) {
+                    // set request
+                    this.graph.getCell('167d54d6-3a73-40f7-b317-0aa3580a44ac').set('position', { x: 0, y: 144 })
+                    // set student
+                    this.graph.getCell('48b440c6-43fc-4df6-b874-f758137e90e5').set('position', { x: 48, y: -12 })
+                    // set review 
+                    this.graph.getCell('1952db8b-764c-45da-b2d4-8b1537400377').set('position', { x: 144, y: 144 })
+                    // set decision
+                    this.graph.getCell('9a172fc4-04cd-49d1-94f3-b8b62d2aed42').set('position', { x: 348, y: 144 })
+                    // set lecture
+                    this.graph.getCell('846b0b51-9981-40ad-a36a-5ee873f4de5a').set('position', { x: 288, y: -12 })
+                    // set accept
+                    this.graph.getCell('0e1c227f-c03b-4969-be2b-9b151898a35c').set('position', { x: 504, y: 48 })
+                    // set reject
+                    this.graph.getCell('82ca126e-1b63-40ad-9f92-d156da6823b8').set('position', { x: 504, y: 240 })
+                    // set notification
+                    this.graph.getCell('daa76eb3-c88c-4f29-9903-43f2892d70da').set('position', { x: 708, y: 144 })
+                    // set grade
+                    this.graph.getCell('e6caf7c5-fe05-47fa-8179-cf3b7b3cad2a').set('position', { x: 528, y: -96 })
+
+
+
+                    // set lecture
+                    // this.graph.getCell('846b0b51-9981-40ad-a36a-5ee873f4de5a').set('position', { x: 264, y: 0 })
+                    // set notification
+                    // set reject
+                    // set grade
+                }
+
+                
             }
         },
         onPaperClick(clickX, clickY) {
@@ -373,6 +456,9 @@ export default {
                 },
                 rotate: true,
                 action: (evt) => {
+                    console.log('clicked inspector')
+                    console.log(element.id)
+                    console.log(element.get('position'));
                     if (element.get('jsonnetsType') === 'place') {
                         this.uiState.updateInspector(INSPECTOR_MODE_PLACE, element.id);
                     } else if (element.get('jsonnetsType') === 'transition') {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 //import { RouterLink, RouterView } from 'vue-router'
 import { onMounted } from 'vue';
+import example from '@/examples/recognition/net.js';
 import Inspector from './components/Inspector.vue';
 import InboundArcModal from './components/InboundArcModal.vue';
 //@ts-ignore
@@ -15,17 +16,18 @@ import { useUiStateStore } from '@/stores/uiState';
 import { addPlaceToExportArray, addTransitionToExportArray } from '@/util/exportNet';
 // TODO: proper typescript modularisation
 // @ts-ignore
-import {importNet, uploadNet} from '@/util/importNet';
+// import {importNet, uploadNet} from '@/util/importNet';
 // @ts-ignore
-import {exportNet} from '@/util/exportNet';
+// import {exportNet} from '@/util/exportNet';
+import {download, readFile} from '@/util/files';
 
 import JointPaper from './components/JointPaper.vue';
 // TODO: proper typescript modularisation
 // @ts-ignore
-import { addPlace, addTransition } from '@/components/jsonnets/net.js'
+import { exportNet, importNet } from '@/components/jsonnets/net.js'
 // TODO: proper typescript modularisation
 // @ts-ignore
-import { init as initCanvas, getStagePosition, setClickPosition } from '@/components/canvas/net.js'
+// import { init as initCanvas, getStagePosition, setClickPosition } from '@/components/canvas/net.js'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
@@ -64,9 +66,11 @@ export const MODE_CONNECT_START = 'MODE_CONNECT_START';
 export const MODE_CONNECT_FROM_PLACE = 'MODE_CONNECT_FROM_PLACE';
 export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION';
 export const MODE_INSPECT = 'MODE_INSPECT';
+export const MODE_LAYOUT = 'MODE_LAYOUT';
 export const MODE_OCCUR = 'MODE_OCCUR';
 export const MODE_UPLOAD = 'MODE_UPLOAD';
 export const MODE_EXAMPLE = 'MODE_EXAMPLE';
+export const MODE_PLAY = 'MODE_PLAY';
 
 export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION';
 export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE';
@@ -83,14 +87,19 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC';
     <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
     <!-- <ModeButton icon="fas fa-trash" :mode="MODE_REMOVE" /> -->
     <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
+    <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
     <!-- <ModeButton icon="fas fa-expand-arrows-alt" :mode="MODE_PAN" /> -->
     <!-- <ModeButton icon="fas fa-edit" :mode="MODE_INSPECT" /> -->
-    <!-- <ModeButton icon="fas fa-play-circle" :mode="MODE_OCCUR" /> -->
-    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_UPLOAD" :callback="exportNet"/>
+    <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
+    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_UPLOAD" :callback="() =>  {
+      let jsonString = exportNet();
+      download(jsonString, 'export.json', 'application/json');
+    }"/>
     <input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="resume" @change="(event) =>{
-    uploadNet(event);
+      readFile(event, importNet)
+    // uploadNet(event);
     }">
-    <button style="margin-left: 15px" @click.stop="() => {uiState.setMode(MODE_EXAMPLE); importNet(false);}" class="button is-primary is-outlined">
+    <button style="margin-left: 15px" @click.stop="() => {uiState.setMode(MODE_EXAMPLE); importNet('example', example);}" class="button is-primary is-outlined">
       Load Example
     </button>
   </div>

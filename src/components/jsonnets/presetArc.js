@@ -14,8 +14,8 @@ export const PRESET_ARC_TYPE_READ = 'read';
  */
 export function PresetArc(place, transition, id) {
   this.id = id;
-  this.place = place;
   this.type = 'preset';
+  this.place = place;
   this.transition = transition;
   this.label = {
     type: PRESET_ARC_TYPE_CONSUME,

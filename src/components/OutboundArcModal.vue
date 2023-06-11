@@ -286,7 +286,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import { ref, shallowRef } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'

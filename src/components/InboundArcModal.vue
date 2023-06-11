@@ -120,8 +120,6 @@
                       >
                     </td>
                     <td>Return all objects (apply no filter)</td>
-                    <!--<td><button class="button is-white" @click="uiState.setJsonPathQuery('$.*')"><code>$.*</code></button></td>-->
-                    <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$.*')">$.*</code></td> -->
                     <td>
                       <span class="is-clickable" @click="uiState.setJsonPathQuery('')"
                         ><i>(leave empty)</i></span
@@ -184,20 +182,11 @@
                       >
                     </td>
                   </tr>
-                  <!-- <tr> -->
-                  <!-- <td>Filter for all objects the values of a property</td> -->
-                  <!-- <td><code class="is-clickable" @click="uiState.setJsonPathQuery('$..name')">$..name</code></td> -->
-                  <!-- </tr> -->
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-        <!--
-                    <div v-if="bindSource == 'default'">
-                        <h2> Input tokens</h2>
-                        <label>Insert tokens in pre-set place first to display input tokens here.</label>
-                    </div>-->
         <div class="columns is-vcentered">
           <div class="column is-5">
             <div class="field">
@@ -255,11 +244,8 @@ import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { useUiStateStore } from '@/stores/uiState'
 //@ts-ignore
-import { updateArcLabelInExportArray } from '@/util/exportNet.js'
-//@ts-ignore
 import { setArcLabel } from '@/components/jsonnets/net.js'
 //@ts-ignore
-//import { PRESET_ARC_TYPE_CONSUME, PRESET_ARC_TYPE_READ } from '@/components/jsonnets/presetArc.js';
 
 export default {
   name: 'InboundArcModal',
@@ -311,19 +297,12 @@ export default {
     },
     saveChanges() {
       // TODO: check for expression errors
-      //if (this.output == '[]') {
-      //    alert("Your expression is not a valid JSONPath expression. Check the templates for help.")
-      //    return
-      //}
-
       const arcLabel = {
         type: this.uiState.arcMode,
         filter: this.uiState.jsonPathQuery
       }
       //@ts-ignore
       setArcLabel(this.uiState.lastSelectedID, arcLabel)
-      //@ts-ignore
-      // updateArcLabelInExportArray(this.uiState.lastSelectedID, arcLabel);
       this.close()
     },
     close() {

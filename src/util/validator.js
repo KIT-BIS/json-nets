@@ -1,6 +1,6 @@
-import Ajv from 'ajv';
+import Ajv from 'ajv'
 
-const ajv = new Ajv();
+const ajv = new Ajv()
 
 /**
  * Validates a document against a JSON Schema.
@@ -10,15 +10,15 @@ const ajv = new Ajv();
  */
 export function validate(data, schema) {
   try {
-    const check = ajv.compile(schema);
-    const valid = check(data);
+    const check = ajv.compile(schema)
+    const valid = check(data)
     if (!valid) {
-      console.log('document not valid');
-      console.log(check.errors);
+      console.log('document not valid')
+      console.log(check.errors)
     }
-    return {isValid: valid, errors: check.errors};
+    return { isValid: valid, errors: check.errors }
   } catch (error) {
-    return {isValid: false, errors: {message: error.message}};
+    return { isValid: false, errors: { message: error.message } }
   }
 }
 

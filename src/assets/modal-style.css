@@ -1,5 +1,5 @@
 .column {
-    width: 47%;
+  width: 47%;
 }
 
 /* Generell modal styling */
@@ -34,7 +34,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    /* margin-bottom: 0px; *//*
+    /* margin-bottom: 0px; */ /*
     font-size: 40px;
     font-weight: bold;
     font: 700 34px/1.2, sans-serif, Arial, Helvetica;
@@ -42,19 +42,19 @@
 */
 
 .modal h2 {
-    font-size: 24px;
-    font-weight: 700;
-    font: 700 24px/1.2, sans-serif, Arial, Helvetica;
-    color: #2c3e50;
-    margin-top: 5px;
-    margin-bottom: 5px;
+  font-size: 24px;
+  font-weight: 700;
+  font: 700 24px/1.2, sans-serif, Arial, Helvetica;
+  color: #2c3e50;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .modal h3 {
-    font-size: 17px;
-    font-weight: 700;
-    padding: 10px 0px 5px 0px;
-    color: #2c3e50
+  font-size: 17px;
+  font-weight: 700;
+  padding: 10px 0px 5px 0px;
+  color: #2c3e50;
 }
 
 /*
@@ -63,7 +63,6 @@
     margin: 10px 0px 10px 0px;
 }*/
 
-
 /*
 .label {
     font-size: inherit;
@@ -71,133 +70,132 @@
     margin-bottom: 10px;
 }*/
 
-
 .evaluationLabel {
-    font-weight: 350;
-    /* color: #5f6970; */
+  font-weight: 350;
+  /* color: #5f6970; */
 }
 
 .addedLine {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    border: 1px solid #6c757d;
-    margin-top: 5px;
-    padding: 10px;
-    color: #000000;
-    background-color: #e3e7ec;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #6c757d;
+  margin-top: 5px;
+  padding: 10px;
+  color: #000000;
+  background-color: #e3e7ec;
 }
 
 .validationLine {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: left;
-    height: auto;
-    border-radius: 5px;
-    margin-top: -5px;
-    padding: 10px;
-    color: #000000;
-    /* background-color: #ebeff5; */
-    background-color: #e3e7ec;
-    position: relative;
-    z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: left;
+  height: auto;
+  border-radius: 5px;
+  margin-top: -5px;
+  padding: 10px;
+  color: #000000;
+  /* background-color: #ebeff5; */
+  background-color: #e3e7ec;
+  position: relative;
+  z-index: 1;
 }
 
 .validationHeading {
-    font-size: 17px;
-    font-weight: 700;
-    padding: 5px 0px 5px 0px;
-    color: #454545;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 5px 0px 5px 0px;
+  color: #454545;
 }
 
 .alignRow {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .alignedItemsContainer {
-    display: flex;
-    align-items: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
+  display: flex;
+  align-items: center;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .arrow {
-    font-size: 60px;
-    display: inline-block;
-    transform: scaleY(2);
-    transform-origin: left center;
+  font-size: 60px;
+  display: inline-block;
+  transform: scaleY(2);
+  transform-origin: left center;
 }
 
 /* Modal buttons */
 
 .modal .close {
-    background-color: #aeb7c0;
-    margin-top: 7px;
-    color: #232323;
-    padding: 10px 20px;
-    font-size: 20px;
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+  background-color: #aeb7c0;
+  margin-top: 7px;
+  color: #232323;
+  padding: 10px 20px;
+  font-size: 20px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
 .modal .close:hover {
-    background-color: #778899;
+  background-color: #778899;
 }
 
 .modal .saveChanges {
-    background-color: #90ee90;
-    margin-top: 7px;
-    color: #232323;
-    padding: 10px 20px;
-    font-size: 20px;
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+  background-color: #90ee90;
+  margin-top: 7px;
+  color: #232323;
+  padding: 10px 20px;
+  font-size: 20px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
 .modal .saveChanges:hover {
-    background-color: #008000;
+  background-color: #008000;
 }
 
 .modal .validate {
-    background-color: #7fb07f;
-    margin-top: 7px;
-    color: #232323;
-    padding: 10px 20px;
-    font-size: 20px;
-    width: 100%;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    position: relative;
-    z-index: 2;
+  background-color: #7fb07f;
+  margin-top: 7px;
+  color: #232323;
+  padding: 10px 20px;
+  font-size: 20px;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  position: relative;
+  z-index: 2;
 }
 
 .modal .validate:hover {
-    background-color: #486348;
+  background-color: #486348;
 }
 
 .smallBtn {
-    margin: 5px;
-    cursor: pointer;
-    border-radius: 0.25rem;
-    background-color: #aeb7c0;
-    color: #2c3e50;
-    font-weight: bold;
-    width: 25px;
-    height: 25px;
-    text-align: center;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  background-color: #aeb7c0;
+  color: #2c3e50;
+  font-weight: bold;
+  width: 25px;
+  height: 25px;
+  text-align: center;
 }
 
 .smallBtn:hover {
-    background-color: #778899;
+  background-color: #778899;
 }
 
 /* Info button styling */
@@ -223,12 +221,12 @@
 .infoModal {
     position: absolute;
     bottom: 20px;
-    /* left: 20%; *//*
+    /* left: 20%; */ /*
     transform: translateX(20%);
     width: auto;
     min-width: 150px;
     height: auto;
-    /* min-height: 50px; *//*
+    /* min-height: 50px; */ /*
     padding: 10px;
     background-color: #fff;
     color: #2c3e50;
@@ -264,174 +262,166 @@
 /* Template / Example styling */
 
 .container {
-    margin: 0px 0px 10px 0px;
-    padding: 10px;
-    border-radius: 5px;
-    width: 100%;
-    height: 100%;
-    background-color: #e8f5fe;
-    /* background-color: #e3e7ec; */
+  margin: 0px 0px 10px 0px;
+  padding: 10px;
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+  background-color: #e8f5fe;
+  /* background-color: #e3e7ec; */
 }
 
 .roundBtn {
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    background-color: #2c3e50;
-    border: none;
-    color: white;
-    font-size: 20px;
-    margin-right: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background-color: #2c3e50;
+  border: none;
+  color: white;
+  font-size: 20px;
+  margin-right: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
 }
 
 .roundBtn:hover {
-    background-color: #778899;
+  background-color: #778899;
 }
 
 .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.375rem 0.75rem;
-    line-height: 1.5;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    border: 2px solid;
-    border-radius: 50%;
-    width: 35px;
-    height: 35px;
-    cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  border: 2px solid;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  cursor: pointer;
 }
-
 
 /* Table styling */
 .table {
-    overflow: auto;
-    width: 100%;
-    border-collapse: collapse;
+  overflow: auto;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 .table th {
-    background-color: #e3e7ec;
-    font-weight: 600;
-    /* padding: 10px; */
-    padding: 3px 10px;
-    text-align: left;
-    border: 1px solid lightgray;
+  background-color: #e3e7ec;
+  font-weight: 600;
+  /* padding: 10px; */
+  padding: 3px 10px;
+  text-align: left;
+  border: 1px solid lightgray;
 }
 
 .table td {
-    font-weight: 300;
-    /* padding: 10px; */
-    padding: 3px 10px;
-    border: 1px solid lightgray;
-    background-color: white;
+  font-weight: 300;
+  /* padding: 10px; */
+  padding: 3px 10px;
+  border: 1px solid lightgray;
+  background-color: white;
 }
 
 .tableBoldHeading {
-    font-weight: 600;
-    margin-right: 5px;
+  font-weight: 600;
+  margin-right: 5px;
 }
 
 .tableBtn {
-    background-color: #e3e7ec;
-    color: inherit;
-    padding: 5px;
-    font-size: inherit;
-    font-weight: 300;
-    /* width: 100%; */
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
+  background-color: #e3e7ec;
+  color: inherit;
+  padding: 5px;
+  font-size: inherit;
+  font-weight: 300;
+  /* width: 100%; */
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
 }
 
 .tableBtn:hover {
-    background-color: #778899;
+  background-color: #778899;
 }
 
 /* Styling for the accordion, inspired by: Katherine Kato (https://codepen.io/kathykato/pen/MoZJom) */
 
-
-
 .accordion button {
-    position: relative;
-    display: block;
-    text-align: left;
-    width: 100%;
-    padding: 1em 0;
-    color: var(--text);
-    font-size: inherit;
-    border: none;
-    background: none;
-    outline: none;
+  position: relative;
+  display: block;
+  text-align: left;
+  width: 100%;
+  padding: 1em 0;
+  color: var(--text);
+  font-size: inherit;
+  border: none;
+  background: none;
+  outline: none;
 }
 
 .accordion button:hover,
 .accordion button:focus {
-    cursor: pointer;
-    color: #3c1ad1;
+  cursor: pointer;
+  color: #3c1ad1;
 }
 
 .accordion button::after {
-    cursor: pointer;
-    color: var(--text);
-    border: 1px solid var(--text);
+  cursor: pointer;
+  color: var(--text);
+  border: 1px solid var(--text);
 }
 
 /* TODO Wenn geschlossen wird, bleibt farblich markiert */
 
 .accordion .icon {
-    display: inline-block;
-    position: absolute;
-    top: 18px;
-    right: 0;
-    width: 22px;
-    height: 22px;
-    border: 1px solid;
-    border-radius: 22px;
+  display: inline-block;
+  position: absolute;
+  top: 18px;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  border: 1px solid;
+  border-radius: 22px;
 }
 
 .accordion .icon::before {
-    display: block;
-    position: absolute;
-    content: '';
-    top: 9px;
-    left: 5px;
-    width: 10px;
-    height: 2px;
-    background: currentColor;
+  display: block;
+  position: absolute;
+  content: '';
+  top: 9px;
+  left: 5px;
+  width: 10px;
+  height: 2px;
+  background: currentColor;
 }
 
 .accordion .icon::after {
-    display: block;
-    position: absolute;
-    content: '';
-    top: 5px;
-    left: 9px;
-    width: 2px;
-    height: 10px;
-    background: currentColor;
+  display: block;
+  position: absolute;
+  content: '';
+  top: 5px;
+  left: 9px;
+  width: 2px;
+  height: 10px;
+  background: currentColor;
 }
 
 .accordion button[aria-expanded='true'] .icon::after {
-    width: 0;
+  width: 0;
 }
 
-.accordion button[aria-expanded='true']+.accordion-content {
-    opacity: 1;
-    max-height: 1000px;
-    transition: all 100ms linear;
-    will-change: opacity, max-height;
+.accordion button[aria-expanded='true'] + .accordion-content {
+  opacity: 1;
+  max-height: 1000px;
+  transition: all 100ms linear;
+  will-change: opacity, max-height;
 }
-
-
-
 
 /* Result styling */
-
-

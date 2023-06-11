@@ -1,9 +1,9 @@
 /** @typedef {import('./transition').Transition} Transition */
 /** @typedef {import('./place').Place} Place */
-import {query} from '@/util/jsonPath';
+import { query } from '@/util/jsonPath'
 
-export const PRESET_ARC_TYPE_CONSUME = 'consume';
-export const PRESET_ARC_TYPE_READ = 'read';
+export const PRESET_ARC_TYPE_CONSUME = 'consume'
+export const PRESET_ARC_TYPE_READ = 'read'
 
 /**
  * Creates a new preset arc that can read and may delete documents in a place
@@ -13,14 +13,14 @@ export const PRESET_ARC_TYPE_READ = 'read';
  * @param {String} id ID of the new arc.
  */
 export function PresetArc(place, transition, id) {
-  this.id = id;
-  this.type = 'preset';
-  this.place = place;
-  this.transition = transition;
+  this.id = id
+  this.type = 'preset'
+  this.place = place
+  this.transition = transition
   this.label = {
     type: PRESET_ARC_TYPE_CONSUME,
     filter: ''
-  };
+  }
 }
 
 /**
@@ -30,16 +30,16 @@ export function PresetArc(place, transition, id) {
  * @name PresetArc#applyFilter
  * @return {Array}
  */
-PresetArc.prototype.applyFilter = function() {
-  const documents = this.place.content.data;
+PresetArc.prototype.applyFilter = function () {
+  const documents = this.place.content.data
   //TODO: jsonPath query functin was updated, this if condition may not be necessary any more
   if (this.label.filter === '') {
-    return documents;
+    return documents
   } else {
-    const filteredDocuments = query(documents, this.label.filter);
-    return filteredDocuments;
+    const filteredDocuments = query(documents, this.label.filter)
+    return filteredDocuments
   }
-};
+}
 
 /**
  * Removes the given document from the connected place
@@ -48,9 +48,9 @@ PresetArc.prototype.applyFilter = function() {
  * @param {Object} document
  * @name PresetArc#occur
  */
-PresetArc.prototype.occur = function(document) {
+PresetArc.prototype.occur = function (document) {
   if (this.label.type === PRESET_ARC_TYPE_CONSUME) {
-    const index = this.place.content.data.indexOf(document);
-    this.place.content.data.splice(index, 1);
+    const index = this.place.content.data.indexOf(document)
+    this.place.content.data.splice(index, 1)
   }
-};
+}

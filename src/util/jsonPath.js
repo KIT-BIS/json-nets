@@ -7,21 +7,19 @@ import { JSONPath } from 'jsonpath-plus'
  * @return {*}
  */
 export function query(documents, expression) {
-  let jsonPathString = '';
-  
+  let jsonPathString = ''
+
   if (expression === '') {
     jsonPathString = '$.*'
   } else {
-    jsonPathString = '$.[' + expression + ']';
-
-  }  
+    jsonPathString = '$.[' + expression + ']'
+  }
 
   return JSONPath({
-        //@ts-ignore
-          path: jsonPathString,
-          //@ts-ignore
-          json: documents
-
-        })
+    //@ts-ignore
+    path: jsonPathString,
+    //@ts-ignore
+    json: documents
+  })
   //return jsonpath.query(documents, jsonPathString);
 }

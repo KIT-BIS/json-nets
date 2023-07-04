@@ -63,7 +63,7 @@
               <span>Minimize templates for JSONPath expressions</span>
             </div>
             <div class="block">
-              <table class="table">
+              <table class="table is-fullwidth">
                 <thead>
                   <tr>
                     <th>Example</th>
@@ -75,89 +75,18 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td rowspan="9">
-                      <code>
-                        [ {<br />
-                        "name": "Alice",<br />
-                        "age": 23,<br />
-                        "studentID": 2567<br />
-                        },<br />
-                        { <br />
-                        "name": "Marco", <br />
-                        "age": 17, <br />
-                        "studentID": 2544 <br />
-                        }, <br />
-                        { <br />
-                        "age": 21, <br />
-                        "studentID": 2063 <br />
-                        } ]</code
-                      >
+                  <tr v-for="(snippet, index) in jsonPathSnippets">
+        
+                    <td v-if="index === 0" rowspan="9">
+                      <StaticCodeEditor :content="JSON.stringify(examples,null,2)"/>
                     </td>
-                    <td>Return all objects (apply no filter)</td>
-                    <td>
-                      <span class="is-clickable" @click="uiStateStore.setJsonPathQuery('')"
-                        ><i>(leave empty)</i></span
-                      >
-                    </td>
+                    <InboundArcModalExampleRow 
+                      :desc="snippet.desc"
+                      :querySnippet="snippet.querySnippet"
+                      :query="snippet.query"
+                    />
                   </tr>
-                  <tr>
-                    <td>Filter the first object</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('0')">$.[0]</code>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter the first two objects</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('0,1')"
-                        >$.[0,1]</code
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter the last object</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('-1:')"
-                        >$.[-1:]</code
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter until the third object</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery(':2')"
-                        >$.[:2]</code
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter all objects with a specific property</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('?(@.name)')"
-                        >$.[?(@.name)]</code
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter all objects where the property is equal to a specific value</td>
-                    <td>
-                      <code
-                        class="is-clickable"
-                        @click="uiStateStore.setJsonPathQuery('?(@.name == \'Alice\')')"
-                        >$.[?(@.name=="Alice")]</code
-                      >
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Filter all objects where a property is greater than a specific value</td>
-                    <td>
-                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('?(@.age > 18)')"
-                        >$.[?(@.age > 18)]</code
-                      >
-                    </td>
-                  </tr>
-                </tbody>
+               </tbody>
               </table>
             </div>
           </div>
@@ -181,7 +110,8 @@
             </div>
           </div>
           <div class="column is-2 has-text-centered">
-            <p class="scoped-arrow">&#10093;</p>
+            <Arrow />
+            <!-- <p class="scoped-arrow">&#10093;</p> -->
           </div>
           <div class="column is-5">
             <div class="field">
@@ -214,26 +144,37 @@
 import { mapStores } from 'pinia'
 import { defineComponent } from 'vue'
 import { useUiStateStore } from '@/stores/uiState'
+import StaticCodeEditor from '@/components/_shared/StaticCodeEditor.vue'
+import InboundArcModalExampleRow from './InboundArcModalExampleRow.vue'
+import Arrow from '@/components/_shared/Arrow.vue'
 
-import { setArcLabel } from '@/components/jsonnets/net'
+import { setArcLabel } from '@/jsonnets/net'
 
-import HelpButton from '@/components/HelpButton.vue'
+import HelpButton from '@/components/_shared/HelpButton.vue'
 
 import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { basicSetup } from 'codemirror';
 
+import { examples, jsonPathSnippets } from './InboundArcModalExamples'
+
 export default defineComponent({
   components: {
     Codemirror,
-    HelpButton
+    HelpButton,
+    StaticCodeEditor,
+    InboundArcModalExampleRow,
+    Arrow
   },
   setup() {
     const extensions = [basicSetup, json(), oneDark]
     return {
       extensions
     }
+  },
+  data() {
+    return { examples, jsonPathSnippets }
   },
   computed: {
     jsonPathQuery: {
@@ -285,7 +226,7 @@ export default defineComponent({
 .scoped-codemirror {
   height: '400px';
 }
-.scoped-arrow {
+/* .scoped-arrow {
   font-size: 60px;
   display: inline-block;
   transform: scaleY(2);
@@ -293,5 +234,6 @@ export default defineComponent({
   width: 5%; 
   align-self: center; 
   text-align: center;
-}
+} */
 </style>
+@/jsonnets/net

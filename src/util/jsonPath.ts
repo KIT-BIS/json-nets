@@ -6,7 +6,7 @@ import { JSONPath } from 'jsonpath-plus'
  * @param {String} expression expects a JSONPath-predicate.
  * @return {*}
  */
-export function query(documents, expression) {
+export function query(documents: Array<any>, expression: String) {
   let jsonPathString = ''
 
   if (expression === '') {
@@ -16,9 +16,7 @@ export function query(documents, expression) {
   }
 
   return JSONPath({
-    //@ts-ignore
     path: jsonPathString,
-    //@ts-ignore
     json: documents
   })
   //return jsonpath.query(documents, jsonPathString);

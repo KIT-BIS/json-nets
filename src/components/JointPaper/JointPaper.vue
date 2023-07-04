@@ -47,7 +47,7 @@ import {
   addTransition,
   register,
   connect
-} from '@/components/jsonnets/net'
+} from '@/jsonnets/net'
 
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
@@ -161,7 +161,7 @@ export default defineComponent({
       let sourceId = linkView.model.source().id
 
       _graph.removeCells([linkView.model]);
-      connect(sourceId, targetId)
+      connect(String(sourceId), String(targetId))
     })
 
     register(this.onJsonnetsEvent)
@@ -332,4 +332,4 @@ export default defineComponent({
   cursor: grabbing !important;
 }
 </style>
-./JointPaper/JointPlace./JointPaper/JointTransition./JointPaper/JointLink
+./JointPaper/JointPlace./JointPaper/JointTransition./JointPaper/JointLink@/jsonnets/net

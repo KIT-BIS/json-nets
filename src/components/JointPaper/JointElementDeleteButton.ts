@@ -2,7 +2,7 @@ import * as joint from 'jointjs';
 import {
   removePlace,
   removeTransition
-} from '@/components/jsonnets/net'
+} from '@/jsonnets/net'
 
 export default class DeleteButton extends joint.elementTools.Button {
     constructor(deleteX: string, element: joint.dia.Element) {
@@ -39,9 +39,9 @@ export default class DeleteButton extends joint.elementTools.Button {
         rotate: true,
         action: function () {
           if (element.get('jsonnetsType') === 'place') {
-            removePlace(element.id)
+            removePlace(String(element.id))
           } else if (element.get('jsonnetsType') === 'transition') {
-            removeTransition(element.id)
+            removeTransition(String(element.id))
           }
         }
       })

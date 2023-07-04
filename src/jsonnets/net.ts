@@ -1,9 +1,9 @@
-import { Place } from './place'
+import { Place, type PlaceContent } from './place'
 import { v4 as uuidv4 } from 'uuid'
 import { Transition } from './transition'
-import { PresetArc } from './presetArc'
+import { PresetArc, type PresetArcLabel } from './presetArc'
 import { PostsetArc } from './postsetArc'
-import { validate } from '@/util/validator'
+import { validate } from '@/util/jsonSchema'
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE'
 export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION'
@@ -18,10 +18,14 @@ export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION'
 export const EVENT_REMOVE_ARC = 'EVENT_REMOVE_ARC'
 export const EVENT_NET_IMPORTED = 'EVENT_NET_IMPORTED'
 
-let _transitions = []
-let _places = []
-let _arcs = []
-let _notificationReceivers = []
+let _transitions: Array<Transition> = []
+let _places: Array<Place> = []
+let _arcs: Array<PresetArc|PostsetArc> = []
+let _notificationReceivers: Array<Function> = []
+
+interface NotificationReceiver {
+  notify: Function
+}
 
 function clear() {
   while (_transitions.length > 0) {
@@ -33,7 +37,7 @@ function clear() {
   }
 }
 
-export function importNet(jsonString, example) {
+export function importNet(jsonString: string, example: Object) {
   clear()
 
   let data
@@ -44,8 +48,6 @@ export function importNet(jsonString, example) {
   } else {
     data = JSON.parse(jsonString)
   }
-  console.log('importing')
-  console.log(data)
 
   for (let i = 0; i < data.places.length; i++) {
     let place = data.places[i]
@@ -128,7 +130,7 @@ export function exportNet() {
  * @param {String} placeID The ID of the place to find.
  * @return {Place} The found place.
  */
-export function findPlace(placeID) {
+export function findPlace(placeID: string) {
   return _places.find((place) => place.id === placeID)
 }
 
@@ -152,7 +154,7 @@ export function addPlace(placeID = uuidv4()) {
  * arcs that were connected to it.
  * @param {String} placeID The ID of the place to remove.
  */
-export function removePlace(placeID) {
+export function removePlace(placeID: string) {
   _places = _places.filter((place) => {
     return place.id !== placeID
   })
@@ -173,53 +175,40 @@ export function removePlace(placeID) {
  * @param {Object} content New content of the place.
  * @param {String} placeName Name of the place.
  */
-export function setPlaceContent(placeID, content, placeName) {
+export function setPlaceContent(placeID: string, content: PlaceContent, placeName: string) {
   const place = _places.find((place) => place.id === placeID)
   const schema = content.schema
   const data = content.data
   let allValid = true
   const errors = { nameError: '', validationError: '' }
-  const docErrors = []
+  const docErrors: Array<any> = []
   data.forEach((doc) => {
     const { isValid, errors } = validate(doc, schema)
     if (!isValid) {
-      console.log('Invalid document:')
-      console.log(errors)
+      // console.log('Invalid document:')
+      // console.log(errors)
       docErrors.push(errors)
       allValid = false
     }
   })
 
-  //const itemNameReturn = document.getElementById('itemNameReturn');
-  //const itemName = document.getElementById('itemName');
   if (!validatePlaceName(placeName, placeID)) {
-    //itemNameReturn.classList.remove('is-hidden');
-    //itemName.classList.add('is-danger');
     errors.nameError = 'Name already exists and must be unique.'
     allValid = false
   }
-  //else {
-  //  itemNameReturn.classList.add('is-hidden');
-  //  itemName.classList.remove('is-danger');
-  //}
 
   if (docErrors.length > 0) {
-    console.log('Schema validation errors.')
-    console.log(docErrors)
+    // console.log('Schema validation errors.')
+    // console.log(docErrors)
     errors.validationError = 'Validation error: ' + JSON.stringify(docErrors)
     //showConsole(namedocErrors);
   }
 
-  if (allValid) {
+  if (allValid && place) {
     place.content = content
     place.name = placeName
     notify(EVENT_CHANGE_PLACE_CONTENT, { placeID, num: place.content.data.length, name: placeName })
   }
-  // else {
-  //   //TODO: vue and jsonnets implementation should be untangled ... make ui subscribe to an event
-  //   useUiStateStore().setValidationError(errors.validationError);
-  //   useUiStateStore().setNameError(errors.nameError);
-  // }
 }
 
 /**
@@ -228,11 +217,13 @@ export function setPlaceContent(placeID, content, placeName) {
  * @param {Object} content
  * @param {String} name
  */
-export function setTransitionContent(transitionID, content, name) {
+export function setTransitionContent(transitionID: string, content: string, name: string) {
   const transition = findTransition(transitionID)
-  transition.content = content
-  transition.name = name
-  notify(EVENT_CHANGE_TRANSITION_CONTENT, { transitionID, name })
+  if (transition) {
+    transition.content = content
+    transition.name = name
+    notify(EVENT_CHANGE_TRANSITION_CONTENT, { transitionID, name })
+  }
 }
 
 /**
@@ -240,7 +231,7 @@ export function setTransitionContent(transitionID, content, name) {
  * @param {String} transitionID The ID of the transition to find.
  * @return {Transition} The found transition.
  */
-export function findTransition(transitionID) {
+export function findTransition(transitionID: string) {
   return _transitions.find((transition) => transition.id === transitionID)
 }
 
@@ -264,8 +255,8 @@ export function addTransition(transitionID = uuidv4()) {
  * any connected arcs.
  * @param {String} transitionID The ID of the transition to remove.
  */
-export function removeTransition(transitionID) {
-  let transitionToRemove = null
+export function removeTransition(transitionID: string) {
+  let transitionToRemove = findTransition(transitionID);  
   const newTransitionsList = _transitions.filter((transition) => {
     if (transition.id === transitionID) {
       transitionToRemove = transition
@@ -275,7 +266,9 @@ export function removeTransition(transitionID) {
     }
   })
 
-  transitionToRemove.preset.forEach((arc) => {
+  if(!transitionToRemove) return;
+
+  transitionToRemove.preset.forEach((arc: PresetArc) => {
     disconnect(arc.id)
   })
   transitionToRemove.postset.forEach((arc) => {
@@ -292,9 +285,10 @@ export function removeTransition(transitionID) {
  * @param {String} arcID Optional predefined ID of arc.
  * @return {String} ID of the created arc.
  */
-export function connect(fromID, toID, arcID = uuidv4()) {
-  console.log('connecting ' + fromID + ' with ' + toID)
-  const nodes = _places.concat(_transitions)
+export function connect(fromID: string, toID: string, arcID = uuidv4()) {
+  // console.log('connecting ' + fromID + ' with ' + toID)
+  // const nodes: Array<Place|Transition> = _places.concat(_transitions)
+  const nodes = [..._places, ..._transitions]
   const from = nodes.find((node) => node.id === fromID)
   const to = nodes.find((node) => node.id === toID)
   let arc
@@ -319,7 +313,7 @@ export function connect(fromID, toID, arcID = uuidv4()) {
       console.log('Can only connect Places and Transitions.')
     }
   }
-  if (arc) {
+  if (arc && from && to) {
     notify(EVENT_CONNECT, { from: from.id, to: to.id, arcID, jsonnetsType: arc.type })
     return arc
   }
@@ -329,7 +323,7 @@ export function connect(fromID, toID, arcID = uuidv4()) {
  * Removes an arc.
  * @param {String} arcID
  */
-export function disconnect(arcID) {
+export function disconnect(arcID: string) {
   _arcs = _arcs.filter((arc) => {
     if (arc.id === arcID) {
       _transitions.forEach((transition) => {
@@ -355,7 +349,7 @@ export function disconnect(arcID) {
  * @param {String} arcID The arc ID.
  * @return {PresetArc|PostsetArc} The found arc.
  */
-export function findArc(arcID) {
+export function findArc(arcID: string) {
   return _arcs.find((arc) => arc.id === arcID)
 }
 
@@ -364,20 +358,20 @@ export function findArc(arcID) {
  * @param {String} arcID The ID of the arc to add the label to.
  * @param {Object} label The label to set.
  */
-export function setArcLabel(arcID, label) {
+export function setArcLabel(arcID: string, label: PresetArcLabel | string) {
   const arc = _arcs.find((arc) => arc.id === arcID)
-  arc.label = label
+  if (arc instanceof PostsetArc) {
+    arc.label = String(label)
+  } else if (arc instanceof PresetArc){
+    //Todo: this doesn't feel right
+    arc.label = <PresetArcLabel>label
+  }
 }
 
 export function occurAny() {
-  console.log('any occurs?')
   for (let i = 0; i < _transitions.length; i++) {
     let transition = _transitions[i]
-    // console.log('iterating')
-    // console.log(transition.name)
-    // console.log(transition.isEnabled());
     if (transition.isEnabled()) {
-      // console.log('found enabled')
       occur(transition.id)
       break
     }
@@ -389,8 +383,9 @@ export function occurAny() {
  * Checks if transition is enabled.
  * @param {String} transitionID
  */
-export function occur(transitionID) {
+export function occur(transitionID: string) {
   const transition = findTransition(transitionID)
+  if(!transition) return;
   if (!transition.isEnabled()) {
     alert('The transition is not enabled.')
   } else {
@@ -402,11 +397,6 @@ export function occur(transitionID) {
         num: arc.place.content.data.length
       })
     )
-    //  notify(EVENT_CHANGE_PLACE_CONTENT, {
-    //        placeID: arc.place.id,
-    //        num: arc.place.content.data.length,
-    //        name: arc.place.name,
-    //      }));
     transition.postset.forEach((arc) =>
       notify(EVENT_OCCUR_ADD_TOKEN, {
         arcID: arc.id,
@@ -414,15 +404,10 @@ export function occur(transitionID) {
         num: arc.place.content.data.length
       })
     )
-    //      notify(EVENT_CHANGE_PLACE_CONTENT, {
-    //        placeID: arc.place.id,
-    //        num: arc.place.content.data.length,
-    //        name: arc.place.name,
-    //      }));
   }
 }
 
-export function register(notificationReceiver) {
+export function register(notificationReceiver: Function) {
   _notificationReceivers.push(notificationReceiver)
 }
 
@@ -431,7 +416,7 @@ export function register(notificationReceiver) {
  * @param {String} event The event that occured.
  * @param {Object} payload Message to send to the observer.
  */
-export function notify(event, payload) {
+export function notify(event: string, payload: Object) {
   for (let i = 0; i < _notificationReceivers.length; i++) {
     _notificationReceivers[0](event, payload)
   }
@@ -444,7 +429,7 @@ export function notify(event, payload) {
  * @param {String} id - ID of the place
  * @return {Boolean}
  */
-export function validatePlaceName(name, id) {
+export function validatePlaceName(name: string, id: string) {
   const otherPlacesWithSameName = _places.filter((place) => {
     const isOtherPlaceWithSameName = place.name === name && place.id !== id
     return isOtherPlaceWithSameName

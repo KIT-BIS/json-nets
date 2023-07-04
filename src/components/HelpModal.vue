@@ -61,15 +61,15 @@
 <script lang="ts">
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 
 export default defineComponent({
-  setup() {
-    const uiState = useUiStateStore()
-    return { uiState }
+  computed: {
+    ...mapStores(useUiStateStore)
   },
   methods: {
     close() {
-      this.uiState.showHelpModal = false
+      this.uiStateStore.showHelpModal = false
     }
   }
 })

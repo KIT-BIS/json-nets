@@ -6,7 +6,10 @@ import { mapStores } from 'pinia'
 export default defineComponent({
   props: {
     icon: String,
-    mode: String,
+    mode: {
+      type: String,
+      required: true
+    },
     callback: Function
   },
   computed: {

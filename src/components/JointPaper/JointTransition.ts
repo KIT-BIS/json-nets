@@ -4,7 +4,7 @@ import InspectorButton from './JointElementInspectorButton'
 import ConnectButton from './JointConnectButton'
 import { 
   occur
-} from '@/components/jsonnets/net'
+} from '@/jsonnets/net'
 
 
 export default class Transition extends joint.shapes.pn.Transition {
@@ -68,7 +68,7 @@ export default class Transition extends joint.shapes.pn.Transition {
       },
       rotate: true,
       action: () => {
-        occur(this.id)
+        occur(String(this.id))
       }
     })
     const toolsView = new joint.dia.ToolsView({

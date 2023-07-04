@@ -1,55 +1,47 @@
-// TODO: proper modularisation
 import { defineStore } from 'pinia'
 import { mock } from 'mock-json-schema'
 import { toRaw } from 'vue'
-// @ts-ignore
 import * as beautify from 'js-beautify'
-// @ts-ignore
 import {
   INSPECTOR_MODE_PLACE,
   INSPECTOR_MODE_POSTSET_ARC,
   INSPECTOR_MODE_PRESET_ARC,
   INSPECTOR_MODE_TRANSITION,
-  MODE_MOVE,
   MODE_NONE,
-  MODE_PAN
 } from '@/App.vue'
-// @ts-ignore
-import { findArc, findTransition, findPlace } from '@/components/jsonnets/net.js'
-// @ts-ignore
+import { findArc, findTransition, findPlace } from '@/jsonnets/net.js'
 import { query } from '@/util/jsonPath.js'
-// @ts-ignore
 import { variablifyDocuments, evaluate } from '@/util/jsonnet.js'
-// @ts-ignore
-import { validate } from '@/util/validator.js'
-// @ts-ignore
+import { validate } from '@/util/jsonSchema.js'
 import { transferSchemaToJsonFormsData, transferJsonFormsDataToSchema } from '@/util/jsonForms.js'
+import type { ErrorObject } from 'ajv'
+import { PresetArc } from '@/jsonnets/presetArc'
 
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
     return {
-      mode: MODE_NONE as string | undefined,
+      mode: MODE_NONE as string,
       showInspector: false as boolean,
-      lastSelectedID: '' as string | undefined,
-      inspectorContent: '' as string | undefined,
-      itemName: '' as string | undefined,
-      nameError: '' as string | undefined,
-      validationError: '' as string | undefined,
+      lastSelectedID: '' as string,
+      inspectorContent: '' as string,
+      itemName: '' as string,
+      nameError: '' as string,
+      validationError: '' as string,
 
       showPresetModal: false as boolean,
-      arcMode: '' as string | undefined,
-      inputTokens: '' as string | undefined,
-      inspectorMode: '' as string | undefined,
-      jsonPathQuery: '' as string | undefined,
-      queryResult: '' as string | undefined,
+      arcMode: '' as string,
+      inputTokens: '' as string,
+      inspectorMode: '' as string,
+      jsonPathQuery: '' as string,
+      queryResult: '' as string,
       jsonPathHelpExpanded: false as boolean,
 
       showTransitionModal: false as boolean,
       inputTokensArray: [] as Array<{ name: string, documents: Array<{}> }> | undefined,
-      tempAssignment: {} as Object | undefined,
+      tempAssignment: {} as Object,
       selectedForAssignment: {} as { [key: string]: number },
       transitionInscriptionValid: false as boolean,
-      inscriptionEvaluationResult: '' as string | undefined,
+      inscriptionEvaluationResult: '' as string,
 
       showPostsetModal: false as boolean,
       outboundEvaluation: false as boolean,
@@ -59,31 +51,19 @@ export const useUiStateStore = defineStore('uiState', {
 
       showPlaceModal: false as boolean,
       formsData: {},
-      formsDataString: '' as string | undefined,
-      generatedSchemaString: '' as string | undefined,
-      placeTokens: [] as Array<Object> | undefined,
-      tokenString: '' as string | undefined,
+      formsDataString: '' as string,
+      generatedSchemaString: '' as string,
+      placeTokens: [] as Array<Object>,
+      tokenString: '' as string,
       placeTokenValidation: false as boolean,
-      placeTokenValidationResult: '' as string | undefined,
+      placeTokenValidationResult: '' as string,
       selectedIndex: -1,
 
       showHelpModal: false as boolean
     }
   },
   actions: {
-    setMode(mode: string | undefined) {
-      //TODO: Draggable setting may still be useful for some modes?
-      //      if (mode === MODE_MOVE) {
-      //        // toggleDraggable(true);
-      //      } else {
-      //        // toggleDraggable(false);
-      //      }
-      //
-      //      if (mode === MODE_PAN) {
-      //        // setPanable(true);
-      //      } else {
-      //        // setPanable(false);
-      //      }
+    setMode(mode: string) {
       this.mode = mode
     },
     setShowInspector(show: boolean) {
@@ -100,6 +80,9 @@ export const useUiStateStore = defineStore('uiState', {
       this.lastSelectedID = id
       if (mode === INSPECTOR_MODE_PRESET_ARC) {
         const arc = findArc(this.lastSelectedID)
+        if(!arc) return;
+        if(!(arc instanceof PresetArc)) return;
+
         const place = arc.place
         this.jsonPathQuery = arc.label.filter
         this.inputTokens = JSON.stringify(place.content.data, null, 2)
@@ -114,6 +97,8 @@ export const useUiStateStore = defineStore('uiState', {
       } else if (mode === INSPECTOR_MODE_POSTSET_ARC) {
         this.showPostsetModal = true
         const arc = findArc(this.lastSelectedID)
+        if(!arc) return;
+
         const inputTokens = []
         const transition = arc.transition
         for (let i = 0; i < transition.preset.length; i++) {
@@ -129,6 +114,8 @@ export const useUiStateStore = defineStore('uiState', {
       } else if (mode === INSPECTOR_MODE_TRANSITION) {
         this.showTransitionModal = true
         const transition = findTransition(this.lastSelectedID)
+        if(!transition) return;
+
         const inputTokens = []
         for (let i = 0; i < transition.preset.length; i++) {
           const name = transition.preset[i].place.name
@@ -145,6 +132,8 @@ export const useUiStateStore = defineStore('uiState', {
         this.setItemName(transition.name)
       } else if (mode === INSPECTOR_MODE_PLACE) {
         const place = findPlace(this.lastSelectedID)
+        if (!place) return;
+
         this.showPlaceModal = true
         this.setItemName(place.name)
         this.formsData = transferSchemaToJsonFormsData(JSON.stringify(place.content.schema))
@@ -166,7 +155,7 @@ export const useUiStateStore = defineStore('uiState', {
       )
       this.validateTokens()
     },
-    selectToken(index) {
+    selectToken(index: number) {
       this.selectedIndex = index
       this.tokenString = JSON.stringify(this.placeTokens[index], null, 2)
     },
@@ -175,21 +164,22 @@ export const useUiStateStore = defineStore('uiState', {
       this.placeTokens.push(newDoc)
       this.validateTokens()
     },
-    deleteToken(index) {
+    deleteToken(index: number) {
       this.placeTokens.splice(index, 1)
       this.selectedIndex = -1
       this.tokenString = ''
     },
     validateTokens() {
-      const docErrors = []
+      const docErrors: Array<any> = []
       let allValid = true
 
       this.placeTokens.forEach((doc, index) => {
         const { isValid, errors } = validate(doc, JSON.parse(this.generatedSchemaString))
         if (!isValid) {
-          console.log('Invalid document:')
-          console.log(errors)
-          errors[0].errorIndex = index
+          // console.log('Invalid document:')
+          // console.log(errors)
+          // const error: ErrorObject = errors[0]
+          // error.errorIndex = index
           docErrors.push(errors)
           allValid = false
         }
@@ -260,6 +250,7 @@ export const useUiStateStore = defineStore('uiState', {
     },
     updateOutboundSchemaEvaluation() {
       const arc = findArc(this.lastSelectedID)
+      if(!arc) return;
       const place = arc.place
       if (this.outboundEvaluation) {
         //@ts-ignore
@@ -272,11 +263,11 @@ export const useUiStateStore = defineStore('uiState', {
           this.outboundSchemaEvaluationResult = 'Token is valid.'
         } else {
           this.outboundSchemaEvaluation = false
-          // Todo: multiple errors possible
+          // Todo: multiple errors possible, also ts typing
+          //@ts-ignore
           this.outboundSchemaEvaluationResult = 'Not valid: ' + validationResult.errors[0].message
         }
       } else {
-        console.log('inscription failed')
         this.outboundSchemaEvaluation = false
         this.outboundSchemaEvaluationResult = 'Evaluation failed.'
         // todo: show appropriate message
@@ -291,6 +282,7 @@ export const useUiStateStore = defineStore('uiState', {
         jsonnetString += this.inspectorContent
       } else if (this.showPostsetModal) {
         const arc = findArc(this.lastSelectedID)
+        if(!arc) return;
         jsonnetString += arc.transition.content
       }
       // Convert string to Boolean

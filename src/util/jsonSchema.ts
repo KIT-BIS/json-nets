@@ -8,7 +8,7 @@ const ajv = new Ajv()
  * @param {Object} schema
  * @return {Object}
  */
-export function validate(data, schema) {
+export function validate(data: Object, schema: Object) {
   try {
     const check = ajv.compile(schema)
     const valid = check(data)
@@ -17,7 +17,7 @@ export function validate(data, schema) {
       console.log(check.errors)
     }
     return { isValid: valid, errors: check.errors }
-  } catch (error) {
+  } catch (error: any) {
     return { isValid: false, errors: { message: error.message } }
   }
 }

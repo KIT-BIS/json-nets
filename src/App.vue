@@ -1,20 +1,15 @@
 <script setup lang="ts">
-//@ts-ignore
-import example from '@/examples/recognition/net.js'
-import InboundArcModal from './components/InboundArcModal.vue'
+import example from '@/examples/recognition/net'
+import InboundArcModal from './components/InboundArcModal/InboundArcModal.vue'
 import HelpModal from './components/HelpModal.vue'
-//@ts-ignore
 import OutboundArcModal from './components/OutboundArcModal/OutboundArcModal.vue'
-//@ts-ignore
-import TransitionModal from './components/TransitionModal.vue'
-import PlaceModal from './components/PlaceModal.vue'
-import ModeButton from './components/ModeButton.vue'
+import TransitionModal from './components/TransitionModal/TransitionModal.vue'
+import PlaceModal from './components/PlaceModal/PlaceModal.vue'
+import ModeButton from './components/_shared/ModeButton.vue'
 import { useUiStateStore } from '@/stores/uiState'
-// @ts-ignore
 import { download, readFile } from '@/util/files'
 import JointPaper from './components/JointPaper/JointPaper.vue'
-// @ts-ignore
-import { exportNet, importNet } from '@/components/jsonnets/net.js'
+import { exportNet, importNet } from '@/jsonnets/net'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
@@ -102,3 +97,4 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC'
   <HelpModal v-if="uiState.showHelpModal" />
   <!-- <RouterView /> -->
 </template>
+@/jsonnets/net.js

@@ -1,5 +1,5 @@
 import * as joint from 'jointjs';
-import { disconnect } from '@/components/jsonnets/net'
+import { disconnect } from '@/jsonnets/net'
 import { useUiStateStore } from '@/stores/uiState';
 import {
   INSPECTOR_MODE_POSTSET_ARC,
@@ -54,7 +54,7 @@ export default class Link extends joint.shapes.standard.Link {
       ],
       distance: 30,
       action: () => {
-        disconnect(this.id)
+        disconnect(String(this.id))
       }
     })
 

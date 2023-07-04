@@ -1,10 +1,11 @@
 /**
+ * TODO: very hacky, needs rework
  * based on odometer solution in
  * https://stackoverflow.com/questions/8936610/how-can-i-create-every-combination-possible-for-the-contents-of-two-arrays
  * @param {Array} arrayOfArrays
  * @return {Array}
  */
-export function combineArrays(arrayOfArrays) {
+export function combineArrays(arrayOfArrays: any) {
   if (!arrayOfArrays) {
     return []
   }
@@ -46,7 +47,7 @@ export function combineArrays(arrayOfArrays) {
  * @param {Array} arrayOfArrays
  * @return {Array}
  */
-function formCombination(odometer, arrayOfArrays) {
+function formCombination(odometer: any, arrayOfArrays: any) {
   const output = []
   for (let i = 0; i < odometer.length; i++) {
     output.push(arrayOfArrays[i][odometer[i]])
@@ -59,7 +60,7 @@ function formCombination(odometer, arrayOfArrays) {
  * @param {Array} arrayOfArrays
  * @return {Number}
  */
-function odometerIncrement(odometer, arrayOfArrays) {
+function odometerIncrement(odometer: any, arrayOfArrays: any) {
   // Basically, work you way from the rightmost digit of the "odometer"...
   // if you're able to increment without cycling that digit back to zero,
   // you're all done, otherwise,

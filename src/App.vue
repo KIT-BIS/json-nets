@@ -1,12 +1,10 @@
 <script setup lang="ts">
-// TODO: proper typescript modularisation
-import { onMounted } from 'vue'
 //@ts-ignore
 import example from '@/examples/recognition/net.js'
 import InboundArcModal from './components/InboundArcModal.vue'
 import HelpModal from './components/HelpModal.vue'
 //@ts-ignore
-import OutboundArcModal from './components/OutboundArcModal.vue'
+import OutboundArcModal from './components/OutboundArcModal/OutboundArcModal.vue'
 //@ts-ignore
 import TransitionModal from './components/TransitionModal.vue'
 import PlaceModal from './components/PlaceModal.vue'
@@ -14,14 +12,13 @@ import ModeButton from './components/ModeButton.vue'
 import { useUiStateStore } from '@/stores/uiState'
 // @ts-ignore
 import { download, readFile } from '@/util/files'
-import JointPaper from './components/JointPaper.vue'
+import JointPaper from './components/JointPaper/JointPaper.vue'
 // @ts-ignore
 import { exportNet, importNet } from '@/components/jsonnets/net.js'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore()
-
 </script>
 <script lang="ts">
 export const MODE_NONE = 'MODE_NONE'

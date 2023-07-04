@@ -1,7 +1,11 @@
 {
   "files": [],
   "compilerOptions": {
+    // TODO: needed?
     "allowJs": true,
+    // for jointjs+ts from https://resources.jointjs.com/tutorial/vue-ts
+    "strictPropertyInitialization": false,
+    "skipLibCheck": true 
   },
   "references": [
     {

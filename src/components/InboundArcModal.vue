@@ -1,38 +1,29 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-card" style="width: 80%">
+    <div class="modal-card jsn-modal-wide">
       <header class="modal-card-head">
         <p class="modal-card-title">Inbound arc inscription</p>
         <button class="delete" aria-label="close" @click="close"></button>
       </header>
       <section class="modal-card-body">
         <div class="field">
-          <label class="label" for="addons"
-            >JSONPath expression
-            <div class="dropdown is-hoverable is-right">
-              <div class="dropdown-trigger">
-                <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle" /></span>
-              </div>
-              <div class="dropdown-menu">
-                <div class="dropdown-content">
-                  <div class="dropdown-item">
-                    <p>
-                      For more information about JSONPath, visit
-                      <a href="https://goessner.net/articles/JsonPath/" target="_blank"
-                        >https://goessner.net/articles/JsonPath/</a
-                      >.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </label>
+          <label class="label" for="addons">
+            JSONPath expression 
+            <HelpButton 
+              help-text="
+              For more information about JSONPath, visit 
+              <a href='https://goessner.net/articles/JsonPath/' target='_blank'>
+                https://goessner.net/articles/JsonPath/
+              </a>.
+              "
+            />
+         </label>
         </div>
         <div class="field has-addons">
           <p class="control">
             <span class="select">
-              <select v-model="uiState.arcMode">
+              <select v-model="uiStateStore.arcMode">
                 <!-- TODO: these are actually constants, not sure how to use them here-->
                 <option value="read">Read</option>
                 <option value="consume">Consume</option>
@@ -45,31 +36,28 @@
 
           <p class="control is-expanded">
             <input
-              style="border-left: none; border-right: none"
-              id="jsonPathQuery"
-              class="input"
+              class="input scoped-input"
               type="text"
               placeholder="Enter JSONPath expression"
-              v-model="uiState.jsonPathQuery"
+              v-model="jsonPathQuery"
             />
           </p>
           <p class="control">
-            <a style="border-left: none" class="button is-static">]</a>
+            <a style="" class="button is-static scoped-right-control">]</a>
           </p>
-          <!--          <p class="help is-danger">{{ uiState.nameError }} </p>-->
         </div>
         <div class="notification is-info">
-          <div v-if="expanded == false">
+          <div v-if="uiStateStore.jsonPathHelpExpanded == false">
             <div class="block">
-              <span @click="expand" class="icon" style="cursor: pointer"
+              <span @click="expand" class="icon is-clickable"
                 ><font-awesome-icon icon="fas fa-plus-circle"
               /></span>
               <span>Expand templates for JSONPath expressions</span>
             </div>
           </div>
-          <div v-if="expanded == true">
+          <div v-if="uiStateStore.jsonPathHelpExpanded == true">
             <div class="block">
-              <span @click="expand" class="icon" style="cursor: pointer"
+              <span @click="expand" class="icon is-clickable"
                 ><font-awesome-icon icon="fas fa-minus-circle"
               /></span>
               <span>Minimize templates for JSONPath expressions</span>
@@ -78,24 +66,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Example JSON document</th>
+                    <th>Example</th>
                     <th>Filter command</th>
-                    <th style="width: 35%">
+                    <th class="scoped-column">
                       JSONPath expression
-                      <div class="dropdown is-hoverable is-right">
-                        <div class="dropdown-trigger">
-                          <span class="icon is-small"
-                            ><font-awesome-icon icon="fas fa-info-circle"
-                          /></span>
-                        </div>
-                        <div class="dropdown-menu">
-                          <div class="dropdown-content">
-                            <div class="dropdown-item">
-                              <p>Click on expressions to insert in input field.</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      <HelpButton help-text="Click on expressions to insert in input field."/>
                     </th>
                   </tr>
                 </thead>
@@ -121,7 +96,7 @@
                     </td>
                     <td>Return all objects (apply no filter)</td>
                     <td>
-                      <span class="is-clickable" @click="uiState.setJsonPathQuery('')"
+                      <span class="is-clickable" @click="uiStateStore.setJsonPathQuery('')"
                         ><i>(leave empty)</i></span
                       >
                     </td>
@@ -129,13 +104,13 @@
                   <tr>
                     <td>Filter the first object</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery('0')">$.[0]</code>
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('0')">$.[0]</code>
                     </td>
                   </tr>
                   <tr>
                     <td>Filter the first two objects</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery('0,1')"
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('0,1')"
                         >$.[0,1]</code
                       >
                     </td>
@@ -143,7 +118,7 @@
                   <tr>
                     <td>Filter the last object</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery('-1:')"
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('-1:')"
                         >$.[-1:]</code
                       >
                     </td>
@@ -151,7 +126,7 @@
                   <tr>
                     <td>Filter until the third object</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery(':2')"
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery(':2')"
                         >$.[:2]</code
                       >
                     </td>
@@ -159,7 +134,7 @@
                   <tr>
                     <td>Filter all objects with a specific property</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.name)')"
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('?(@.name)')"
                         >$.[?(@.name)]</code
                       >
                     </td>
@@ -169,7 +144,7 @@
                     <td>
                       <code
                         class="is-clickable"
-                        @click="uiState.setJsonPathQuery('?(@.name == \'Alice\')')"
+                        @click="uiStateStore.setJsonPathQuery('?(@.name == \'Alice\')')"
                         >$.[?(@.name=="Alice")]</code
                       >
                     </td>
@@ -177,7 +152,7 @@
                   <tr>
                     <td>Filter all objects where a property is greater than a specific value</td>
                     <td>
-                      <code class="is-clickable" @click="uiState.setJsonPathQuery('?(@.age > 18)')"
+                      <code class="is-clickable" @click="uiStateStore.setJsonPathQuery('?(@.age > 18)')"
                         >$.[?(@.age > 18)]</code
                       >
                     </td>
@@ -193,36 +168,34 @@
               <label class="label">Input tokens</label>
               <div class="control">
                 <Codemirror
+                  class="scoped-codemirror"
                   :disabled="true"
-                  v-model="uiState.inputTokens"
+                  v-model="uiStateStore.inputTokens"
                   placeholder="JSON data as input"
-                  :style="{ height: '400px' }"
                   :autofocus="true"
                   :indent-with-tab="true"
                   :tab-size="2"
                   :extensions="extensions"
-                  @ready="handleReady"
                 />
               </div>
             </div>
           </div>
           <div class="column is-2 has-text-centered">
-            <p style="width: 5%; align-self: center; text-align: center" class="arrow">&#10093;</p>
+            <p class="scoped-arrow">&#10093;</p>
           </div>
           <div class="column is-5">
             <div class="field">
               <label class="label">Preview of results</label>
               <div class="control">
                 <Codemirror
+                  class="scoped-codemirror"
                   :disabled="true"
-                  v-model="uiState.queryResult"
+                  v-model="uiStateStore.queryResult"
                   placeholder="Output"
-                  :style="{ height: '400px' }"
                   :autofocus="true"
                   :indent-with-tab="true"
                   :tab-size="2"
                   :extensions="extensions"
-                  @ready="handleReady"
                 />
               </div>
             </div>
@@ -238,85 +211,87 @@
 </template>
 
 <script lang="ts">
-import { ref, shallowRef } from 'vue'
+import { mapStores } from 'pinia'
+import { defineComponent } from 'vue'
+import { useUiStateStore } from '@/stores/uiState'
+
+import { setArcLabel } from '@/components/jsonnets/net'
+
+import HelpButton from '@/components/HelpButton.vue'
+
 import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { useUiStateStore } from '@/stores/uiState'
-//@ts-ignore
-import { setArcLabel } from '@/components/jsonnets/net.js'
-//@ts-ignore
+import { basicSetup } from 'codemirror';
 
-export default {
-  name: 'InboundArcModal',
+export default defineComponent({
   components: {
-    Codemirror
+    Codemirror,
+    HelpButton
   },
   setup() {
-    const code1 = ref('')
-    const code2 = ref('')
-    const extensions = [json(), oneDark]
-    const view = shallowRef()
-    const handleReady = (payload) => {
-      view.value = payload.view
-      //view.value.state.readOnly.of(true);
-    }
-    const uiState = useUiStateStore()
+    const extensions = [basicSetup, json(), oneDark]
     return {
-      code1,
-      code2,
-      extensions,
-      handleReady,
-      uiState
+      extensions
     }
   },
-  props: ['bindSource', 'bindQuery'],
-  mounted() {
-    // Todo: this subscription may need to be killed on unmount?
-    // Todo: catch errors
-    this.uiState.$subscribe((mutation, state) => {
-      //@ts-ignore
-      if (!(mutation.events.key === 'jsonPathQuery')) {
-        return
+  computed: {
+    jsonPathQuery: {
+      get() {
+        this.uiStateStore.updateQueryResult();
+        return this.uiStateStore.jsonPathQuery;
+      },
+      set(newQuery: string) {
+        this.uiStateStore.jsonPathQuery = newQuery;
+        this.uiStateStore.updateQueryResult();
       }
-      this.uiState.updateQueryResult()
-    })
-  },
-  data() {
-    return {
-      inputTokens: '',
-      newArray: [],
-      query: '',
-      output: '',
-      expanded: false
-    }
+    },
+    ...mapStores(useUiStateStore)
   },
   methods: {
     expand() {
-      this.expanded = !this.expanded
+      this.uiStateStore.jsonPathHelpExpanded = !this.uiStateStore.jsonPathHelpExpanded
     },
     saveChanges() {
       // TODO: check for expression errors
       const arcLabel = {
-        type: this.uiState.arcMode,
-        filter: this.uiState.jsonPathQuery
+        type: this.uiStateStore.arcMode,
+        filter: this.uiStateStore.jsonPathQuery
       }
-      //@ts-ignore
-      setArcLabel(this.uiState.lastSelectedID, arcLabel)
+      setArcLabel(this.uiStateStore.lastSelectedID, arcLabel)
       this.close()
     },
     close() {
-      this.uiState.setShowPresetModal(false)
+      this.uiStateStore.setShowPresetModal(false)
     }
   }
-}
+})
 </script>
 
 <style scoped>
-.arrow {
+.scoped-input {
+  border-left: none; 
+  border-right: none;
+}
+
+.scoped-right-control {
+  border-left: none;
+}
+
+.scoped-column {
+  width: 35%;
+}
+
+.scoped-codemirror {
+  height: '400px';
+}
+.scoped-arrow {
   font-size: 60px;
   display: inline-block;
   transform: scaleY(2);
   transform-origin: left center;
+  width: 5%; 
+  align-self: center; 
+  text-align: center;
 }
 </style>

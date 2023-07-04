@@ -42,19 +42,20 @@ export const useUiStateStore = defineStore('uiState', {
       inspectorMode: '' as string | undefined,
       jsonPathQuery: '' as string | undefined,
       queryResult: '' as string | undefined,
+      jsonPathHelpExpanded: false as boolean,
 
       showTransitionModal: false as boolean,
-      inputTokensArray: [] as Array<Object> | undefined,
+      inputTokensArray: [] as Array<{ name: string, documents: Array<{}> }> | undefined,
       tempAssignment: {} as Object | undefined,
-      selectedForAssignment: {} as Object | undefined,
+      selectedForAssignment: {} as { [key: string]: number },
       transitionInscriptionValid: false as boolean,
       inscriptionEvaluationResult: '' as string | undefined,
 
       showPostsetModal: false as boolean,
       outboundEvaluation: false as boolean,
-      outboundEvaluationResult: '' as string | undefined,
+      outboundEvaluationResult: '' as string,
       outboundSchemaEvaluation: false as boolean,
-      outboundSchemaEvaluationResult: '' as string | undefined,
+      outboundSchemaEvaluationResult: '' as string,
 
       showPlaceModal: false as boolean,
       formsData: {},
@@ -72,17 +73,17 @@ export const useUiStateStore = defineStore('uiState', {
   actions: {
     setMode(mode: string | undefined) {
       //TODO: Draggable setting may still be useful for some modes?
-//      if (mode === MODE_MOVE) {
-//        // toggleDraggable(true);
-//      } else {
-//        // toggleDraggable(false);
-//      }
-//
-//      if (mode === MODE_PAN) {
-//        // setPanable(true);
-//      } else {
-//        // setPanable(false);
-//      }
+      //      if (mode === MODE_MOVE) {
+      //        // toggleDraggable(true);
+      //      } else {
+      //        // toggleDraggable(false);
+      //      }
+      //
+      //      if (mode === MODE_PAN) {
+      //        // setPanable(true);
+      //      } else {
+      //        // setPanable(false);
+      //      }
       this.mode = mode
     },
     setShowInspector(show: boolean) {

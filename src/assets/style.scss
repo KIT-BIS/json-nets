@@ -10,6 +10,18 @@ body {
   // background-color: #f0f0f0;
 }
 
+.jsn-modal-wide {
+  width: 80%;
+}
+
+.jsn-evaluation-editor {
+  flex-grow: 1;
+  display: inline !important;
+  margin-left: 15px;
+  // margin-top: 15px;
+  // padding: 5px 10px;
+}
+
 #menu {
   position: absolute;
   left: 30px;

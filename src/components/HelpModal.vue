@@ -1,7 +1,7 @@
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
-    <div class="modal-card" style="width: 80%">
+    <div class="modal-card jsn-modal-wide">
       <header class="modal-card-head">
         <p class="modal-card-title">Manual</p>
         <button class="delete" aria-label="close" @click="close"></button>
@@ -60,7 +60,9 @@
 </template>
 <script lang="ts">
 import { useUiStateStore } from '@/stores/uiState'
-export default {
+import { defineComponent } from 'vue'
+
+export default defineComponent({
   setup() {
     const uiState = useUiStateStore()
     return { uiState }
@@ -70,5 +72,5 @@ export default {
       this.uiState.showHelpModal = false
     }
   }
-}
+})
 </script>

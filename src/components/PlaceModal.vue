@@ -1,275 +1,3 @@
-<script lang="ts">
-// TODO: proper modularisation
-import { useUiStateStore } from '@/stores/uiState'
-// @ts-ignore
-import { validatePlaceName, setPlaceContent } from '@/components/jsonnets/net.js'
-import { defineComponent, ref, shallowRef } from 'vue'
-import { Codemirror } from 'vue-codemirror'
-import { json } from '@codemirror/lang-json'
-import { oneDark } from '@codemirror/theme-one-dark'
-import { JsonForms, JsonFormsChangeEvent } from '@jsonforms/vue'
-import { defaultStyles, mergeStyles, vanillaRenderers } from '@jsonforms/vue-vanilla'
-
-const testStyle = {
-  arrayList: {
-    addButton:
-      'button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold',
-    label: 'label level-item',
-    legend: 'level',
-    item: 'level-left property-box',
-    itemToolbar: 'level-item',
-    itemContent: 'level-item',
-    itemDelete: 'delete',
-    itemWrapper: 'level remove-margin'
-  },
-  horizontalLayout: {
-    item: 'my-horizontal-spacing',
-    root: 'field is-horizontal'
-  },
-  group: {
-    item: 'property-box'
-  }
-}
-
-const myStyles = mergeStyles(defaultStyles, testStyle)
-const renderers = [...vanillaRenderers]
-
-const schema = {
-  type: 'object',
-  properties: {
-    properties: {
-      type: 'array',
-      items: { $ref: '#/$defs/field' }
-    }
-  },
-
-  $defs: {
-    field: {
-      type: 'object',
-      properties: {
-        type: { $ref: '#/$defs/type' },
-        name: { $ref: '#/$defs/name' },
-        properties: { $ref: '#/$defs/properties' },
-        items: { $ref: '#/$defs/type' }
-      }
-    },
-    type: {
-      type: 'string',
-      enum: ['string', 'number', 'integer', 'boolean', 'null', 'object', 'array']
-    },
-    name: { type: 'string' },
-    properties: {
-      type: 'array',
-      items: { $ref: '#/$defs/field' }
-    }
-  }
-}
-
-const nameAndTypeElements = {
-  type: 'HorizontalLayout',
-  elements: [
-    {
-      type: 'Control',
-      scope: '#/properties/name'
-    },
-    {
-      type: 'Control',
-      scope: '#/properties/type'
-    }
-  ]
-}
-
-//const propertiesInArray = {
-//  type: 'Control',
-//  scope: '#/properties/properties',
-//  options: {
-//    detail: {
-//      type: 'VerticalLayout',
-//      elements: [nameAndTypeElements]
-//    }
-//  }
-//}
-
-const items = {
-  type: 'Group',
-  elements: [
-    {
-      type: 'VerticalLayout',
-      elements: [
-        {
-          type: 'Control',
-          scope: '#/properties/items'
-        },
-        {
-          type: 'Control',
-          scope: '#/properties/properties',
-          options: {
-            detail: nameAndTypeElements
-          },
-          rule: {
-            effect: 'SHOW',
-            condition: {
-              scope: '#/properties/items',
-              schema: {
-                const: 'object'
-              }
-            }
-          }
-        }
-        // propertiesInArray
-      ]
-    }
-  ],
-  rule: {
-    effect: 'SHOW',
-    condition: {
-      scope: '#/properties/type',
-      schema: {
-        const: 'array'
-      }
-    }
-  }
-}
-const properties = {
-  type: 'Control',
-  scope: '#/properties/properties',
-  options: {
-    detail: {
-      type: 'VerticalLayout',
-      elements: [
-        nameAndTypeElements,
-        {
-          type: 'Control',
-          scope: '#/properties/properties',
-          options: {
-            detail: {
-              type: 'VerticalLayout',
-              elements: [nameAndTypeElements]
-            }
-          },
-          rule: {
-            effect: 'SHOW',
-            condition: {
-              scope: '#/properties/type',
-              schema: {
-                const: 'object'
-              }
-            }
-          }
-        },
-        items
-      ]
-    }
-  },
-  rule: {
-    effect: 'SHOW',
-    condition: {
-      scope: '#/properties/type',
-      schema: {
-        const: 'object'
-      }
-    }
-  }
-}
-
-const uischema = {
-  type: 'VerticalLayout',
-  elements: [
-    {
-      type: 'Control',
-      scope: '#/properties/properties',
-      options: {
-        detail: {
-          type: 'VerticalLayout',
-          elements: [nameAndTypeElements, items, properties]
-        }
-      }
-    }
-  ]
-}
-
-export default defineComponent({
-  setup() {
-    const uiState = useUiStateStore()
-
-    const code1 = ref('')
-    const code2 = ref('')
-    const code3 = ref('')
-    const extensions = [json(), oneDark]
-    const view = shallowRef()
-    const handleReady = (payload) => {
-      view.value = payload.view
-    }
-
-    console.log(myStyles)
-    return {
-      code1,
-      code2,
-      code3,
-      extensions,
-      handleReady,
-      uiState
-    }
-  },
-  components: {
-    JsonForms,
-    Codemirror
-  },
-  data() {
-    return {
-      // freeze renderers for performance gains
-      renderers: Object.freeze(renderers),
-      schema,
-      uischema
-    }
-  },
-  methods: {
-    close() {
-      this.uiState.showPlaceModal = false
-    },
-    onChange(event: JsonFormsChangeEvent) {
-      this.uiState.formsData = event.data
-      this.uiState.formsDataString = JSON.stringify(this.uiState.formsData, null, 2)
-      this.uiState.updateJsonSchema()
-    },
-    shorten(string) {
-      if (string.length <= 25) {
-        return string
-      } else {
-        return string.slice(0, 22) + '...'
-      }
-    },
-    handleTokenChange() {
-      this.uiState.updateCurrentToken()
-    },
-    insertLineBreak(text) {
-      //TODO Ist wahrscheinlich auch hier und bei Outbound -> Component oder util (genauso bei expanded und toggleAccordion)
-      return text.replace(/\n/g, '<br>')
-    },
-    saveChanges() {
-      this.uiState.nameError = ''
-      let nameValid = validatePlaceName(this.uiState.itemName, this.uiState.lastSelectedID)
-      if (!nameValid) {
-        this.uiState.nameError = 'Place name must be unique.'
-      } else {
-        const placeContent = {
-          schema: {},
-          data: []
-        }
-        placeContent.schema = JSON.parse(this.uiState.generatedSchemaString)
-        placeContent.data = this.uiState.placeTokens
-        setPlaceContent(this.uiState.lastSelectedID, placeContent, this.uiState.itemName)
-        this.close()
-      }
-    }
-  },
-  provide() {
-    return {
-      styles: myStyles
-    }
-  }
-})
-</script>
 <template>
   <div class="modal is-active">
     <div class="modal-background"></div>
@@ -289,21 +17,11 @@ export default defineComponent({
         </div>
         <label class="label">
           Structure of tokens (JSON Schema)
-          <div class="dropdown is-hoverable is-right">
-            <div class="dropdown-trigger">
-              <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle" /></span>
-            </div>
-            <div class="dropdown-menu">
-              <div class="dropdown-content">
-                <div class="dropdown-item">
-                  <p>
-                    For more information about JSON Schema, please visit
-                    <a href="https://json-schema.org/" target="_blank">https://json-schema.org/</a>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HelpButton help-text="
+            For more information about JSON Schema, please visit
+            <a href='https://json-schema.org/' target='_blank'>https://json-schema.org/</a>.
+            
+          "/>
         </label>
         <div class="columns is-vcentered">
           <div class="column is-5">
@@ -329,30 +47,18 @@ export default defineComponent({
               :indent-with-tab="true"
               :tab-size="2"
               :extensions="extensions"
-              @ready=""
             />
+            <!-- @ready="" -->
           </div>
         </div>
         <div class="field">
           <label class="label">
             Tokens (JSON)
-            <div class="dropdown is-hoverable">
-              <div class="dropdown-trigger">
-                <span class="icon is-small"><font-awesome-icon icon="fas fa-info-circle" /></span>
-              </div>
-              <div class="dropdown-menu">
-                <div class="dropdown-content">
-                  <div class="dropdown-item">
-                    <p>
-                      For more information about JSON, please visit
-                      <a href="https://www.json.org/json-en.html" target="_blank"
-                        >https://www.json.org/json-en.html</a
-                      >
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <HelpButton help-text="
+              For more information about JSON, please visit
+              <a href='https://www.json.org/json-en.html' target='_blank'
+                >https://www.json.org/json-en.html</a>.
+            "/>
           </label>
         </div>
         <div class="block">
@@ -365,9 +71,16 @@ export default defineComponent({
           </button>
         </div>
         <div class="tags block">
-          <span
-            @click="uiState.selectToken(index)"
+          <TokenTag 
             v-for="(doc, index) in uiState.placeTokens"
+            :callback="() => { uiState.selectToken(index) }"
+            :token="JSON.stringify(doc, null, 2)"
+            :isSelected="uiState.selectedIndex === index"
+            :isDeletable="true"
+            :deletableCallbak="() => { uiState.deleteToken(index) }"
+          />
+          <!-- <span
+            @click="uiState.selectToken(index)"
             :data-tooltip="JSON.stringify(doc, null, 2)"
             class="tag has-tooltip-bottom"
             :class="{
@@ -376,8 +89,8 @@ export default defineComponent({
             }"
           >
             {{ shorten(JSON.stringify(doc, null, 2)) }}
-            <button class="delete is-small" @click.stop="uiState.deleteToken(index)"></button>
-          </span>
+            <button class="delete is-small" @click.stop="uiState.deleteToken(index)"></button> -->
+          <!-- </span> -->
         </div>
         <div class="block">
           <Codemirror
@@ -416,6 +129,102 @@ export default defineComponent({
     </div>
   </div>
 </template>
+
+<script lang="ts">
+import { useUiStateStore } from '@/stores/uiState'
+import { validatePlaceName, setPlaceContent } from '@/components/jsonnets/net.js'
+import { defineComponent, ref, shallowRef } from 'vue'
+import { Codemirror } from 'vue-codemirror'
+import { json } from '@codemirror/lang-json'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { JsonForms, JsonFormsChangeEvent } from '@jsonforms/vue'
+import { defaultStyles, mergeStyles, vanillaRenderers } from '@jsonforms/vue-vanilla'
+import HelpButton from './HelpButton.vue'
+
+import TokenTag from './TokenTag.vue'
+import { testStyle, schema, uischema } from './PlaceModalSchemaConfig'
+
+
+const myStyles = mergeStyles(defaultStyles, testStyle)
+const renderers = [...vanillaRenderers]
+
+export default defineComponent({
+  components: {
+    JsonForms,
+    Codemirror,
+    HelpButton,
+    TokenTag
+},
+  setup() {
+    const uiState = useUiStateStore()
+
+    const extensions = [json(), oneDark]
+    // const view = shallowRef()
+    // const handleReady = (payload) => {
+      // view.value = payload.view
+    // }
+
+    return {
+      extensions,
+      // handleReady,
+      uiState
+    }
+  },
+  data() {
+    return {
+      // freeze renderers for performance gains
+      renderers: Object.freeze(renderers),
+      schema,
+      uischema
+    }
+  },
+  methods: {
+    close() {
+      this.uiState.showPlaceModal = false
+    },
+    onChange(event: JsonFormsChangeEvent) {
+      this.uiState.formsData = event.data
+      this.uiState.formsDataString = JSON.stringify(this.uiState.formsData, null, 2)
+      this.uiState.updateJsonSchema()
+    },
+    shorten(string: string) {
+      if (string.length <= 25) {
+        return string
+      } else {
+        return string.slice(0, 22) + '...'
+      }
+    },
+    handleTokenChange() {
+      this.uiState.updateCurrentToken()
+    },
+    insertLineBreak(text) {
+      //TODO Ist wahrscheinlich auch hier und bei Outbound -> Component oder util (genauso bei expanded und toggleAccordion)
+      return text.replace(/\n/g, '<br>')
+    },
+    saveChanges() {
+      this.uiState.nameError = ''
+      let nameValid = validatePlaceName(this.uiState.itemName, this.uiState.lastSelectedID)
+      if (!nameValid) {
+        this.uiState.nameError = 'Place name must be unique.'
+      } else {
+        const placeContent = {
+          schema: {},
+          data: []
+        }
+        placeContent.schema = JSON.parse(this.uiState.generatedSchemaString)
+        placeContent.data = this.uiState.placeTokens
+        setPlaceContent(this.uiState.lastSelectedID, placeContent, this.uiState.itemName)
+        this.close()
+      }
+    }
+  },
+  provide() {
+    return {
+      styles: myStyles
+    }
+  }
+})
+</script>
 
 <style>
 .arrow {

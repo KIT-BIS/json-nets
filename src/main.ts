@@ -1,8 +1,9 @@
-// import './assets/style.scss'
+import './assets/style.scss'
 /* import the fontawesome core */
 import { library } from '@fortawesome/fontawesome-svg-core'
 /* import font awesome icon component */
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import VueCodemirror from 'vue-codemirror'
 import {
   faCircle,
   faSquare,
@@ -47,6 +48,11 @@ import App from './App.vue'
 const app = createApp(App).component('font-awesome-icon', FontAwesomeIcon)
 
 app.use(createPinia())
+app.use(VueCodemirror, {
+  // keep the global default extensions empty
+  // to allow removal of gutters
+  extensions: []
+})
 //app.use(router)
 
 app.mount('#app')

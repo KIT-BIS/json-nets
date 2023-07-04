@@ -272,8 +272,7 @@ import { json } from '@codemirror/lang-json'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { evaluate } from '../util/jsonnet.js'
 import { useUiStateStore } from '@/stores/uiState'
-//@ts-ignore
-import { setTransitionContent } from '@/components/jsonnets/net.js'
+import { setTransitionContent } from '@/components/jsonnets/net'
 
 export default {
   name: 'TransitionModal',

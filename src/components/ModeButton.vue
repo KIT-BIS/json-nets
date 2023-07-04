@@ -1,29 +1,26 @@
 <script lang="ts">
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
+import { mapStores } from 'pinia'
 
 export default defineComponent({
-  setup() {
-    const uiState = useUiStateStore()
-    return { uiState }
-  },
   props: {
     icon: String,
-    //        isActive: Boolean,
     mode: String,
     callback: Function
   },
   computed: {
     notActive() {
-      return this.mode !== this.uiState.mode
-    }
+      return this.mode !== this.uiStateStore.mode
+    },
+    ...mapStores(useUiStateStore)
   },
   methods: {
     onClick() {
       if (this.callback === undefined) {
-        this.uiState.setMode(this.mode)
+        this.uiStateStore.setMode(this.mode)
       } else {
-        this.uiState.setMode(this.mode)
+        this.uiStateStore.setMode(this.mode)
         this.callback()
       }
     }
@@ -39,7 +36,7 @@ export default defineComponent({
   </button>
 </template>
 
-<style lang="scss" scoped>
+<style scoped>
 button,
 input {
   margin-left: 15px;

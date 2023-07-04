@@ -68,6 +68,6 @@ export function transferJsonFormsDataToSchema(formsData) {
 
   traverse(schema, objectAndArrayTypesFromFormsDataToSchema)
   objectAndArrayTypesFromFormsDataToSchema('', schema)
-  
+
   return schema
 }

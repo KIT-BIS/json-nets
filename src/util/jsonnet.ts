@@ -1,6 +1,6 @@
-//require('./libraries/jsonnet.js');
-import './libraries/jsonnet'
-
+// TODO: jsonnet is loaded as additional library from public folder
+// not nice, but explicitly importing it causes vue build process to complain
+// there doesn't seem to be another up to date npm package as alternative
 /**
  * Evaluate a document with Jsonnet.
  * @param {Object} data
@@ -22,6 +22,7 @@ export function evaluate(data: Object) {
       data: result[0]
     }
   } catch (error: any) {
+  // } catch (error) {
     return {
       success: false,
       data: error.message
@@ -38,6 +39,7 @@ export function evaluate(data: Object) {
  * @return {String}
  */
 export function variablifyDocuments(documents: Object) {
+// export function variablifyDocuments(documents) {
   let jsonnetString = ''
   for (const [key, value] of Object.entries(documents)) {
     jsonnetString += `local ${key.toLowerCase()} = ${JSON.stringify(value)}; \n`

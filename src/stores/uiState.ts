@@ -14,9 +14,11 @@ import { query } from '@/util/jsonPath.js'
 import { variablifyDocuments, evaluate } from '@/util/jsonnet.js'
 import { validate } from '@/util/jsonSchema.js'
 import { transferSchemaToJsonFormsData, transferJsonFormsDataToSchema } from '@/util/jsonForms.js'
-import type { ErrorObject } from 'ajv'
 import { PresetArc } from '@/jsonnets/presetArc'
 
+//TODO: this was built while I was still learning how to use stores
+// some rework required, better architecture
+// also MODES concept needs some rework
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
     return {

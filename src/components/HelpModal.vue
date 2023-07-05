@@ -30,7 +30,7 @@
           </p>
           <div class="columns is-vcentered">
             <div class="column is-narrow">
-              <img src="manual.png" width="300" />
+              <img :src="image" width="300" />
             </div>
             <div class="column">
               <p><b>Delete element:</b> Click on the delete button to delete the element.</p>
@@ -62,8 +62,14 @@
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
+import image from '@/assets/manual.png'
 
 export default defineComponent({
+  data() {
+    return {
+      image
+    }
+  },  
   computed: {
     ...mapStores(useUiStateStore)
   },

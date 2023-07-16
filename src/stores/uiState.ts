@@ -11,7 +11,7 @@ import {
 } from '@/App.vue'
 import { findArc, findTransition, findPlace } from '@/jsonnets/net.js'
 import { query } from '@/util/jsonPath.js'
-import { variablifyDocuments, evaluate } from '@/util/jsonnet.js'
+import { jsonnetify, evaluate } from '@/util/jsonnet.js'
 import { validate } from '@/util/jsonSchema.js'
 import { transferSchemaToJsonFormsData, transferJsonFormsDataToSchema } from '@/util/jsonForms.js'
 import { PresetArc } from '@/jsonnets/presetArc'
@@ -234,7 +234,7 @@ export const useUiStateStore = defineStore('uiState', {
       let outboundEvaluation = false
       let outboundEvaluationResult = ''
 
-      let jsonnetString = variablifyDocuments(toRaw(this.tempAssignment))
+      let jsonnetString = jsonnetify(toRaw(this.tempAssignment))
       jsonnetString += this.inspectorContent
 
       const evaluateDocuments = evaluate(jsonnetString)
@@ -278,7 +278,7 @@ export const useUiStateStore = defineStore('uiState', {
     updateTransitionEvaluation() {
       let transitionEvaluation = false
       // Todo: some duplication from transition evaluation function
-      let jsonnetString = variablifyDocuments(toRaw(this.tempAssignment))
+      let jsonnetString = jsonnetify(toRaw(this.tempAssignment))
 
       if (this.showTransitionModal) {
         jsonnetString += this.inspectorContent

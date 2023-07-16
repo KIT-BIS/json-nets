@@ -1,6 +1,7 @@
 import { combineArrays } from '@/util/util'
 import { evaluate, jsonnetify } from '@/util/jsonnet.js'
-import type { PresetArc } from './presetArc'
+import type { Arc } from './Arc'
+import type { JSONValue } from '@/util/jsonOperations'
 
 /**
  * Creates a new Transition object.
@@ -8,20 +9,55 @@ import type { PresetArc } from './presetArc'
  * @param {String} name Name of the transition.
  */
 export class Transition {
-  id: string
-  name: string
-  preset: Array<PresetArc>
-  postset: Array<any>
-  state: Record<string, Object> 
-  content: string
+  readonly id: string
+  public name: string
+  readonly preset: Array<Arc>
+  readonly postset: Array<Arc>
+  readonly state: Record<string, JSONValue> 
+  readonly inscription: string
 
   constructor(id: string, name:string) {
     this.id = id
     this.name = name
     this.preset = []
     this.postset = []
-    this.state = {} // Save each document with placeName as key
-    this.content = 'true'
+    this.state = {} // Save each variable
+    this.inscription = 'true'
+  }
+
+  connectArc(arc: Arc) {
+    if (arc.type === 'preset') {
+      this.preset.push(arc)
+    } else if (arc.type === 'postset') {
+      this.postset.push(arc)
+    }
+  }
+
+  clearAssignment() {
+    for (var variableKey in this.state){
+        if (this.state.hasOwnProperty(variableKey)){
+            delete this.state[variableKey];
+        }
+    }
+  }
+
+  // todo: distinguish between logic for ui and net
+  updateAssignment() {
+    this.clearAssignment();
+    //todo: more efficient with per arc assignment management
+    const arcs = this.preset.concat(this.postset);
+  
+    for (let i = 0; i < arcs.length; i++) {
+      const arc = arcs[i]
+      const fragment = arc.currentAssignment.fragment;
+      const key = arc.currentAssignment.key;
+      const token = arc.currentAssignment.token;
+
+      this.state[arc.fragmentVarName] = fragment;
+      this.state[arc.keyVarName] = key;
+      this.state[arc.tokenVarName] = token;
+    }
+
   }
 
   /**

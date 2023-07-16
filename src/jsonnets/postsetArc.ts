@@ -1,4 +1,4 @@
-import { evaluate, variablifyDocuments } from '@/util/jsonnet.js'
+import { evaluate, jsonnetify } from '@/util/jsonnet.js'
 import { validate } from '@/util/jsonSchema'
 import type { Transition } from './transition'
 import type { Place } from './place'
@@ -33,7 +33,7 @@ export class PostsetArc {
    */
   createDocument() {
     const inputDocuments = this.transition.state
-    let jsonnetString = variablifyDocuments(inputDocuments)
+    let jsonnetString = jsonnetify(inputDocuments)
     jsonnetString += this.label
 
     const evaluateDocuments = evaluate(jsonnetString)

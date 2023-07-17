@@ -12,7 +12,7 @@
           <div class="control">
             <input class="input" type="text" v-model="placeName" />
           </div>
-          <p class="help is-danger">{{ uiStateStore.nameError }}</p>
+          <p class="help is-danger">{{ nameError }}</p>
         </div>
         <label class="label">
           Structure of tokens (JSON Schema)
@@ -174,20 +174,30 @@ export default defineComponent({
 
       placeName: '',
 
+      formsData: {},
+      formsDataString: '',
+      generatedSchemaString: '',
+      tempSchemaValidator: compileValidator({ $id: 'temp' }),
+
       placeTokens: [] as JSONMarking,
       tokenString: '',
       selectedTokenIndex: -1,
       tokenValidation: true,
       tokenValidationMessage: '',
 
-      formsData: {},
-      formsDataString: '',
-      generatedSchemaString: '',
-      tempSchemaValidator: compileValidator({ $id: 'temp' })
     }
   },
   computed: {
-    ...mapStores(useUiStateStore)
+    ...mapStores(useUiStateStore),
+    nameError() {
+      let nameValid = this.net.validatePlaceName(this.placeName, this.uiStateStore.lastSelectedID)
+      if (!nameValid) {
+        return 'Place name must be unique.'
+      } else {
+        return ''
+      }
+
+    }
   },
   provide() {
     return {
@@ -211,6 +221,7 @@ export default defineComponent({
   },
   methods: {
     close() {
+      unCacheSchema('temp');
       this.uiStateStore.setModal('none');
     },
     onFormChange(event: JsonFormsChangeEvent) {
@@ -289,20 +300,15 @@ export default defineComponent({
     },
 
     saveChanges() {
-      this.uiStateStore.nameError = ''
-      let nameValid = validatePlaceName(this.uiStateStore.itemName, this.uiStateStore.lastSelectedID)
-      if (!nameValid) {
-        this.uiStateStore.nameError = 'Place name must be unique.'
-      } else {
-        const placeContent: { schema: Object, data: Array<Object>} = {
-          schema: {},
-          data: [] 
-        }
-        // placeContent.schema = JSON.parse(this.generatedSchemaString)
-        // placeContent.data = this.uiStateStore.placeTokens;
-        // setPlaceContent(this.uiStateStore.lastSelectedID, placeContent, this.uiStateStore.itemName)
-        this.close()
+      if (this.nameError !== '') {
+        return;
       }
+      if (!this.tokenValidation) {
+        return;
+      }
+      const schemaToSave = JSON.parse(this.generatedSchemaString);
+      this.net.updatePlace(this.uiStateStore.lastSelectedID,this.placeName, schemaToSave ,this.placeTokens)
+      this.close()
     }
   },
 })

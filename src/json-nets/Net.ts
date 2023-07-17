@@ -1,11 +1,13 @@
 import type { Arc } from "./Arc";
 import { Place } from "./Place";
+import type { JSONMarking, JSONObject } from "@/util/jsonOperations";
 
 import { v4 as uuid } from 'uuid'
 import type { Transition } from "./Transition";
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE'
 export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE'
+export const EVENT_UPDATE_PLACE = 'EVENT_UPDATE_PLACE'
 
 export class Net {
 
@@ -79,11 +81,19 @@ export class Net {
      * Set the content of a place
      * (expected to be an object with fields 'schema' and 'data')
      * @param {String} placeID The place to set the content.
-     * @param {Object} content New content of the place.
      * @param {String} placeName Name of the place.
      */
-    setPlaceContent(placeID: string, content: any, placeName: string) {
+    updatePlace(placeID: string, placeName: string, schema: JSONObject, marking: JSONMarking) {
+      const place = this.findPlace(placeID);
+      if (!place) {
+        return;
+      }
+      place.name = placeName;
+      place.schema = schema;
+      place.marking = marking;
+      this.notify(EVENT_UPDATE_PLACE, { id: placeID, name: placeName, num: marking.length })
     }
+
     /**
      * Check if place name is unique.
      * @param {String} name - Name of the place

@@ -21,7 +21,7 @@ export class Place {
   readonly id: string
   private _name: string
   private _schema: Schema 
-  readonly marking: JSONMarking
+  public marking: JSONMarking
 
 
   constructor(id: string, name: string) {
@@ -38,14 +38,14 @@ export class Place {
   }
 
 
-
   get name() {
     return this._name;
   }
 
   // expects 
   set schema(schema: JSONObject) {
-    this._schema.update(schema)
+    const arraySchema = { $id: this.id, type: "array", items: schema }
+    this._schema.update(arraySchema)
   }
 
   get schema(): JSONObject {

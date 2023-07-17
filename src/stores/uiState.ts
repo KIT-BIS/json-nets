@@ -30,7 +30,7 @@ export const useUiStateStore = defineStore('uiState', {
       // showInspector: false as boolean,
       inspectorContent: '' as string,
       itemName: '' as string,
-      nameError: '' as string,
+      // nameError: '' as string,
       validationError: '' as string,
 
       showPresetModal: false as boolean,
@@ -262,9 +262,9 @@ export const useUiStateStore = defineStore('uiState', {
     setItemName(name: string) {
       this.itemName = name
     },
-    setNameError(error: string) {
-      this.nameError = error
-    },
+    // setNameError(error: string) {
+      // this.nameError = error
+    // },
     setValidationError(error: string) {
       this.validationError = error
     }

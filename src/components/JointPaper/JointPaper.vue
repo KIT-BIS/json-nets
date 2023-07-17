@@ -37,7 +37,7 @@ import {
   // EVENT_ADD_PLACE,
   EVENT_ADD_TRANSITION,
   EVENT_CONNECT,
-  EVENT_CHANGE_PLACE_CONTENT,
+  // EVENT_CHANGE_PLACE_CONTENT,
   // EVENT_REMOVE_PLACE,
   EVENT_REMOVE_TRANSITION,
   EVENT_DISCONNECT,
@@ -52,6 +52,7 @@ import {
 import {
   EVENT_ADD_PLACE,
   EVENT_REMOVE_PLACE,
+  EVENT_UPDATE_PLACE,
   Net
 } from '@/json-nets/Net'
 
@@ -229,8 +230,8 @@ export default defineComponent({
         _graph.removeCells([_graph.getCell(payload)])
       } else if (event === EVENT_DISCONNECT) {
         _graph.removeCells([_graph.getCell(payload)])
-      } else if (event === EVENT_CHANGE_PLACE_CONTENT) {
-        const place = _graph.getCell(payload.placeID)
+      } else if (event === EVENT_UPDATE_PLACE) {
+        const place = _graph.getCell(payload.id)
         place.set('tokens', payload.num)
         place.attr('.label/text', payload.name)
         // change name and token view

@@ -2,10 +2,8 @@
  * TODO: very hacky, needs rework
  * based on odometer solution in
  * https://stackoverflow.com/questions/8936610/how-can-i-create-every-combination-possible-for-the-contents-of-two-arrays
- * @param {Array} arrayOfArrays
- * @return {Array}
  */
-export function combineArrays(arrayOfArrays: any) {
+export function combineArrays(arrayOfArrays: Array<Array<any>>) {
   if (!arrayOfArrays) {
     return []
   }
@@ -43,9 +41,6 @@ export function combineArrays(arrayOfArrays: any) {
 
 /**
  * Translate "odometer" to combinations from arrayOfArrays
- * @param {Number} odometer
- * @param {Array} arrayOfArrays
- * @return {Array}
  */
 function formCombination(odometer: any, arrayOfArrays: any) {
   const output = []

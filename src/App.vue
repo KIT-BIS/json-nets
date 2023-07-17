@@ -10,22 +10,26 @@ import { useUiStateStore } from '@/stores/uiState'
 import { download, readFile } from '@/util/files'
 import JointPaper from './components/JointPaper/JointPaper.vue'
 import { exportNet, importNet } from '@/jsonnets/net'
+import { Net } from './json-nets/Net'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore()
+
+// TODO having the net as reactive property may cause performance issues?
+const net = new Net();
 </script>
 <script lang="ts">
 export const MODE_NONE = 'MODE_NONE'
 export const MODE_ADD_PLACE = 'MODE_ADD_PLACE'
 export const MODE_ADD_TRANSITION = 'MODE_ADD_TRANSITION'
-export const MODE_REMOVE = 'MODE_REMOVE'
+// export const MODE_REMOVE = 'MODE_REMOVE'
 export const MODE_MOVE = 'MODE_MOVE'
-export const MODE_PAN = 'MODE_PAN'
+// export const MODE_PAN = 'MODE_PAN'
 export const MODE_CONNECT_START = 'MODE_CONNECT_START'
 export const MODE_CONNECT_FROM_PLACE = 'MODE_CONNECT_FROM_PLACE'
 export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION'
-export const MODE_INSPECT = 'MODE_INSPECT'
+// export const MODE_INSPECT = 'MODE_INSPECT'
 export const MODE_LAYOUT = 'MODE_LAYOUT'
 export const MODE_OCCUR = 'MODE_OCCUR'
 export const MODE_UPLOAD = 'MODE_UPLOAD'
@@ -33,14 +37,14 @@ export const MODE_EXAMPLE = 'MODE_EXAMPLE'
 export const MODE_PLAY = 'MODE_PLAY'
 export const MODE_HELP = 'MODE_HELP'
 
-export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION'
-export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE'
-export const INSPECTOR_MODE_PRESET_ARC = 'INSPECTOR_MODE_PRESET_ARC'
-export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC'
+// export const INSPECTOR_MODE_TRANSITION = 'INSPECTOR_MODE_TRANSITION'
+// export const INSPECTOR_MODE_PLACE = 'INSPECTOR_MODE_PLACE'
+// export const INSPECTOR_MODE_PRESET_ARC = 'INSPECTOR_MODE_PRESET_ARC'
+// export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC'
 </script>
 
 <template>
-  <JointPaper />
+  <JointPaper :net="net"/>
   <div id="menu">
     <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
     <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
@@ -93,8 +97,7 @@ export const INSPECTOR_MODE_POSTSET_ARC = 'INSPECTOR_MODE_POSTSET_ARC'
   <InboundArcModal v-if="uiState.showPresetModal" />
   <OutboundArcModal v-if="uiState.showPostsetModal" />
   <TransitionModal v-if="uiState.showTransitionModal" />
-  <PlaceModal v-if="uiState.showPlaceModal" />
+  <PlaceModal v-if="uiState.showModal === 'place'" :net="net"/>
   <HelpModal v-if="uiState.showHelpModal" />
   <!-- <RouterView /> -->
 </template>
-@/jsonnets/net.js

@@ -7,12 +7,14 @@ import { getEnvPathExpression, getFragment, getKey } from '@/util/jsonPointer'
 
 type Filter = {
   filterExpression: string,
+  pathExpression: string | null,
   key: string | null,
   fragment: JSONValue | null,
   token: JSONObject | null,
 }
 
-type FilterAssignment = {
+export type FilterAssignment = {
+  pathExpression: string,
   key: string,
   fragment: JSONValue,
   token: JSONObject
@@ -48,6 +50,7 @@ export class Arc {
 
     this.filter = {
       filterExpression: '$.*',
+      pathExpression: null,
       key: null,
       fragment: null,
       token: null
@@ -104,7 +107,7 @@ export class Arc {
       const envPathExpression = getEnvPathExpression(pathExpression);
       const fragment = getFragment(marking, pathExpression);
       const token = getFragment(marking, envPathExpression);
-      filterAssignments.push({ key, fragment, token })
+      filterAssignments.push({ pathExpression, key, fragment, token })
     }
     return filterAssignments;
   }
@@ -116,16 +119,18 @@ export class Arc {
 
   get currentAssignment() {
     return {
+      pathExpression: this.filter.pathExpression,
       key: this.filter.key,
       fragment: this.filter.fragment,
       token: this.filter.token
     }
   }
 
-  assignFilter(index: number) {
-    this.filter.key = this.filterAssignments[index].key;
-    this.filter.fragment = this.filterAssignments[index].fragment;
-    this.filter.token = this.filterAssignments[index].token;
+  assignFilter(assignment: FilterAssignment) {
+    this.filter.pathExpression = assignment.pathExpression
+    this.filter.key = assignment.key;
+    this.filter.fragment = assignment.fragment;
+    this.filter.token = assignment.token;
   }
 
   resetAssignment() {

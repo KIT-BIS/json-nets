@@ -10,7 +10,7 @@
         <div class="field">
           <label class="label">Name of the place</label>
           <div class="control">
-            <input class="input" type="text" v-model="uiStateStore.itemName" />
+            <input class="input" type="text" v-model="placeName" />
           </div>
           <p class="help is-danger">{{ uiStateStore.nameError }}</p>
         </div>
@@ -26,9 +26,9 @@
             <div class="property-box">
               <json-forms
                 :uischema="uischema"
-                :data="uiStateStore.formsData"
+                :data="formsData"
                 :renderers="renderers"
-                :schema="schema"
+                :schema="metaSchema"
                 @change="onFormChange"
               />
             </div>
@@ -39,7 +39,7 @@
           <div class="column is-5">
             <Codemirror
               :disabled="true"
-              v-model="uiStateStore.generatedSchemaString"
+              v-model="generatedSchemaString"
               placeholder="Output"
               :autofocus="true"
               :indent-with-tab="true"
@@ -60,7 +60,7 @@
         </div>
         <div class="block">
           <button
-            @click="uiStateStore.addToken()"
+            @click="addToken()"
             class="array-list-add button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold"
             type="button"
           >
@@ -69,23 +69,23 @@
         </div>
         <div class="tags block">
           <TokenTag 
-            v-for="(doc, index) in uiStateStore.placeTokens"
-            :callback="() => { uiStateStore.selectToken(index) }"
+            v-for="(doc, index) in placeTokens"
+            :callback="() => { selectToken(index) }"
             :token="JSON.stringify(doc, null, 2)"
-            :isSelected="uiStateStore.selectedIndex === index"
+            :isSelected="selectedTokenIndex === index"
             :isDeletable="true"
-            :deletableCallback="() => { uiStateStore.deleteToken(index) }"
+            :deletableCallback="() => { deleteToken(index) }"
           />
         </div>
         <div class="block">
           <Codemirror
-            v-model="uiStateStore.tokenString"
+            v-model="tokenString"
             placeholder="Select token to edit content."
             :autofocus="true"
             :indent-with-tab="true"
             :tab-size="2"
             :extensions="extensions"
-            @update="onTokenEditorUpdate"
+            @update="updateCurrentToken"
           />
         </div>
 
@@ -96,11 +96,11 @@
               <p class="level-item">Result of schema validation:</p>
             </div>
             <p
-              v-html="uiStateStore.placeTokenValidationResult"
+              v-html="tokenValidationMessage"
               class="level-item"
               :class="{
-                'jsn-green-background': uiStateStore.placeTokenValidation,
-                'jsn-red-background': !uiStateStore.placeTokenValidation
+                'jsn-green-background': tokenValidation,
+                'jsn-red-background': !tokenValidation
               }"
             ></p>
           </div>
@@ -116,6 +116,8 @@
 </template>
 
 <script lang="ts">
+
+import  type { ValidateFunction } from 'ajv'
 import type { JsonFormsChangeEvent } from '@jsonforms/vue'
 import { mapStores } from 'pinia'
 import { useUiStateStore } from '@/stores/uiState'
@@ -130,7 +132,13 @@ import HelpButton from '@/components/_shared/HelpButton.vue'
 
 import TokenTag from '@/components/_shared/TokenTag.vue'
 import Arrow from '@/components/_shared/Arrow.vue'
-import { testStyle, schema, uischema } from './PlaceModalSchemaConfig'
+import { testStyle, metaSchema, uischema } from './PlaceModalSchemaConfig'
+import { Place } from '@/json-nets/Place'
+import { transferJsonFormsDataToSchema, transferSchemaToJsonFormsData } from '@/util/jsonForms'
+import type { JSONMarking } from '@/util/jsonOperations'
+import { Net } from '@/json-nets/Net'
+import { mock } from 'mock-json-schema'
+import { compileValidator, unCacheSchema, validateJSON } from '@/util/jsonSchema'
 
 
 const myStyles = mergeStyles(defaultStyles, testStyle)
@@ -143,7 +151,13 @@ export default defineComponent({
     HelpButton,
     TokenTag,
     Arrow
-},
+  },
+  props: {
+    net: {
+      type: Net,
+      required: true
+    }
+  },
   setup() {
     const extensions = [json(), oneDark]
 
@@ -155,8 +169,21 @@ export default defineComponent({
     return {
       // freeze renderers for performance gains
       renderers: Object.freeze(renderers),
-      schema,
-      uischema
+      metaSchema,
+      uischema,
+
+      placeName: '',
+
+      placeTokens: [] as JSONMarking,
+      tokenString: '',
+      selectedTokenIndex: -1,
+      tokenValidation: true,
+      tokenValidationMessage: '',
+
+      formsData: {},
+      formsDataString: '',
+      generatedSchemaString: '',
+      tempSchemaValidator: compileValidator({ $id: 'temp' })
     }
   },
   computed: {
@@ -167,18 +194,100 @@ export default defineComponent({
       styles: myStyles
     }
   },
+  mounted() {
+    const place = this.net.findPlace(this.uiStateStore.lastSelectedID)
+    //TODO some error handling
+    if (!place) return;
+
+    this.placeName = place.name;
+    this.placeTokens = place.marking
+
+    this.formsData = transferSchemaToJsonFormsData(place.schema.items)
+    this.formsDataString = JSON.stringify(this.formsData, null, 2)
+
+
+    this.updateJsonSchema()
+    this.validateTokens()
+  },
   methods: {
     close() {
-      this.uiStateStore.showPlaceModal = false
+      this.uiStateStore.setModal('none');
     },
     onFormChange(event: JsonFormsChangeEvent) {
-      this.uiStateStore.formsData = event.data
-      this.uiStateStore.formsDataString = JSON.stringify(this.uiStateStore.formsData, null, 2)
-      this.uiStateStore.updateJsonSchema()
+      this.formsData = event.data
+      this.formsDataString = JSON.stringify(this.formsData, null, 2)
+      this.updateJsonSchema()
     },
-    onTokenEditorUpdate() {
-      this.uiStateStore.updateCurrentToken()
+    updateJsonSchema() {
+      unCacheSchema('temp');
+
+      this.generatedSchemaString = JSON.stringify(
+        transferJsonFormsDataToSchema(this.formsDataString),
+        null,
+        2
+      )
+      const tempSchema = JSON.parse(this.generatedSchemaString); 
+      tempSchema['$id'] = 'temp';
+      this.tempSchemaValidator = compileValidator(tempSchema);
+      this.validateTokens()
     },
+    selectToken(index: number) {
+      this.selectedTokenIndex = index
+      this.tokenString = JSON.stringify(this.placeTokens[index], null, 2)
+    },
+    addToken() {
+      let newDoc = mock(JSON.parse(this.generatedSchemaString))
+      this.placeTokens.push(newDoc)
+      this.validateTokens()
+    },
+    deleteToken(index: number) {
+      this.placeTokens.splice(index, 1)
+      this.selectedTokenIndex = -1
+      this.tokenString = ''
+    },
+    validateTokens() {
+      const tokenErrors: Array<{tokenID: number, message: string}> = []
+      let allValid = true
+
+      let tokenID = 1
+      this.placeTokens.forEach((token) => {
+        const { isValid, error } = validateJSON(token, this.tempSchemaValidator);
+        
+        if (!isValid) {
+          tokenErrors.push({ tokenID, message: error })
+          allValid = false
+        }
+        tokenID++;
+      })
+
+      if (!allValid) {
+        this.tokenValidation = false
+        this.tokenValidationMessage = '<ul>'
+        for (let i = 0; i < tokenErrors.length; i++) {
+          let error = tokenErrors[i]
+          this.tokenValidationMessage += '<li>'
+          this.tokenValidationMessage +=
+            'Token ' + error.tokenID + ': ' + error.message
+          this.tokenValidationMessage += '</li>'
+        }
+        this.tokenValidationMessage += '</ul>'
+      } else {
+        this.tokenValidation = true
+        this.tokenValidationMessage = 'All tokens valid to schema.'
+      }
+    },
+    updateCurrentToken() {
+      try {
+        let newDoc = JSON.parse(this.tokenString)
+        if (newDoc) {
+          this.placeTokens[this.selectedTokenIndex] = newDoc
+          this.validateTokens()
+        }
+      } catch (e) {
+
+      }
+    },
+
     saveChanges() {
       this.uiStateStore.nameError = ''
       let nameValid = validatePlaceName(this.uiStateStore.itemName, this.uiStateStore.lastSelectedID)
@@ -189,9 +298,9 @@ export default defineComponent({
           schema: {},
           data: [] 
         }
-        placeContent.schema = JSON.parse(this.uiStateStore.generatedSchemaString)
-        placeContent.data = this.uiStateStore.placeTokens;
-        setPlaceContent(this.uiStateStore.lastSelectedID, placeContent, this.uiStateStore.itemName)
+        // placeContent.schema = JSON.parse(this.generatedSchemaString)
+        // placeContent.data = this.uiStateStore.placeTokens;
+        // setPlaceContent(this.uiStateStore.lastSelectedID, placeContent, this.uiStateStore.itemName)
         this.close()
       }
     }
@@ -200,4 +309,4 @@ export default defineComponent({
 </script>
 <style>
 @import '../../assets/json-forms.css';
-</style>@/jsonnets/net.js
+</style>

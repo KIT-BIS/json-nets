@@ -1,6 +1,9 @@
 // TODO: jsonnet is loaded as additional library from public folder
 // not nice, but explicitly importing it causes vue build process to complain
 // there doesn't seem to be another up to date npm package as alternative
+
+import type { JSONValue } from "./jsonOperations"
+
 /**
  * Evaluate a document with Jsonnet.
  * @param {Object} jsonnetExpression
@@ -51,7 +54,7 @@ export function jsonnetify(documents: Object) {
 
 // NEW JSON-NET VERSION
 
-export function evaluateExpression(jsonnetExpression: string, variables: Record<string, any> = {}, reference = '') {
+export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = '') {
   const variableString = jsonnetify(variables)
   jsonnetExpression = variableString + jsonnetExpression;
 

@@ -1,4 +1,4 @@
-import { type JSONObject, type JSONMarking, type JSONValue, deepInsert, deepRemove } from "@/util/jsonOperations"
+import { type JSONObject, type JSONMarking, type JSONValue, deepInsert, deepRemove, type JSONArray } from "@/util/jsonOperations"
 import type { CheckResult } from "./Schema"
 import { Schema } from "./Schema"
 
@@ -54,6 +54,10 @@ export class Place {
 
   validateToken(token: JSONObject): CheckResult {
     return this._schema.validateMarking([token])
+  }
+
+  validateMarking(marking: JSONMarking): CheckResult {
+    return this._schema.validateMarking(marking);
   }
 
   insertFragment(pathExpression: string, fragment: JSONValue, key: string | number, check = false) {

@@ -34,20 +34,26 @@ import {
   EVENT_NET_IMPORTED,
   EVENT_OCCUR_ADD_TOKEN,
   EVENT_OCCUR_REMOVE_TOKEN,
-  EVENT_ADD_PLACE,
+  // EVENT_ADD_PLACE,
   EVENT_ADD_TRANSITION,
   EVENT_CONNECT,
   EVENT_CHANGE_PLACE_CONTENT,
-  EVENT_REMOVE_PLACE,
+  // EVENT_REMOVE_PLACE,
   EVENT_REMOVE_TRANSITION,
   EVENT_DISCONNECT,
   EVENT_CHANGE_TRANSITION_CONTENT,
   occurAny,
-  addPlace,
+  // addPlace,
   addTransition,
-  register,
+  // register,
   connect
 } from '@/jsonnets/net'
+
+import {
+  EVENT_ADD_PLACE,
+  EVENT_REMOVE_PLACE,
+  Net
+} from '@/json-nets/Net'
 
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
@@ -60,6 +66,12 @@ let _paper: joint.dia.Paper;
 let _graph: joint.dia.Graph;
 
 export default defineComponent({
+  props: {
+    net: {
+      type: Net,
+      required: true
+    }
+  },
   data() {
     return {
       panX: 0,
@@ -164,8 +176,7 @@ export default defineComponent({
       connect(String(sourceId), String(targetId))
     })
 
-    register(this.onJsonnetsEvent)
-
+    this.net.register(this.onJsonnetsEvent)
   },
   methods: {
     onModeChange(newMode: string) {
@@ -276,7 +287,7 @@ export default defineComponent({
       this.clickX = clickX
       this.clickY = clickY
       if (this.uiStateStore.mode === MODE_ADD_PLACE) {
-        addPlace()
+        this.net.addPlace()
       } else if (this.uiStateStore.mode === MODE_ADD_TRANSITION) {
         addTransition()
       }

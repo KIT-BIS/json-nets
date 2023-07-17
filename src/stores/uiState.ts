@@ -3,10 +3,10 @@ import { mock } from 'mock-json-schema'
 import { toRaw } from 'vue'
 import * as beautify from 'js-beautify'
 import {
-  INSPECTOR_MODE_PLACE,
-  INSPECTOR_MODE_POSTSET_ARC,
-  INSPECTOR_MODE_PRESET_ARC,
-  INSPECTOR_MODE_TRANSITION,
+  // INSPECTOR_MODE_PLACE,
+  // INSPECTOR_MODE_POSTSET_ARC,
+  // INSPECTOR_MODE_PRESET_ARC,
+  // INSPECTOR_MODE_TRANSITION,
   MODE_NONE,
 } from '@/App.vue'
 import { findArc, findTransition, findPlace } from '@/jsonnets/net.js'
@@ -16,6 +16,7 @@ import { validate } from '@/util/jsonSchema.js'
 import { transferSchemaToJsonFormsData, transferJsonFormsDataToSchema } from '@/util/jsonForms.js'
 import { PresetArc } from '@/jsonnets/presetArc'
 
+export type ShowModal = 'none' | 'place'
 //TODO: this was built while I was still learning how to use stores
 // some rework required, better architecture
 // also MODES concept needs some rework
@@ -23,8 +24,10 @@ export const useUiStateStore = defineStore('uiState', {
   state: () => {
     return {
       mode: MODE_NONE as string,
-      showInspector: false as boolean,
+      showModal: 'none' as ShowModal,
       lastSelectedID: '' as string,
+
+      // showInspector: false as boolean,
       inspectorContent: '' as string,
       itemName: '' as string,
       nameError: '' as string,
@@ -51,15 +54,15 @@ export const useUiStateStore = defineStore('uiState', {
       outboundSchemaEvaluation: false as boolean,
       outboundSchemaEvaluationResult: '' as string,
 
-      showPlaceModal: false as boolean,
-      formsData: {},
-      formsDataString: '' as string,
-      generatedSchemaString: '' as string,
-      placeTokens: [] as Array<Object>,
-      tokenString: '' as string,
-      placeTokenValidation: false as boolean,
-      placeTokenValidationResult: '' as string,
-      selectedIndex: -1,
+      // showPlaceModal: false as boolean,
+      // formsData: {},
+      // formsDataString: '' as string,
+      // generatedSchemaString: '' as string,
+      // placeTokens: [] as Array<Object>,
+      // tokenString: '' as string,
+      // placeTokenValidation: false as boolean,
+      // placeTokenValidationResult: '' as string,
+      // selectedIndex: -1,
 
       showHelpModal: false as boolean
     }
@@ -68,150 +71,79 @@ export const useUiStateStore = defineStore('uiState', {
     setMode(mode: string) {
       this.mode = mode
     },
-    setShowInspector(show: boolean) {
-      this.showInspector = show
+    setModal(modal: ShowModal, selectedID = '') {
+      this.showModal = modal;
+      this.lastSelectedID = selectedID;
     },
+    // setShowInspector(show: boolean) {
+      // this.showInspector = show
+    // },
     setShowPresetModal(show: boolean) {
       this.showPresetModal = show
     },
     setShowTransitionModal(show: boolean) {
       this.showTransitionModal = show
     },
-    updateInspector(mode: string, id: string) {
-      this.inspectorMode = mode
-      this.lastSelectedID = id
-      if (mode === INSPECTOR_MODE_PRESET_ARC) {
-        const arc = findArc(this.lastSelectedID)
-        if(!arc) return;
-        if(!(arc instanceof PresetArc)) return;
-
-        const place = arc.place
-        this.jsonPathQuery = arc.label.filter
-        this.inputTokens = JSON.stringify(place.content.data, null, 2)
-        //@ts-ignore
-        this.queryResult = JSON.stringify(
-          query(JSON.parse(this.inputTokens), this.jsonPathQuery),
-          null,
-          2
-        )
-        this.showPresetModal = true
-        this.arcMode = arc.label.type
-      } else if (mode === INSPECTOR_MODE_POSTSET_ARC) {
-        this.showPostsetModal = true
-        const arc = findArc(this.lastSelectedID)
-        if(!arc) return;
-
-        const inputTokens = []
-        const transition = arc.transition
-        for (let i = 0; i < transition.preset.length; i++) {
-          const name = transition.preset[i].place.name
-          const documents = transition.preset[i].applyFilter()
-          inputTokens.push({ name, documents })
-        }
-        this.inputTokensArray = inputTokens
-        this.tempAssignment = {}
-        this.selectedForAssignment = {}
-        this.inscriptionEvaluationResult = 'false'
-        this.setInspectorContent(String(arc.label))
-      } else if (mode === INSPECTOR_MODE_TRANSITION) {
-        this.showTransitionModal = true
-        const transition = findTransition(this.lastSelectedID)
-        if(!transition) return;
-
-        const inputTokens = []
-        for (let i = 0; i < transition.preset.length; i++) {
-          const name = transition.preset[i].place.name
-          const documents = transition.preset[i].applyFilter()
-          inputTokens.push({ name, documents })
-        }
-        this.inputTokensArray = inputTokens
-        this.tempAssignment = {}
-        this.selectedForAssignment = {}
-        // Todo: give feedback specifically when not all variables are selected.
-        // Todo: show jsonnet feedback when error occurs
-        this.inscriptionEvaluationResult = 'false'
-        this.setInspectorContent(String(transition.content))
-        this.setItemName(transition.name)
-      } else if (mode === INSPECTOR_MODE_PLACE) {
-        const place = findPlace(this.lastSelectedID)
-        if (!place) return;
-
-        this.showPlaceModal = true
-        this.setItemName(place.name)
-        this.formsData = transferSchemaToJsonFormsData(JSON.stringify(place.content.schema))
-        this.formsDataString = JSON.stringify(this.formsData, null, 2)
-        this.placeTokens = place.content.data
-        this.tokenString = ''
-        this.selectedIndex = -1
-        this.updateJsonSchema()
-        this.validateTokens()
-      } else {
-        this.showInspector = true
-      }
-    },
-    updateJsonSchema() {
-      this.generatedSchemaString = JSON.stringify(
-        transferJsonFormsDataToSchema(this.formsDataString),
-        null,
-        2
-      )
-      this.validateTokens()
-    },
-    selectToken(index: number) {
-      this.selectedIndex = index
-      this.tokenString = JSON.stringify(this.placeTokens[index], null, 2)
-    },
-    addToken() {
-      let newDoc = mock(JSON.parse(this.generatedSchemaString))
-      this.placeTokens.push(newDoc)
-      this.validateTokens()
-    },
-    deleteToken(index: number) {
-      this.placeTokens.splice(index, 1)
-      this.selectedIndex = -1
-      this.tokenString = ''
-    },
-    validateTokens() {
-      const docErrors: Array<any> = []
-      let allValid = true
-
-      this.placeTokens.forEach((doc, index) => {
-        const { isValid, errors } = validate(doc, JSON.parse(this.generatedSchemaString))
-        if (!isValid) {
-          // console.log('Invalid document:')
-          // console.log(errors)
-          // const error: ErrorObject = errors[0]
-          // error.errorIndex = index
-          docErrors.push(errors)
-          allValid = false
-        }
-      })
-
-      if (!allValid) {
-        this.placeTokenValidation = false
-        this.placeTokenValidationResult = '<ul>'
-        for (let i = 0; i < docErrors.length; i++) {
-          let error = docErrors[i][0]
-          this.placeTokenValidationResult += '<li>'
-          this.placeTokenValidationResult +=
-            'Token ' + error.errorIndex + ': ' + error.dataPath + ' ' + error.message
-          this.placeTokenValidationResult += '</li>'
-        }
-        this.placeTokenValidationResult += '</ul>'
-      } else {
-        this.placeTokenValidation = true
-        this.placeTokenValidationResult = 'All tokens valid to schema.'
-      }
-    },
-    updateCurrentToken() {
-      try {
-        let newDoc = JSON.parse(this.tokenString)
-        if (newDoc) {
-          this.placeTokens[this.selectedIndex] = newDoc
-          this.validateTokens()
-        }
-      } catch (e) {}
-    },
+//    updateInspector(mode: string, id: string) {
+//      this.inspectorMode = mode
+//      this.lastSelectedID = id
+//      if (mode === INSPECTOR_MODE_PRESET_ARC) {
+//        const arc = findArc(this.lastSelectedID)
+//        if(!arc) return;
+//        if(!(arc instanceof PresetArc)) return;
+//
+//        const place = arc.place
+//        this.jsonPathQuery = arc.label.filter
+//        this.inputTokens = JSON.stringify(place.content.data, null, 2)
+//        //@ts-ignore
+//        this.queryResult = JSON.stringify(
+//          query(JSON.parse(this.inputTokens), this.jsonPathQuery),
+//          null,
+//          2
+//        )
+//        this.showPresetModal = true
+//        this.arcMode = arc.label.type
+//      } else if (mode === INSPECTOR_MODE_POSTSET_ARC) {
+//        this.showPostsetModal = true
+//        const arc = findArc(this.lastSelectedID)
+//        if(!arc) return;
+//
+//        const inputTokens = []
+//        const transition = arc.transition
+//        for (let i = 0; i < transition.preset.length; i++) {
+//          const name = transition.preset[i].place.name
+//          const documents = transition.preset[i].applyFilter()
+//          inputTokens.push({ name, documents })
+//        }
+//        this.inputTokensArray = inputTokens
+//        this.tempAssignment = {}
+//        this.selectedForAssignment = {}
+//        this.inscriptionEvaluationResult = 'false'
+//        this.setInspectorContent(String(arc.label))
+//      } else if (mode === INSPECTOR_MODE_TRANSITION) {
+//        this.showTransitionModal = true
+//        const transition = findTransition(this.lastSelectedID)
+//        if(!transition) return;
+//
+//        const inputTokens = []
+//        for (let i = 0; i < transition.preset.length; i++) {
+//          const name = transition.preset[i].place.name
+//          const documents = transition.preset[i].applyFilter()
+//          inputTokens.push({ name, documents })
+//        }
+//        this.inputTokensArray = inputTokens
+//        this.tempAssignment = {}
+//        this.selectedForAssignment = {}
+//        // Todo: give feedback specifically when not all variables are selected.
+//        // Todo: show jsonnet feedback when error occurs
+//        this.inscriptionEvaluationResult = 'false'
+//        this.setInspectorContent(String(transition.content))
+//        this.setItemName(transition.name)
+//      } else if (mode === INSPECTOR_MODE_PLACE) {
+//      } else {
+//        this.showInspector = true
+//      }
+//    },
     addDocumentToTempAssignment(name: string, doc: object, index: number) {
       //@ts-ignore
       this.tempAssignment[name] = doc

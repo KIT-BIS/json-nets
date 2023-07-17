@@ -1,8 +1,8 @@
 import * as joint from 'jointjs';
 import { useUiStateStore } from '@/stores/uiState';
 import {
-  INSPECTOR_MODE_PLACE,
-  INSPECTOR_MODE_TRANSITION
+  // INSPECTOR_MODE_PLACE,
+  // INSPECTOR_MODE_TRANSITION
 } from '@/App.vue'
 
 
@@ -41,11 +41,15 @@ export default class InspectorButton extends joint.elementTools.Button {
       rotate: true,
       action: () => {
         const uiState = useUiStateStore();
-        if (element.get('jsonnetsType') === 'place') {
-          uiState.updateInspector(INSPECTOR_MODE_PLACE, <string>element.id)
-        } else if (element.get('jsonnetsType') === 'transition') {
-          uiState.updateInspector(INSPECTOR_MODE_TRANSITION, <string>element.id)
-        }
+        uiState.setModal(element.get('jsonnetsType'), <string>element.id);
+        //if (element.get('jsonnetsType') === 'place') {
+        //  // TODO
+        //  ui
+        //  // uiState.updateInspector(INSPECTOR_MODE_PLACE, <string>element.id)
+        //} else if (element.get('jsonnetsType') === 'transition') {
+        //  // TODO
+        //  // uiState.updateInspector(INSPECTOR_MODE_TRANSITION, <string>element.id)
+        //}
       }
     })
   }

@@ -19,7 +19,7 @@ export const testStyle = {
   }
 }
 
-export const schema = {
+export const metaSchema = {
   type: 'object',
   properties: {
     properties: {

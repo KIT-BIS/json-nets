@@ -2,8 +2,8 @@ import * as joint from 'jointjs';
 import { disconnect } from '@/jsonnets/net'
 import { useUiStateStore } from '@/stores/uiState';
 import {
-  INSPECTOR_MODE_POSTSET_ARC,
-  INSPECTOR_MODE_PRESET_ARC,
+  // INSPECTOR_MODE_POSTSET_ARC,
+  // INSPECTOR_MODE_PRESET_ARC,
 } from '@/App.vue'
 
 
@@ -87,9 +87,11 @@ export default class Link extends joint.shapes.standard.Link {
         // console.log('inspector')
         // console.log(this.id)
         if (this.get('jsonnetsType') === 'preset') {
-          uiState.updateInspector(INSPECTOR_MODE_PRESET_ARC, <string>this.id)
+          //TODO
+          // uiState.updateInspector(INSPECTOR_MODE_PRESET_ARC, <string>this.id)
         } else if (this.get('jsonnetsType') === 'postset') {
-          uiState.updateInspector(INSPECTOR_MODE_POSTSET_ARC, <string>this.id)
+          // TODO
+          // uiState.updateInspector(INSPECTOR_MODE_POSTSET_ARC, <string>this.id)
         }
       }
     })

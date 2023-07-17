@@ -1,4 +1,7 @@
 // TODO: this module is pretty hacky, rework required!
+
+import type { JSONObject, JSONValue } from "./jsonOperations"
+
 // from https://stackoverflow.com/questions/722668/traverse-all-the-nodes-of-a-json-object-tree-with-javascript
 function traverse(o: any, func: Function) {
   for (var i in o) {
@@ -34,7 +37,8 @@ function arrayTypesFromSchemaToJsonFormsData(key: any, schemaFragment: any) {
 }
 
 export function transferSchemaToJsonFormsData(schema: any) {
-  const jsonFormsData = JSON.parse(schema)
+  // const jsonFormsData = JSON.parse(schema)
+  const jsonFormsData = JSON.parse(JSON.stringify(schema));
 
   traverse(jsonFormsData, arrayTypesFromSchemaToJsonFormsData)
   objectTypesFromSchemaToJsonFormsData('', jsonFormsData)

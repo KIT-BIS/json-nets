@@ -1,6 +1,6 @@
 import { combineArrays } from '@/util/util'
-import { evaluate, jsonnetify } from '@/util/jsonnet.js'
-import type { Arc } from './Arc'
+import { evaluate, evaluateExpression, jsonnetify } from '@/util/jsonnet.js'
+import type { Arc, FilterAssignment } from './Arc'
 import type { JSONValue } from '@/util/jsonOperations'
 
 /**
@@ -13,7 +13,7 @@ export class Transition {
   public name: string
   readonly preset: Array<Arc>
   readonly postset: Array<Arc>
-  readonly state: Record<string, JSONValue> 
+  private _state: Record<string, JSONValue> 
   readonly inscription: string
 
   constructor(id: string, name:string) {
@@ -21,7 +21,7 @@ export class Transition {
     this.name = name
     this.preset = []
     this.postset = []
-    this.state = {} // Save each variable
+    this._state = {} // Save each variable
     this.inscription = 'true'
   }
 
@@ -34,9 +34,9 @@ export class Transition {
   }
 
   clearAssignment() {
-    for (var variableKey in this.state){
-        if (this.state.hasOwnProperty(variableKey)){
-            delete this.state[variableKey];
+    for (var variableKey in this._state){
+        if (this._state.hasOwnProperty(variableKey)){
+            delete this._state[variableKey];
         }
     }
   }
@@ -53,9 +53,9 @@ export class Transition {
       const key = arc.currentAssignment.key;
       const token = arc.currentAssignment.token;
 
-      this.state[arc.fragmentVarName] = fragment;
-      this.state[arc.keyVarName] = key;
-      this.state[arc.tokenVarName] = token;
+      this._state[arc.fragmentVarName] = fragment;
+      this._state[arc.keyVarName] = key;
+      this._state[arc.tokenVarName] = token;
     }
 
   }
@@ -64,12 +64,9 @@ export class Transition {
    * Checks whether all connected preset arcs have
    * valid documents in their connected places
    * And all connected postset arc can create valid documents.
-   * @method
-   * @name Transition#isAlive
-   * @return {Boolean}
    */
   isEnabled() {
-    this.state = {}
+    this.clearAssignment();
     // check if each preset arc filter finds documents
     for (let i = 0; i < this.preset.length; i++) {
       const filteredDocuments = this.preset[i].applyFilter()
@@ -82,7 +79,7 @@ export class Transition {
     // check if there is a valid assignment
     const assignment = this.findAssignment()
     if (assignment) {
-      this.state = assignment
+      this._state = assignment
     } else {
       console.log('No valid assignment found')
       return false
@@ -105,7 +102,7 @@ export class Transition {
 
   occur() {
     for (let i = 0; i < this.preset.length; i++) {
-      this.preset[i].occur(this.state[this.preset[i].place.name.toLowerCase()])
+      this.preset[i].occur(this._state[this.preset[i].place.name.toLowerCase()])
     }
     this.postset.forEach((arc) => arc.occur())
 
@@ -114,68 +111,67 @@ export class Transition {
   /**
    * Finds a valid assignment of documents to filters.
    * Based on filter expressions and transition inscriptions.
-   * @method
-   * @return {Object|Boolean}
    */
   findAssignment() {
-    const keys = []
-    const documents = []
-    for (let i = 0; i < this.preset.length; i++) {
-      const filteredDocuments = this.preset[i].applyFilter()
-      if (filteredDocuments.length == 0) {
-        // TODO: is resetting state required here?
-        this.state = {}
-        return undefined
+    // this.clearAssignment()
+    const varNames = []
+    const allAssignments: Array<Array<FilterAssignment>> = [];
+    // const documents = []
+    const allArcs = this.preset.concat(this.postset);
+    for (let i = 0; i < allArcs.length; i++) {
+      const arc = allArcs[i]
+      const arcAssignments = arc.applyFilter();
+      if (arcAssignments.length == 0) {
+        return false
       } else {
-        documents.push(filteredDocuments)
-        keys.push(this.preset[i].place.name.toLowerCase())
+        allAssignments.push(arcAssignments)
+        varNames.push({ key: arc.keyVarName, fragment: arc.fragmentVarName, token: arc.tokenVarName })
       }
     }
 
-    const combinations = combineArrays(documents)
+    const combinations = combineArrays(allAssignments)
 
     for (let i = 0; i < combinations.length; i++) {
       const combination = combinations[i]
-      //TODO: proper typescript solution without any
-      const documents:any = {}
+      const state:Record<string, JSONValue> = {}
+      let anyMarkingInvalid = false;
       for (let j = 0; j < combination.length; j++) {
-        documents[keys[j]] = combination[j]
+        const currentVarNames = varNames[j]
+        const currentAssignment = <FilterAssignment>combination[j]
+        const currentArc = allArcs[j];
+        currentArc.assignFilter(currentAssignment);
+        state[currentVarNames.key] = currentAssignment.key;
+        state[currentVarNames.fragment] = currentAssignment.fragment;
+        state[currentVarNames.token] = currentAssignment.token;
+
+        let markingValid;
+        if (currentArc.type === 'preset') {
+          markingValid = currentArc.place.removeFragment(currentAssignment.pathExpression, true)
+        } else {
+          markingValid = currentArc.place.insertFragment(currentAssignment.pathExpression, currentAssignment.fragment, currentAssignment.key, true) 
+        }
+
+        if (!markingValid) {
+          anyMarkingInvalid = true;
+          break;
+        }
+        
       }
-      if (this.evaluate(documents)) {
-        return documents
+      // transition inscription must be true
+      if (this.evaluate(state) && !anyMarkingInvalid) {
+        // 
+        return state
       }
     }
     return false
   }
 
   /**
-   * TODO: proper typescript solution witout any
-   * Evaluates the inscribed Jsonnet expression with the given documents.
+   * Evaluates the inscribed Jsonnet expression with the given state.
    * Returns true if the transition can occur, false otherwise.
-   * @method
-   * @param {Object} documents
-   * @name Transition#evaluate
-   * @return {Boolean}
    */
-  evaluate(documents: any) {
-    // combine documents with content
-    let jsonnetString = jsonnetify(documents)
-    jsonnetString += this.content
-
-    // Convert string to Boolean
-    const evaluateDocuments = evaluate(jsonnetString)
-    // Todo: give better evaluation feedback
-    if (!evaluateDocuments.success) {
-      // throw new Error(evaluateDocuments.data);
-      return false
-    } else {
-      const result = JSON.parse(evaluateDocuments.data)
-      if (result !== true) {
-        return false
-      } else {
-        return result
-      }
-    }
-
+  evaluate(state: Record<string, JSONValue>): boolean {
+    const evaluation = evaluateExpression(this.inscription, state, this.name);
+    return evaluation.evaluation;
   }
 }

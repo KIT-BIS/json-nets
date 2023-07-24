@@ -84,15 +84,16 @@ export default class Link extends joint.shapes.standard.Link {
       distance: 70,
       action: () => {
         const uiState = useUiStateStore();
+        uiState.setModal(this.get('jsonnetsType'), <string>this.id);
         // console.log('inspector')
         // console.log(this.id)
-        if (this.get('jsonnetsType') === 'preset') {
+        // if (this.get('jsonnetsType') === 'preset') {
           //TODO
           // uiState.updateInspector(INSPECTOR_MODE_PRESET_ARC, <string>this.id)
-        } else if (this.get('jsonnetsType') === 'postset') {
+        // } else if (this.get('jsonnetsType') === 'postset') {
           // TODO
           // uiState.updateInspector(INSPECTOR_MODE_POSTSET_ARC, <string>this.id)
-        }
+        // }
       }
     })
 

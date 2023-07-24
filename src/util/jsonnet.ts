@@ -4,6 +4,7 @@
 
 import type { JSONValue } from "./jsonOperations"
 
+// window.jsonnet = jsonnet;
 /**
  * Evaluate a document with Jsonnet.
  * @param {Object} jsonnetExpression
@@ -68,15 +69,16 @@ export function evaluateExpression(jsonnetExpression: string, variables: Record<
       throw error
     } else {
       const returnValue = JSON.parse(result[0])
-      if (returnValue === true) {
-        return { evaluation: true, hasError: false }
-      } else if (returnValue === false) {
-        // return false for any not-true value
-        return { evaluation: false, hasError: false }
-      } else {
-        const error = new Error('Jsonnet expression for ' + reference + ' does not return boolean value. Returned value is ' + result[0])
-        throw error;
-      }
+      return { evaluation: returnValue, hasError: false }
+      //if (returnValue === true) {
+      //  return { evaluation: true, hasError: false }
+      //} else if (returnValue === false) {
+      //  // return false for any not-true value
+      //  return { evaluation: false, hasError: false }
+      //} else {
+      //  const error = new Error('Jsonnet expression for ' + reference + ' does not return boolean value. Returned value is ' + result[0])
+      //  throw error;
+      //}
     }
 
   } catch (error: any) {

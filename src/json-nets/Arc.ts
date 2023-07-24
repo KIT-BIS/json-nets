@@ -47,15 +47,19 @@ export class Arc {
     this._fragmentVarName = '';
     this._keyVarName = '';
     this.updateVarNames(this.place.name);
+    let filterExpression = '$.*'
+    if (type === "postset") {
+      filterExpression = '$'
+    }
 
     this.filter = {
-      filterExpression: '$.*',
+      filterExpression,
       pathExpression: null,
       key: null,
       fragment: null,
       token: null
     }
-    this.filterAssignments = this.applyFilter();
+    this.filterAssignments = this.applyFilterExpression(this.filter.filterExpression);
   }
 
   // Todo: remember to update var names when place name changes
@@ -69,7 +73,7 @@ export class Arc {
     }
     
     this._tokenVarName = baseName + suffix;
-    this._fragmentVarName = baseName + 'Frament' + suffix;
+    this._fragmentVarName = baseName + 'Fragment' + suffix;
     this._keyVarName = baseName + 'Key' + suffix;
   }
 
@@ -95,11 +99,11 @@ export class Arc {
    * Returns a subset of documents from the connected place.
    * Documents are filtered by the inscribed JSONPath-expression.
    */
-  applyFilter(): Array<FilterAssignment> {
+  applyFilterExpression(filterExpression: string): Array<FilterAssignment> {
     const marking = this.place.marking;
 
     const filterAssignments:Array<FilterAssignment> = [];
-    const pathExpressions = getPathExpressions(marking, this.filter.filterExpression);
+    const pathExpressions = getPathExpressions(marking, filterExpression);
 
     for (let i = 0; i < pathExpressions.length; i++) {
       const pathExpression = pathExpressions[i]
@@ -115,6 +119,10 @@ export class Arc {
   set filterExpression(filterExpression: string) {
     this.filter.filterExpression = filterExpression;
     this.resetAssignment();
+  }
+
+  get filterExpression(): string {
+    return this.filter.filterExpression
   }
 
   get currentAssignment() {

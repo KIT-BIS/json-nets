@@ -50,14 +50,17 @@ export function transferSchemaToJsonFormsData(schema: any) {
 function objectAndArrayTypesFromFormsDataToSchema(key: any, value: any) {
   if (value.properties && value.type !== 'array') {
     let newProps = {}
+    let requiredProps = [];
     for (let i = 0; i < value.properties.length; i++) {
       if (value.properties[i].name) {
+        requiredProps.push(value.properties[i].name);
         //@ts-ignore
         newProps[value.properties[i].name] = value.properties[i]
         //@ts-ignore
         delete newProps[value.properties[i].name].name
       }
     }
+    value.required = requiredProps;
     value.properties = newProps
     value.type = 'object'
   }

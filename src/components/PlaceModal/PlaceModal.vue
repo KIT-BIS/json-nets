@@ -117,11 +117,9 @@
 
 <script lang="ts">
 
-import  type { ValidateFunction } from 'ajv'
 import type { JsonFormsChangeEvent } from '@jsonforms/vue'
 import { mapStores } from 'pinia'
 import { useUiStateStore } from '@/stores/uiState'
-import { validatePlaceName, setPlaceContent } from '@/jsonnets/net'
 import { defineComponent } from 'vue'
 import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'
@@ -220,10 +218,6 @@ export default defineComponent({
     this.validateTokens()
   },
   methods: {
-    close() {
-      unCacheSchema('temp');
-      this.uiStateStore.setModal('none');
-    },
     onFormChange(event: JsonFormsChangeEvent) {
       this.formsData = event.data
       this.formsDataString = JSON.stringify(this.formsData, null, 2)
@@ -307,9 +301,14 @@ export default defineComponent({
         return;
       }
       const schemaToSave = JSON.parse(this.generatedSchemaString);
-      this.net.updatePlace(this.uiStateStore.lastSelectedID,this.placeName, schemaToSave ,this.placeTokens)
+      this.net.updatePlace(this.uiStateStore.lastSelectedID,  this.placeName, schemaToSave ,this.placeTokens)
       this.close()
-    }
+    },
+    close() {
+      unCacheSchema('temp');
+      this.uiStateStore.setModal('none');
+    },
+
   },
 })
 </script>

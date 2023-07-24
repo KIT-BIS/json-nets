@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import example from '@/examples/recognition/net'
 import InboundArcModal from './components/InboundArcModal/InboundArcModal.vue'
+import ArcModal from './components/InboundArcModal/ArcModal.vue'
 import HelpModal from './components/HelpModal.vue'
 import OutboundArcModal from './components/OutboundArcModal/OutboundArcModal.vue'
 import TransitionModal from './components/TransitionModal/TransitionModal.vue'
@@ -94,10 +95,12 @@ export const MODE_HELP = 'MODE_HELP'
       "
     />
   </div>
-  <InboundArcModal v-if="uiState.showPresetModal" />
-  <OutboundArcModal v-if="uiState.showPostsetModal" />
-  <TransitionModal v-if="uiState.showTransitionModal" />
+  <!-- <InboundArcModal v-if="uiState.showPresetModal" /> -->
+  <!-- <OutboundArcModal v-if="uiState.showPostsetModal" /> -->
+  <!-- <TransitionModal v-if="uiState.showTransitionModal" /> -->
+  <ArcModal v-if="uiState.showModal === 'preset'" :net="net"/>
   <PlaceModal v-if="uiState.showModal === 'place'" :net="net"/>
-  <HelpModal v-if="uiState.showHelpModal" />
+  <TransitionModal v-if="uiState.showModal === 'transition'" :net="net"/>
+  <!-- <HelpModal v-if="uiState.showHelpModal" /> -->
   <!-- <RouterView /> -->
 </template>

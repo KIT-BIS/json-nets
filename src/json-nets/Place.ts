@@ -12,18 +12,18 @@ export type FragmentOperation = {
   key: string | number
 }
 
-/**
- * Create a new place.
- * @param {String} id ID of the place.
- * @param {String} name Name of the place.
- */
+
 export class Place {
   readonly id: string
   private _name: string
   private _schema: Schema 
   public marking: JSONMarking
 
-
+  /**
+   * Create a new place.
+   * @param {String} id ID of the place.
+   * @param {String} name Name of the place.
+   */
   constructor(id: string, name: string) {
     this.id = id // id of the place
     this._name = name // name of the place

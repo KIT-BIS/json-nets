@@ -11,10 +11,12 @@ import type { JSONValue } from '@/util/jsonOperations'
 export class Transition {
   readonly id: string
   public name: string
-  readonly preset: Array<Arc>
-  readonly postset: Array<Arc>
+  public preset: Array<Arc>
+  public postset: Array<Arc>
   private _state: Record<string, JSONValue> 
-  readonly inscription: string
+  public guard: string
+  public preface: string
+  public fragmentVarSnippets: Record<string, string>
 
   constructor(id: string, name:string) {
     this.id = id
@@ -22,13 +24,18 @@ export class Transition {
     this.preset = []
     this.postset = []
     this._state = {} // Save each variable
-    this.inscription = 'true'
+    this.guard = 'true',
+    this.preface = ''
+    this.fragmentVarSnippets = {}
   }
 
   connectArc(arc: Arc) {
     if (arc.type === 'preset') {
       this.preset.push(arc)
     } else if (arc.type === 'postset') {
+      this.fragmentVarSnippets[arc.fragmentVarName] = 'local ' + arc.fragmentVarName + ' = {};'
+      console.log('from arc connection')
+      console.log(this.fragmentVarSnippets)
       this.postset.push(arc)
     }
   }
@@ -87,7 +94,7 @@ export class Transition {
 
     // check if creation functions create a valid document
     for (let i = 0; i < this.postset.length; i++) {
-      const document = this.postset[i].createDocument()
+      // const document = this.postset[i].createDocument()
       if (document === undefined) {
         console.log('Could not create valid document')
         return false
@@ -102,9 +109,9 @@ export class Transition {
 
   occur() {
     for (let i = 0; i < this.preset.length; i++) {
-      this.preset[i].occur(this._state[this.preset[i].place.name.toLowerCase()])
+      // this.preset[i].occur(this._state[this.preset[i].place.name.toLowerCase()])
     }
-    this.postset.forEach((arc) => arc.occur())
+    // this.postset.forEach((arc) => arc.occur())
 
   }
 
@@ -171,7 +178,7 @@ export class Transition {
    * Returns true if the transition can occur, false otherwise.
    */
   evaluate(state: Record<string, JSONValue>): boolean {
-    const evaluation = evaluateExpression(this.inscription, state, this.name);
+    const evaluation = evaluateExpression(this.guard, state, this.name);
     return evaluation.evaluation;
   }
 }

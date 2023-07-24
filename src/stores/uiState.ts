@@ -16,7 +16,7 @@ import { validate } from '@/util/jsonSchema.js'
 import { transferSchemaToJsonFormsData, transferJsonFormsDataToSchema } from '@/util/jsonForms.js'
 import { PresetArc } from '@/jsonnets/presetArc'
 
-export type ShowModal = 'none' | 'place'
+export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition'
 //TODO: this was built while I was still learning how to use stores
 // some rework required, better architecture
 // also MODES concept needs some rework
@@ -28,17 +28,17 @@ export const useUiStateStore = defineStore('uiState', {
       lastSelectedID: '' as string,
 
       // showInspector: false as boolean,
-      inspectorContent: '' as string,
-      itemName: '' as string,
+      // inspectorContent: '' as string,
+      // itemName: '' as string,
       // nameError: '' as string,
-      validationError: '' as string,
+      // validationError: '' as string,
 
       showPresetModal: false as boolean,
       arcMode: '' as string,
       inputTokens: '' as string,
       inspectorMode: '' as string,
-      jsonPathQuery: '' as string,
-      queryResult: '' as string,
+      // jsonPathQuery: '' as string,
+      // queryResult: '' as string,
       jsonPathHelpExpanded: false as boolean,
 
       showTransitionModal: false as boolean,
@@ -78,32 +78,17 @@ export const useUiStateStore = defineStore('uiState', {
     // setShowInspector(show: boolean) {
       // this.showInspector = show
     // },
-    setShowPresetModal(show: boolean) {
-      this.showPresetModal = show
-    },
-    setShowTransitionModal(show: boolean) {
-      this.showTransitionModal = show
-    },
+    // setShowPresetModal(show: boolean) {
+      // this.showPresetModal = show
+    // },
+    // setShowTransitionModal(show: boolean) {
+      // this.showTransitionModal = show
+    // },
 //    updateInspector(mode: string, id: string) {
 //      this.inspectorMode = mode
 //      this.lastSelectedID = id
 //      if (mode === INSPECTOR_MODE_PRESET_ARC) {
-//        const arc = findArc(this.lastSelectedID)
-//        if(!arc) return;
-//        if(!(arc instanceof PresetArc)) return;
-//
-//        const place = arc.place
-//        this.jsonPathQuery = arc.label.filter
-//        this.inputTokens = JSON.stringify(place.content.data, null, 2)
-//        //@ts-ignore
-//        this.queryResult = JSON.stringify(
-//          query(JSON.parse(this.inputTokens), this.jsonPathQuery),
-//          null,
-//          2
-//        )
-//        this.showPresetModal = true
-//        this.arcMode = arc.label.type
-//      } else if (mode === INSPECTOR_MODE_POSTSET_ARC) {
+//    } else if (mode === INSPECTOR_MODE_POSTSET_ARC) {
 //        this.showPostsetModal = true
 //        const arc = findArc(this.lastSelectedID)
 //        if(!arc) return;
@@ -121,25 +106,7 @@ export const useUiStateStore = defineStore('uiState', {
 //        this.inscriptionEvaluationResult = 'false'
 //        this.setInspectorContent(String(arc.label))
 //      } else if (mode === INSPECTOR_MODE_TRANSITION) {
-//        this.showTransitionModal = true
-//        const transition = findTransition(this.lastSelectedID)
-//        if(!transition) return;
-//
-//        const inputTokens = []
-//        for (let i = 0; i < transition.preset.length; i++) {
-//          const name = transition.preset[i].place.name
-//          const documents = transition.preset[i].applyFilter()
-//          inputTokens.push({ name, documents })
-//        }
-//        this.inputTokensArray = inputTokens
-//        this.tempAssignment = {}
-//        this.selectedForAssignment = {}
-//        // Todo: give feedback specifically when not all variables are selected.
-//        // Todo: show jsonnet feedback when error occurs
-//        this.inscriptionEvaluationResult = 'false'
-//        this.setInspectorContent(String(transition.content))
-//        this.setItemName(transition.name)
-//      } else if (mode === INSPECTOR_MODE_PLACE) {
+//} else if (mode === INSPECTOR_MODE_PLACE) {
 //      } else {
 //        this.showInspector = true
 //      }
@@ -167,7 +134,7 @@ export const useUiStateStore = defineStore('uiState', {
       let outboundEvaluationResult = ''
 
       let jsonnetString = jsonnetify(toRaw(this.tempAssignment))
-      jsonnetString += this.inspectorContent
+      // jsonnetString += this.inspectorContent
 
       const evaluateDocuments = evaluate(jsonnetString)
       if (!evaluateDocuments.success) {
@@ -213,7 +180,7 @@ export const useUiStateStore = defineStore('uiState', {
       let jsonnetString = jsonnetify(toRaw(this.tempAssignment))
 
       if (this.showTransitionModal) {
-        jsonnetString += this.inspectorContent
+        // jsonnetString += this.inspectorContent
       } else if (this.showPostsetModal) {
         const arc = findArc(this.lastSelectedID)
         if(!arc) return;
@@ -237,36 +204,27 @@ export const useUiStateStore = defineStore('uiState', {
       this.inscriptionEvaluationResult = String(transitionEvaluation)
       this.transitionInscriptionValid = transitionEvaluation
     },
-    setJsonPathQuery(query: string) {
-      this.jsonPathQuery = query
-    },
-    setQueryResult(result: string) {
-      this.queryResult = result
-    },
-    updateQueryResult() {
-      //@ts-ignore
-      try {
-        this.queryResult = JSON.stringify(
-          query(JSON.parse(this.inputTokens), this.jsonPathQuery),
-          null,
-          2
-        )
-      } catch (e) {
-        //TODO: properly handle error cases
-        console.log('jsonpath query failed')
-      }
-    },
-    setInspectorContent(content: string) {
-      this.inspectorContent = beautify.js_beautify(content)
-    },
-    setItemName(name: string) {
-      this.itemName = name
-    },
-    // setNameError(error: string) {
-      // this.nameError = error
+    // setJsonPathQuery(query: string) {
+      // this.jsonPathQuery = query
     // },
-    setValidationError(error: string) {
-      this.validationError = error
-    }
+    // setQueryResult(result: string) {
+      // this.queryResult = result
+    // },
+    // updateQueryResult() {
+      //@ts-ignore
+      // try {
+        // this.queryResult = JSON.stringify(
+          // query(JSON.parse(this.inputTokens), this.jsonPathQuery),
+          // null,
+          // 2
+        // )
+      // } catch (e) {
+        //TODO: properly handle error cases
+        // console.log('jsonpath query failed')
+      // }
+    // },
+    // setInspectorContent(content: string) {
+      // this.inspectorContent = beautify.js_beautify(content)
+    // },
   }
 })

@@ -35,24 +35,25 @@ import {
   EVENT_OCCUR_ADD_TOKEN,
   EVENT_OCCUR_REMOVE_TOKEN,
   // EVENT_ADD_PLACE,
-  EVENT_ADD_TRANSITION,
-  EVENT_CONNECT,
+  // EVENT_CONNECT,
   // EVENT_CHANGE_PLACE_CONTENT,
   // EVENT_REMOVE_PLACE,
-  EVENT_REMOVE_TRANSITION,
-  EVENT_DISCONNECT,
-  EVENT_CHANGE_TRANSITION_CONTENT,
+  // EVENT_DISCONNECT,
   occurAny,
   // addPlace,
-  addTransition,
   // register,
-  connect
+  // connect
 } from '@/jsonnets/net'
 
 import {
   EVENT_ADD_PLACE,
   EVENT_REMOVE_PLACE,
   EVENT_UPDATE_PLACE,
+  EVENT_ADD_TRANSITION,
+  EVENT_REMOVE_TRANSITION,
+  EVENT_UPDATE_TRANSITION,
+  EVENT_CONNECT,
+  EVENT_DISCONNECT,
   Net
 } from '@/json-nets/Net'
 
@@ -174,7 +175,7 @@ export default defineComponent({
       let sourceId = linkView.model.source().id
 
       _graph.removeCells([linkView.model]);
-      connect(String(sourceId), String(targetId))
+      this.net.connect(String(sourceId), String(targetId))
     })
 
     this.net.register(this.onJsonnetsEvent)
@@ -235,7 +236,7 @@ export default defineComponent({
         place.set('tokens', payload.num)
         place.attr('.label/text', payload.name)
         // change name and token view
-      } else if (event === EVENT_CHANGE_TRANSITION_CONTENT) {
+      } else if (event === EVENT_UPDATE_TRANSITION) {
         const transition = _graph.getCell(payload.transitionID)
         transition.attr('.label/text', payload.name)
         // change name
@@ -290,7 +291,7 @@ export default defineComponent({
       if (this.uiStateStore.mode === MODE_ADD_PLACE) {
         this.net.addPlace()
       } else if (this.uiStateStore.mode === MODE_ADD_TRANSITION) {
-        addTransition()
+        this.net.addTransition()
       }
     },
     updateGraphLayout() {

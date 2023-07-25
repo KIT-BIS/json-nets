@@ -63,10 +63,10 @@
                   <!-- }}</code> -->
                 </td>
                 <td>
-                  <code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedFragmentValues[arc.id],null,2)">{{ arc.fragmentVarName }}</code>
+                  <code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedFragmentValues[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
                 </td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="selectedKeyValues[arc.id]">{{ arc.keyVarName }}</code></td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.id],null,2)">{{ arc.tokenVarName }}</code></td>
+                <td><code class="has-tooltip-bottom" :data-tooltip="selectedKeyValues[arc.keyVarName]">{{ arc.keyVarName }}</code></td>
+                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
               </tr>
             </tbody>
         
@@ -116,8 +116,8 @@
                 <td>
                   <code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(fragmentEvaluationResults[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
                 </td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="selectedKeyValues[arc.id]">{{ arc.keyVarName }}</code></td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.id],null,2)">{{ arc.tokenVarName }}</code></td>
+                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(keyEvaluationResults[arc.keyVarName],null,2)">{{ arc.keyVarName }}</code></td>
+                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
               </tr>
             </tbody>
         
@@ -198,9 +198,10 @@
               :indent-with-tab="true"
               :tab-size="2"
               :extensions="extensions"
-              @ready="onEditorReady"
+              @update="updateEvaluation"
             />
  
+              <!-- @ready="onEditorReady" -->
             </div>
 
           </div>
@@ -218,8 +219,36 @@
               @update="updateEvaluation"
             />
               <!-- TODO: enable variable insertion @ready="onEditorReady" -->
-            <p class="jsn-red-background">some problem</p>
+            <p 
+              :class="{
+                  'jsn-green-background': fragmentEvaluationValid[arc.fragmentVarName],
+                  'jsn-red-background': !fragmentEvaluationValid[arc.fragmentVarName]
+                }"
+
+            >{{ fragmentEvaluationResults[arc.fragmentVarName] }}</p>
             </div>
+            <div  class="column is-one-fifth">Variable assignment (<span class="is-family-code">{{ arc.keyVarName }}</span>):</div>
+            <div class="column">
+            <Codemirror
+              v-model="keyVarSnippets[arc.keyVarName]"
+              placeholder="Define variable assignment in Jsonnet"
+              :style="{ height: '50px' }"
+              :autofocus="true"
+              :indent-with-tab="true"
+              :tab-size="2"
+              :extensions="extensions"
+              @update="updateEvaluation"
+            />
+              <!-- TODO: enable variable insertion @ready="onEditorReady" -->
+            <p 
+              :class="{
+                  'jsn-green-background': keyEvaluationValid[arc.keyVarName],
+                  'jsn-red-background': !keyEvaluationValid[arc.keyVarName]
+                }"
+
+            >{{ keyEvaluationResults[arc.keyVarName] }}</p>
+            </div>
+
           </div>
           <div class="columns">
             <div class="column is-one-fifth">Guard:</div>
@@ -233,7 +262,7 @@
               :indent-with-tab="true"
               :tab-size="2"
               :extensions="extensions"
-              @update="() => {}"
+              @update="updateEvaluation"
             />
               <!-- @ready="onEditorReady" -->
 
@@ -285,6 +314,7 @@ import type { Arc } from '@/json-nets/Arc'
 import type { JSONValue, JSONObject } from '@/util/jsonOperations'
 import { toRaw } from 'vue'
 import { evaluateExpression } from '@/util/jsonnet'
+import { mapStateToControlWithDetailProps } from '@jsonforms/core'
 
 export default defineComponent({
   components: {
@@ -323,6 +353,10 @@ export default defineComponent({
       fragmentEvaluationResults: {} as Record<string, JSONValue>,
       fragmentEvaluationValid: {} as Record<string, boolean>,
 
+      keyVarSnippets: {} as Record<string, string>,
+      keyEvaluationResults: {} as Record<string, JSONValue>,
+      keyEvaluationValid: {} as Record<string, boolean>,
+
       selectedFragments: {} as Record<string, number>,
       selectedKeyValues: {} as Record<string, string | number>,
       selectedFragmentValues: {} as Record<string, JSONValue>,
@@ -342,11 +376,13 @@ export default defineComponent({
     const transition = this.net.findTransition(this.uiStateStore.lastSelectedID)
     if (!transition) return;
     this.transitionName = transition.name;
+    //@ts-ignore
     this.postsetArray = transition.postset;
     this.presetArray = transition.preset;
     this.fragmentVarSnippets = JSON.parse(JSON.stringify(transition.fragmentVarSnippets));
-    console.log("fragment var snippets")
-    console.log(toRaw(this.fragmentVarSnippets));
+    this.keyVarSnippets = JSON.parse(JSON.stringify(transition.keyVarSnippets));
+    // console.log("fragment var snippets")
+    // console.log(toRaw(this.fragmentVarSnippets));
     //
     //        const inputTokens = []
     //        for (let i = 0; i < transition.preset.length; i++) {
@@ -378,22 +414,69 @@ export default defineComponent({
     },
     selectFragment(arc: Arc, index: number) {
       this.selectedFragments[arc.id] = index;
-      const filterAssignments = arc.applyFilterExpression(arc.filterExpression)
-      this.selectedKeyValues[arc.id] = filterAssignments[index].key
-      this.selectedFragmentValues[arc.id] = filterAssignments[index].fragment
-      this.selectedTokenValues[arc.id] = filterAssignments[index].token
+      const filterAssignments = arc.applyFilterExpression(arc.filterExpression);
+      if (arc.type === "preset") {
+        this.selectedKeyValues[arc.keyVarName] = filterAssignments[index].key;
+        this.selectedFragmentValues[arc.fragmentVarName] = filterAssignments[index].fragment;
+      }
+      this.selectedTokenValues[arc.tokenVarName] = filterAssignments[index].token;
+      this.updateEvaluation();
     },
     expandExamples() {
       this.expandedExamples = !this.expandedExamples
     },
     updateEvaluation() {
+      let allSelected = false;
+      if (Object.keys(this.selectedFragments).length === (this.presetArray.length + this.postsetArray.length)) {
+        allSelected = true;
+      }
+
       const fragmentVars = Object.keys(this.fragmentVarSnippets)
       for (let i = 0; i < fragmentVars.length; i++) {
-        let snippet = this.fragmentVarSnippets[fragmentVars[i]] + fragmentVars[i]
-        const result = evaluateExpression(snippet)
-        this.fragmentEvaluationValid[fragmentVars[i]] = !result.hasError;
-        this.fragmentEvaluationResults[fragmentVars[i]] = result.evaluation;
+        if (!allSelected) {
+          this.fragmentEvaluationValid[fragmentVars[i]] = false;
+          this.fragmentEvaluationResults[fragmentVars[i]] = "Select a complete filter assignment first.";
+        } else {
+          let snippet = this.jsonnetPreface;
+          snippet += this.fragmentVarSnippets[fragmentVars[i]] + fragmentVars[i]
+          let variables = {
+            ...toRaw(this.selectedKeyValues),
+            ...toRaw(this.selectedFragmentValues),
+            ...toRaw(this.selectedTokenValues)
+          }
+          const result = evaluateExpression(snippet, variables, this.transitionName);
+          this.fragmentEvaluationValid[fragmentVars[i]] = !result.hasError;
+          if (result.hasError) {
+            this.fragmentEvaluationResults[fragmentVars[i]] = result.error;
+          } else {
+            this.fragmentEvaluationResults[fragmentVars[i]] = result.evaluation;
+          }
+        }
       }
+
+      const keyVars = Object.keys(this.keyVarSnippets)
+      for (let i = 0; i < keyVars.length; i++) {
+        if (!allSelected) {
+          this.keyEvaluationValid[keyVars[i]] = false;
+          this.keyEvaluationResults[keyVars[i]] = "Select a complete filter assignment first.";
+        } else {
+          let snippet = this.jsonnetPreface;
+          snippet += this.keyVarSnippets[keyVars[i]] + keyVars[i]
+          let variables = {
+            ...toRaw(this.selectedKeyValues),
+            ...toRaw(this.selectedFragmentValues),
+            ...toRaw(this.selectedTokenValues)
+          }
+          const result = evaluateExpression(snippet, variables, this.transitionName);
+          this.keyEvaluationValid[keyVars[i]] = !result.hasError;
+          if (result.hasError) {
+            this.keyEvaluationResults[keyVars[i]] = result.error;
+          } else {
+            this.keyEvaluationResults[keyVars[i]] = result.evaluation;
+          }
+        }
+      }
+
     },
     saveChanges() {
       this.net.updateTransition(this.uiStateStore.lastSelectedID,

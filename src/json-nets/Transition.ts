@@ -17,6 +17,7 @@ export class Transition {
   public guard: string
   public preface: string
   public fragmentVarSnippets: Record<string, string>
+  public keyVarSnippets: Record<string, string>
 
   constructor(id: string, name:string) {
     this.id = id
@@ -27,15 +28,15 @@ export class Transition {
     this.guard = 'true',
     this.preface = ''
     this.fragmentVarSnippets = {}
+    this.keyVarSnippets = {}
   }
 
   connectArc(arc: Arc) {
     if (arc.type === 'preset') {
       this.preset.push(arc)
     } else if (arc.type === 'postset') {
-      this.fragmentVarSnippets[arc.fragmentVarName] = 'local ' + arc.fragmentVarName + ' = {};'
-      console.log('from arc connection')
-      console.log(this.fragmentVarSnippets)
+      this.fragmentVarSnippets[arc.fragmentVarName] = 'local ' + arc.fragmentVarName + ' = {};';
+      this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = '-';";
       this.postset.push(arc)
     }
   }

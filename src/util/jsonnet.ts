@@ -46,7 +46,7 @@ export function jsonnetify(documents: Object) {
 // export function variablifyDocuments(documents) {
   let jsonnetString = ''
   for (const [key, value] of Object.entries(documents)) {
-    jsonnetString += `local ${key.toLowerCase()} = ${JSON.stringify(value)}; \n`
+    jsonnetString += `local ${key} = ${JSON.stringify(value)}; \n`
   }
 
   return jsonnetString
@@ -58,6 +58,7 @@ export function jsonnetify(documents: Object) {
 export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = '') {
   const variableString = jsonnetify(variables)
   jsonnetExpression = variableString + jsonnetExpression;
+  console.log(jsonnetExpression)
 
   try {
     //@ts-ignore

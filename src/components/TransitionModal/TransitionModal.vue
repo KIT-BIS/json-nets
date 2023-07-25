@@ -13,16 +13,15 @@
             <input class="input" type="text" v-model="transitionName" />
           </div>
         </div>
-        <label class="label"
-          >Assignment selection
+        <div class="block">
+        <label class="label">
+          Filter Assignment (preset)
           <HelpButton 
             help-text="
               Table shows tokens from pre-set places, filtered with JSONPath expression. If no
               tokens are visible, check inbound arc inscription first.
             "/>
         </label>
-          <div class="columns">
-            <div class="column is-half p-2">
 
           <table class="table is-fullwidth is-striped">
             <thead>
@@ -71,9 +70,18 @@
             </tbody>
         
               </table>
+</div>
+              <div class="block">
+        <label class="label">
+          Filter Assignment (postset)
+          <HelpButton 
+            help-text="
+              Table shows tokens from pre-set places, filtered with JSONPath expression. If no
+              tokens are visible, check inbound arc inscription first.
+            "/>
+        </label>
 
-            </div>
-            <div class="column is-half p-2">
+
 
           <table class="table is-fullwidth is-striped">
             <thead>
@@ -122,9 +130,7 @@
             </tbody>
         
               </table>
-
-            </div>
-          </div>
+</div>
           <label class="label">
             Transition inscription (Jsonnet)
             <HelpButton help-text="
@@ -265,6 +271,13 @@
               @update="updateEvaluation"
             />
               <!-- @ready="onEditorReady" -->
+            <p 
+              :class="{
+                  'jsn-green-background': guardEvaluationValid,
+                  'jsn-red-background': !guardEvaluationValid
+                }"
+
+            >{{ guardEvaluationResult }}</p>
 
             </div>
           </div>
@@ -357,6 +370,9 @@ export default defineComponent({
       keyEvaluationResults: {} as Record<string, JSONValue>,
       keyEvaluationValid: {} as Record<string, boolean>,
 
+      guardEvaluationResult: '',
+      guardEvaluationValid: false,
+
       selectedFragments: {} as Record<string, number>,
       selectedKeyValues: {} as Record<string, string | number>,
       selectedFragmentValues: {} as Record<string, JSONValue>,
@@ -381,6 +397,8 @@ export default defineComponent({
     this.presetArray = transition.preset;
     this.fragmentVarSnippets = JSON.parse(JSON.stringify(transition.fragmentVarSnippets));
     this.keyVarSnippets = JSON.parse(JSON.stringify(transition.keyVarSnippets));
+    // TODO: will this directly change the guard ... it should not.
+    this.jsonnetGuard = transition.guard;
     // console.log("fragment var snippets")
     // console.log(toRaw(this.fragmentVarSnippets));
     //
@@ -430,6 +448,12 @@ export default defineComponent({
       if (Object.keys(this.selectedFragments).length === (this.presetArray.length + this.postsetArray.length)) {
         allSelected = true;
       }
+      let variables = {
+        ...toRaw(this.selectedKeyValues),
+        ...toRaw(this.selectedFragmentValues),
+        ...toRaw(this.selectedTokenValues)
+      }
+
 
       const fragmentVars = Object.keys(this.fragmentVarSnippets)
       for (let i = 0; i < fragmentVars.length; i++) {
@@ -439,11 +463,6 @@ export default defineComponent({
         } else {
           let snippet = this.jsonnetPreface;
           snippet += this.fragmentVarSnippets[fragmentVars[i]] + fragmentVars[i]
-          let variables = {
-            ...toRaw(this.selectedKeyValues),
-            ...toRaw(this.selectedFragmentValues),
-            ...toRaw(this.selectedTokenValues)
-          }
           const result = evaluateExpression(snippet, variables, this.transitionName);
           this.fragmentEvaluationValid[fragmentVars[i]] = !result.hasError;
           if (result.hasError) {
@@ -462,11 +481,6 @@ export default defineComponent({
         } else {
           let snippet = this.jsonnetPreface;
           snippet += this.keyVarSnippets[keyVars[i]] + keyVars[i]
-          let variables = {
-            ...toRaw(this.selectedKeyValues),
-            ...toRaw(this.selectedFragmentValues),
-            ...toRaw(this.selectedTokenValues)
-          }
           const result = evaluateExpression(snippet, variables, this.transitionName);
           this.keyEvaluationValid[keyVars[i]] = !result.hasError;
           if (result.hasError) {
@@ -476,6 +490,48 @@ export default defineComponent({
           }
         }
       }
+
+      if (!allSelected) {
+        this.guardEvaluationValid = false;
+        this.guardEvaluationResult = "Select a complete filter assignment first.";
+        return;
+      }
+
+      let guardSnippet = this.jsonnetPreface;
+      for (let i = 0; i < fragmentVars.length; i++) {
+        guardSnippet += this.fragmentVarSnippets[fragmentVars[i]]
+      }
+      for (let i = 0; i < keyVars.length; i++) {
+        guardSnippet += this.keyVarSnippets[keyVars[i]]
+      }
+      const transition = this.net.findTransition(this.uiStateStore.lastSelectedID);
+      if (!transition) return;
+      guardSnippet += this.jsonnetGuard;
+      const result = evaluateExpression(guardSnippet, variables, this.transitionName);
+      // this.guardEvaluationValid = !result.hasError;
+      //if (returnValue === true) {
+      //  return { evaluation: true, hasError: false }
+      //} else if (returnValue === false) {
+      //  // return false for any not-true value
+      //  return { evaluation: false, hasError: false }
+      //} else {
+      //  const error = new Error('Jsonnet expression for ' + reference + ' does not return boolean value. Returned value is ' + result[0])
+      //  throw error;
+      //}
+
+      if (result.hasError) {
+        this.guardEvaluationResult = result.error;
+        this.guardEvaluationValid = false
+      } else {
+        if (result.evaluation === true || result.evaluation === false ){
+          this.guardEvaluationValid = true;
+          this.guardEvaluationResult = result.evaluation;
+        } else {
+          this.guardEvaluationValid = false;
+          this.guardEvaluationResult = "Guard expression must evaluate to true or false. Evaluation is: " + JSON.stringify(result.evaluation, null , 2);
+        }
+      }
+
 
     },
     saveChanges() {

@@ -31,15 +31,13 @@ import {
   MODE_NONE
 } from '@/App.vue'
 import {
-  EVENT_NET_IMPORTED,
-  EVENT_OCCUR_ADD_TOKEN,
-  EVENT_OCCUR_REMOVE_TOKEN,
+  // EVENT_NET_IMPORTED,
   // EVENT_ADD_PLACE,
   // EVENT_CONNECT,
   // EVENT_CHANGE_PLACE_CONTENT,
   // EVENT_REMOVE_PLACE,
   // EVENT_DISCONNECT,
-  occurAny,
+  // occurAny,
   // addPlace,
   // register,
   // connect
@@ -54,11 +52,15 @@ import {
   EVENT_UPDATE_TRANSITION,
   EVENT_CONNECT,
   EVENT_DISCONNECT,
+  EVENT_FIRE_ADD_FRAGMENT,
+  EVENT_FIRE_REMOVE_FRAGMENT,
+  EVENT_NET_IMPORTED,
   Net
 } from '@/json-nets/Net'
 
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
+import { toRaw } from 'vue'
 
 //Todo: not sure if having a variable declared outside of component
 // is advisable - currently it seems to me the only way
@@ -131,6 +133,9 @@ export default defineComponent({
       }
     })
 
+
+    this.uiStateStore.setLayout(_graph)
+
     _paper.on('blank:pointerclick', (event, eventX, eventY) => {
       this.onPaperClick(eventX, eventY)
     })
@@ -190,6 +195,13 @@ export default defineComponent({
           const element = <Place|Transition>elements[i]; 
           element.addConnectTools(_paper);
         }
+
+        const links = _graph.getLinks()
+        for (let i = 0; i < links.length; i++) {
+          const link = <Link>links[i];
+          link.addVerticesTools(_paper);
+        }
+
       } else if (newMode === MODE_MOVE) {
         const elements = _graph.getElements()
         for (let i = 0; i < elements.length; i++) {
@@ -210,7 +222,8 @@ export default defineComponent({
           if (this.uiStateStore.mode !== MODE_PLAY) {
             clearInterval(play)
           } else {
-            occurAny()
+            this.net.fireAny()
+            // occurAny()
           }
         }, 1500)
       }
@@ -225,6 +238,7 @@ export default defineComponent({
       } else if (event === EVENT_CONNECT) {
         const link = new Link(payload.from, payload.to, payload.arcID, payload.jsonnetsType)
         link.addTo(_graph)
+        link.addVerticesTools(_paper)
       } else if (event === EVENT_REMOVE_PLACE || event === EVENT_REMOVE_TRANSITION) {
         // connected links are automatically removed with current jointjs configuration
         // (and should already be properly removed in jsonnets backend)
@@ -240,7 +254,7 @@ export default defineComponent({
         const transition = _graph.getCell(payload.transitionID)
         transition.attr('.label/text', payload.name)
         // change name
-      } else if (event === EVENT_OCCUR_ADD_TOKEN || event === EVENT_OCCUR_REMOVE_TOKEN) {
+      } else if (event === EVENT_FIRE_ADD_FRAGMENT || event === EVENT_FIRE_REMOVE_FRAGMENT) {
         const link = _graph.getCell(payload.arcID)
         const place = _graph.getCell(payload.placeID);
         place.set('tokens', payload.num)
@@ -251,37 +265,17 @@ export default defineComponent({
         const linkView = <joint.dia.LinkView> link.findView(_paper);
         linkView.sendToken(token, sec * 1000)
       } else if (event === EVENT_NET_IMPORTED) {
-        this.updateGraphLayout()
-        // TODO: this is VERY HACKY, but I'd like to have the layout of the example a bit nicer
-        // could later add jointjs-specific positioning data to import/export functionality
-        if (payload.isExample) {
-          // set request
-          const request = _graph.getCell('167d54d6-3a73-40f7-b317-0aa3580a44ac');
-          request.set('position', { x: 0, y: 144 })
-          // set student
-          const student = _graph.getCell('48b440c6-43fc-4df6-b874-f758137e90e5')
-          student.set('position', { x: 48, y: -12 })
-          // set review
-          const review = _graph.getCell('1952db8b-764c-45da-b2d4-8b1537400377')
-          review.set('position', { x: 144, y: 144 })
-          // set decision
-          const decision = _graph.getCell('9a172fc4-04cd-49d1-94f3-b8b62d2aed42')
-          decision.set('position', { x: 348, y: 144 })
-          // set lecture
-          const lecture = _graph.getCell('846b0b51-9981-40ad-a36a-5ee873f4de5a')
-          lecture.set('position', { x: 288, y: -12 })
-          // set accept
-          const accept = _graph.getCell('0e1c227f-c03b-4969-be2b-9b151898a35c')
-          accept.set('position', { x: 504, y: 48 })
-          // set reject
-          const reject = _graph.getCell('82ca126e-1b63-40ad-9f92-d156da6823b8')
-          reject.set('position', { x: 504, y: 240 })
-          // set notification
-          const notification = _graph.getCell('daa76eb3-c88c-4f29-9903-43f2892d70da')
-          notification.set('position', { x: 708, y: 144 })
-          // set grade
-          const grade = _graph.getCell('e6caf7c5-fe05-47fa-8179-cf3b7b3cad2a')
-          grade.set('position', { x: 528, y: -96 })
+        const layout = payload.layout;
+        for (let i = 0; i < layout.cells.length; i++) {
+          const cell = layout.cells[i];
+          const element = _graph.getCell(cell.id);
+          if (cell.type === "pn.Place" || cell.type === "pn.Transition") {
+            element.set('position', { x: cell.position.x, y: cell.position.y});
+          } else if (cell.type === "standard.Link") {
+            const link = <joint.dia.Link> element;
+            link.vertices(cell.vertices)
+          }
+
         }
       }
     },
@@ -345,4 +339,3 @@ export default defineComponent({
   cursor: grabbing !important;
 }
 </style>
-./JointPaper/JointPlace./JointPaper/JointTransition./JointPaper/JointLink@/jsonnets/net

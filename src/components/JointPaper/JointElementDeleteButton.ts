@@ -3,6 +3,7 @@ import {
   removePlace,
   removeTransition
 } from '@/jsonnets/net'
+import { useUiStateStore } from '@/stores/uiState';
 
 export default class DeleteButton extends joint.elementTools.Button {
     constructor(deleteX: string, element: joint.dia.Element) {
@@ -38,10 +39,11 @@ export default class DeleteButton extends joint.elementTools.Button {
         },
         rotate: true,
         action: function () {
+          const uiState = useUiStateStore()
           if (element.get('jsonnetsType') === 'place') {
-            removePlace(String(element.id))
+            uiState.onPlaceDeleteClick(String(element.id))
           } else if (element.get('jsonnetsType') === 'transition') {
-            removeTransition(String(element.id))
+            uiState.onTransitionDeleteClick(String(element.id))
           }
         }
       })

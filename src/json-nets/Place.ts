@@ -32,9 +32,8 @@ export class Place {
   }
 
   set name(name: string) {
+
     this._name = name;
-    // todo: may have to change variable names in connected arcs
-    // this.
   }
 
 

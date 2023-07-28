@@ -5,9 +5,12 @@ import {
   // INSPECTOR_MODE_POSTSET_ARC,
   // INSPECTOR_MODE_PRESET_ARC,
 } from '@/App.vue'
+import type { Net } from '@/json-nets/Net';
 
 
 export default class Link extends joint.shapes.standard.Link {
+  // jsn_net: Net
+  
   constructor(from: string, to: string, id: string, jsonnetsType: string) {
     super({
       source: { id: from, selector: '.root' },
@@ -21,9 +24,14 @@ export default class Link extends joint.shapes.standard.Link {
         }
       }
     })
+    // this.jsn_net = net;
     this.set('id', id)
     // Todo: probably distinction between inbound/outbound useful
     this.prop('jsonnetsType', jsonnetsType)
+
+    // this.router('orthogonal')
+    // this.router('manhattan')
+    this.connector('straight', { cornerType: 'cubic' })
     
   }
 
@@ -54,7 +62,9 @@ export default class Link extends joint.shapes.standard.Link {
       ],
       distance: 30,
       action: () => {
-        disconnect(String(this.id))
+        // this.get('jsonnetsNet').disconnect(String(this.id))
+        const uiState = useUiStateStore();
+        uiState.onLinkDeleteClick(String(this.id))
       }
     })
 
@@ -96,9 +106,23 @@ export default class Link extends joint.shapes.standard.Link {
         // }
       }
     })
+    // var verticesTool = new joint.linkTools.Vertices();
 
     const toolsView = new joint.dia.ToolsView({
       tools: [deleteButton, inspectorButton]
+    })
+
+    let linkView = this.findView(paper)
+    linkView.addTools(toolsView)
+    linkView.hideTools()
+
+  }
+
+  addVerticesTools(paper: joint.dia.Paper) {
+    var verticesTool = new joint.linkTools.Vertices();
+
+    const toolsView = new joint.dia.ToolsView({
+      tools: [verticesTool]
     })
 
     let linkView = this.findView(paper)

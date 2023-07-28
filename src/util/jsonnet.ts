@@ -58,7 +58,7 @@ export function jsonnetify(documents: Object) {
 export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = '') {
   const variableString = jsonnetify(variables)
   jsonnetExpression = variableString + jsonnetExpression;
-  console.log(jsonnetExpression)
+  // console.log(jsonnetExpression)
 
   try {
     //@ts-ignore

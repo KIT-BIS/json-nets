@@ -7,10 +7,10 @@ import { getEnvPathExpression, getFragment, getKey } from '@/util/jsonPointer'
 
 type Filter = {
   filterExpression: string,
-  pathExpression: string | null,
-  key: string | null,
-  fragment: JSONValue | null,
-  token: JSONObject | null,
+  pathExpression: string,
+  key: string,
+  fragment: JSONValue,
+  token: JSONObject,
 }
 
 export type FilterAssignment = {
@@ -32,7 +32,7 @@ export class Arc {
   readonly place: Place
   readonly transition: Transition
   private filter: Filter
-  readonly filterAssignments: Array<FilterAssignment>
+  public filterAssignments: Array<FilterAssignment>
   private _tokenVarName: string
   private _fragmentVarName: string
   private _keyVarName: string
@@ -46,7 +46,7 @@ export class Arc {
     this._tokenVarName = '';
     this._fragmentVarName = '';
     this._keyVarName = '';
-    this.updateVarNames(this.place.name);
+    this.updateVarNames(this.place.name, true);
     let filterExpression = '$.*'
     if (type === "postset") {
       filterExpression = '$'
@@ -54,16 +54,15 @@ export class Arc {
 
     this.filter = {
       filterExpression,
-      pathExpression: null,
-      key: null,
-      fragment: null,
-      token: null
+      pathExpression: '',
+      key: '',
+      fragment: '',
+      token: {}
     }
     this.filterAssignments = this.applyFilterExpression(this.filter.filterExpression);
   }
 
-  // Todo: remember to update var names when place name changes
-  updateVarNames(placeName: string) {
+  updateVarNames(placeName: string, initial = false) {
     const baseName = this.camelize(placeName);
     let suffix;
     if (this.type === 'preset') {
@@ -72,9 +71,24 @@ export class Arc {
       suffix = 'In';
     }
     
+    const oldNames = {
+      token: this._tokenVarName,
+      key: this._keyVarName,
+      fragment: this._fragmentVarName
+    }
     this._tokenVarName = baseName + suffix;
     this._fragmentVarName = baseName + 'Fragment' + suffix;
     this._keyVarName = baseName + 'Key' + suffix;
+
+    const newNames = {
+      token: this._tokenVarName,
+      key: this._keyVarName,
+      fragment: this._fragmentVarName
+    }
+
+    if (!initial) {
+      this.transition.updateSnippets(oldNames, newNames);
+    }
   }
 
   private camelize(str: string): string {
@@ -113,6 +127,7 @@ export class Arc {
       const token = getFragment(marking, envPathExpression);
       filterAssignments.push({ pathExpression, key, fragment, token })
     }
+    this.filterAssignments = filterAssignments;
     return filterAssignments;
   }
 
@@ -142,9 +157,9 @@ export class Arc {
   }
 
   resetAssignment() {
-    this.filter.key = null;
-    this.filter.fragment = null;
-    this.filter.token = null;
+    this.filter.key = '';
+    this.filter.fragment = '';
+    this.filter.token = {};
   }
 
 }

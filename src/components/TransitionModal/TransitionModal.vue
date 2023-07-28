@@ -62,10 +62,10 @@
                   <!-- }}</code> -->
                 </td>
                 <td>
-                  <code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedFragmentValues[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
+                  <code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.fragmentVarName)" :data-tooltip="JSON.stringify(selectedFragmentValues[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
                 </td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="selectedKeyValues[arc.keyVarName]">{{ arc.keyVarName }}</code></td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
+                <td><code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.keyVarName)" :data-tooltip="selectedKeyValues[arc.keyVarName]">{{ arc.keyVarName }}</code></td>
+                <td><code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.tokenVarName)" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
               </tr>
             </tbody>
         
@@ -122,10 +122,10 @@
                   <!-- }}</code> -->
                 </td>
                 <td>
-                  <code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(fragmentEvaluationResults[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
+                  <code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.fragmentVarName)" :data-tooltip="JSON.stringify(fragmentEvaluationResults[arc.fragmentVarName],null,2)">{{ arc.fragmentVarName }}</code>
                 </td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(keyEvaluationResults[arc.keyVarName],null,2)">{{ arc.keyVarName }}</code></td>
-                <td><code class="has-tooltip-bottom" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
+                <td><code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.keyVarName)" :data-tooltip="JSON.stringify(keyEvaluationResults[arc.keyVarName],null,2)">{{ arc.keyVarName }}</code></td>
+                <td><code class="has-tooltip-bottom is-clickable" @click="insertVariableName(arc.tokenVarName)" :data-tooltip="JSON.stringify(selectedTokenValues[arc.tokenVarName],null,2)">{{ arc.tokenVarName }}</code></td>
               </tr>
             </tbody>
         
@@ -193,8 +193,8 @@
 
           <div class="block">
           <div class="columns">
-            <div class="column is-one-fifth">Preface:</div>
-            <div class="column">
+            <div class="column is-2">Preface:</div>
+            <div class="column is-10">
              <!-- @update="handleCodeChange" -->
             <Codemirror
               v-model="jsonnetPreface"
@@ -205,15 +205,16 @@
               :tab-size="2"
               :extensions="extensions"
               @update="updateEvaluation"
+              @ready="(payload) => { onEditorReady('preface', payload.view) }"
+              @focus="() => { selectEditor('preface') }"
             />
  
-              <!-- @ready="onEditorReady" -->
             </div>
 
           </div>
           <div v-for="(arc, index) in postsetArray" class="columns">
-            <div  class="column is-one-fifth">Variable assignment (<span class="is-family-code">{{ arc.fragmentVarName }}</span>):</div>
-            <div class="column">
+            <div  class="column is-2">Variable assignment (<span class="is-family-code">{{ arc.fragmentVarName }}</span>):</div>
+            <div class="column is-4">
             <Codemirror
               v-model="fragmentVarSnippets[arc.fragmentVarName]"
               placeholder="Define variable assignment in Jsonnet"
@@ -223,8 +224,9 @@
               :tab-size="2"
               :extensions="extensions"
               @update="updateEvaluation"
+              @ready="(payload) => { onEditorReady(arc.fragmentVarName, payload.view) }"
+              @focus="() => { selectEditor(arc.fragmentVarName) }"
             />
-              <!-- TODO: enable variable insertion @ready="onEditorReady" -->
             <p 
               :class="{
                   'jsn-green-background': fragmentEvaluationValid[arc.fragmentVarName],
@@ -233,8 +235,8 @@
 
             >{{ fragmentEvaluationResults[arc.fragmentVarName] }}</p>
             </div>
-            <div  class="column is-one-fifth">Variable assignment (<span class="is-family-code">{{ arc.keyVarName }}</span>):</div>
-            <div class="column">
+            <div  class="column is-2">Variable assignment (<span class="is-family-code">{{ arc.keyVarName }}</span>):</div>
+            <div class="column is-4">
             <Codemirror
               v-model="keyVarSnippets[arc.keyVarName]"
               placeholder="Define variable assignment in Jsonnet"
@@ -244,8 +246,9 @@
               :tab-size="2"
               :extensions="extensions"
               @update="updateEvaluation"
+              @ready="(payload) => { onEditorReady(arc.keyVarName, payload.view) }"
+              @focus="() => { selectEditor(arc.keyVarName) }"
             />
-              <!-- TODO: enable variable insertion @ready="onEditorReady" -->
             <p 
               :class="{
                   'jsn-green-background': keyEvaluationValid[arc.keyVarName],
@@ -257,9 +260,9 @@
 
           </div>
           <div class="columns">
-            <div class="column is-one-fifth">Guard:</div>
+            <div class="column is-2">Guard:</div>
 
-            <div class="column">
+            <div class="column is-10">
             <Codemirror
               v-model="jsonnetGuard"
               placeholder="Define transition guard in Jsonnet"
@@ -269,8 +272,9 @@
               :tab-size="2"
               :extensions="extensions"
               @update="updateEvaluation"
+              @ready="(payload) => { onEditorReady('guard', payload.view) }"
+              @focus="() => { selectEditor('guard') }"
             />
-              <!-- @ready="onEditorReady" -->
             <p 
               :class="{
                   'jsn-green-background': guardEvaluationValid,
@@ -283,26 +287,42 @@
           </div>
  
           </div>
-          <div class="block">
-            <div class="level">
-              <div class="level-left">
-                <p class="level-item">Inscription evaluates to:</p>
+          <div class="columns" v-for="(arc, index) in presetArray">
+              <div class="column is-2">
+                Resulting marking of place <i>{{ arc.place.name }}</i>:
               </div>
+              <div class="column is-10">
               <p
-                class="level-item"
                 :class="{
-                  'jsn-green-background': uiStateStore.transitionInscriptionValid,
-                  'jsn-red-background': !uiStateStore.transitionInscriptionValid
+                  'jsn-green-background': placeEvaluationValid[arc.id],
+                  'jsn-red-background': !placeEvaluationValid[arc.id]
                 }"
               >
-                {{ uiStateStore.inscriptionEvaluationResult }}
+                {{ placeEvaluationResult[arc.id] }}
               </p>
-            </div>
+              </div>
           </div>
+          <div class="columns" v-for="(arc, index) in postsetArray">
+              <div class="column is-2">
+                Resulting marking of place <i>{{ arc.place.name }}</i>:
+              </div>
+              <div class="column is-10">
+              <p
+                :class="{
+                  'jsn-green-background': placeEvaluationValid[arc.id],
+                  'jsn-red-background': !placeEvaluationValid[arc.id]
+                }"
+              >
+                {{ placeEvaluationResult[arc.id] }}
+              </p>
+              </div>
+          </div>
+ 
         </section>
         <footer class="modal-card-foot">
           <button class="button is-success" @click="saveChanges">Save changes</button>
-          <button class="button" @click="close()">Close</button>
+          <button class="button" @click="close">Close</button>
+          <button class="button is-pulled-right is-danger" style="margin-left: auto" @click="fire">Fire!</button>
         </footer>
       </div>
     </div>
@@ -323,11 +343,13 @@ import StaticCodeEditor from '@/components/_shared/StaticCodeEditor.vue'
 import { mapStores } from 'pinia'
 import { defineComponent } from 'vue'
 import { Net } from '@/json-nets/Net'
-import type { Arc } from '@/json-nets/Arc'
+import type { Arc, FilterAssignment } from '@/json-nets/Arc'
 import type { JSONValue, JSONObject } from '@/util/jsonOperations'
 import { toRaw } from 'vue'
 import { evaluateExpression } from '@/util/jsonnet'
-import { mapStateToControlWithDetailProps } from '@jsonforms/core'
+import type { CheckResult } from '@/json-nets/Schema'
+import type { ShallowRef } from 'vue'
+import { EditorView } from 'codemirror'
 
 export default defineComponent({
   components: {
@@ -344,11 +366,11 @@ export default defineComponent({
     }
   },
   setup() {
-    const extensions = [json(), oneDark]
-    const view = shallowRef()
+    const extensions = [EditorView.lineWrapping, json(), oneDark]
+    // const view = shallowRef()
     return {
       extensions,
-      view
+      // view
     }
   },
   data() {
@@ -356,6 +378,9 @@ export default defineComponent({
       examples,
       expandedExamples: false,
       inscriptionEvaluated: false,
+      editorViews: {} as Record<string, ShallowRef>,
+      selectedEditor: '',
+      allValid: false,
 
       transitionName: '',
       jsonnetPreface: '',
@@ -373,7 +398,11 @@ export default defineComponent({
       guardEvaluationResult: '',
       guardEvaluationValid: false,
 
+      placeEvaluationResult: {} as Record<string, string>,
+      placeEvaluationValid: {} as Record<string, boolean>,
+
       selectedFragments: {} as Record<string, number>,
+      selectedPathExpressions: {} as Record<string, string>,
       selectedKeyValues: {} as Record<string, string | number>,
       selectedFragmentValues: {} as Record<string, JSONValue>,
       selectedTokenValues: {} as Record<string, JSONObject>
@@ -399,6 +428,9 @@ export default defineComponent({
     this.keyVarSnippets = JSON.parse(JSON.stringify(transition.keyVarSnippets));
     // TODO: will this directly change the guard ... it should not.
     this.jsonnetGuard = transition.guard;
+    this.jsonnetPreface = transition.preface;
+
+
     // console.log("fragment var snippets")
     // console.log(toRaw(this.fragmentVarSnippets));
     //
@@ -419,14 +451,21 @@ export default defineComponent({
     //      
   },
   methods: {
-    onEditorReady(payload: any) {
-      this.view = payload.view;
+    selectEditor(ref: string) {
+      this.selectedEditor = ref;
+    },
+    onEditorReady(ref: string, view: any) {
+      this.editorViews[ref] = view;
+      // this.view = payload.view;
     },
     insertVariableName(varName: string) {
-      const ranges = this.view.state.selection.ranges
+      if (this.selectedEditor === '') return;
+      // const ranges = this.view.state.selection.ranges
+      const view = this.editorViews[this.selectedEditor];
+      const ranges = view.state.selection.ranges
       const cursor = ranges[0].anchor
 
-      this.view.dispatch({
+      view.dispatch({
         changes: { from: cursor, insert: varName }
       })
     },
@@ -438,15 +477,19 @@ export default defineComponent({
         this.selectedFragmentValues[arc.fragmentVarName] = filterAssignments[index].fragment;
       }
       this.selectedTokenValues[arc.tokenVarName] = filterAssignments[index].token;
+      this.selectedPathExpressions[arc.id] = filterAssignments[index].pathExpression;
       this.updateEvaluation();
     },
     expandExamples() {
       this.expandedExamples = !this.expandedExamples
     },
-    updateEvaluation() {
+    updateEvaluation() { //todo @update triggers evaluation too often
       let allSelected = false;
+      let allValid = true;
       if (Object.keys(this.selectedFragments).length === (this.presetArray.length + this.postsetArray.length)) {
         allSelected = true;
+      } else {
+        allValid = false;
       }
       let variables = {
         ...toRaw(this.selectedKeyValues),
@@ -454,7 +497,8 @@ export default defineComponent({
         ...toRaw(this.selectedTokenValues)
       }
 
-
+      // TODO: maybe move this logic to Transition class? actually work with assignments?
+      // hmm ... but I don't want to save the jsonnet inscription at this point
       const fragmentVars = Object.keys(this.fragmentVarSnippets)
       for (let i = 0; i < fragmentVars.length; i++) {
         if (!allSelected) {
@@ -467,6 +511,7 @@ export default defineComponent({
           this.fragmentEvaluationValid[fragmentVars[i]] = !result.hasError;
           if (result.hasError) {
             this.fragmentEvaluationResults[fragmentVars[i]] = result.error;
+            allValid = false;
           } else {
             this.fragmentEvaluationResults[fragmentVars[i]] = result.evaluation;
           }
@@ -494,55 +539,121 @@ export default defineComponent({
       if (!allSelected) {
         this.guardEvaluationValid = false;
         this.guardEvaluationResult = "Select a complete filter assignment first.";
-        return;
-      }
-
-      let guardSnippet = this.jsonnetPreface;
-      for (let i = 0; i < fragmentVars.length; i++) {
-        guardSnippet += this.fragmentVarSnippets[fragmentVars[i]]
-      }
-      for (let i = 0; i < keyVars.length; i++) {
-        guardSnippet += this.keyVarSnippets[keyVars[i]]
-      }
-      const transition = this.net.findTransition(this.uiStateStore.lastSelectedID);
-      if (!transition) return;
-      guardSnippet += this.jsonnetGuard;
-      const result = evaluateExpression(guardSnippet, variables, this.transitionName);
-      // this.guardEvaluationValid = !result.hasError;
-      //if (returnValue === true) {
-      //  return { evaluation: true, hasError: false }
-      //} else if (returnValue === false) {
-      //  // return false for any not-true value
-      //  return { evaluation: false, hasError: false }
-      //} else {
-      //  const error = new Error('Jsonnet expression for ' + reference + ' does not return boolean value. Returned value is ' + result[0])
-      //  throw error;
-      //}
-
-      if (result.hasError) {
-        this.guardEvaluationResult = result.error;
-        this.guardEvaluationValid = false
       } else {
-        if (result.evaluation === true || result.evaluation === false ){
-          this.guardEvaluationValid = true;
-          this.guardEvaluationResult = result.evaluation;
+        let guardSnippet = this.jsonnetPreface;
+        for (let i = 0; i < fragmentVars.length; i++) {
+          guardSnippet += this.fragmentVarSnippets[fragmentVars[i]]
+        }
+        for (let i = 0; i < keyVars.length; i++) {
+          guardSnippet += this.keyVarSnippets[keyVars[i]]
+        }
+        const transition = this.net.findTransition(this.uiStateStore.lastSelectedID);
+        if (!transition) return;
+        guardSnippet += this.jsonnetGuard;
+        const result = evaluateExpression(guardSnippet, variables, this.transitionName);
+
+        if (result.hasError) {
+          this.guardEvaluationResult = result.error;
+          this.guardEvaluationValid = false
+          allValid = false;
         } else {
-          this.guardEvaluationValid = false;
-          this.guardEvaluationResult = "Guard expression must evaluate to true or false. Evaluation is: " + JSON.stringify(result.evaluation, null , 2);
+          if (result.evaluation === true || result.evaluation === false) {
+            this.guardEvaluationValid = result.evaluation;
+            this.guardEvaluationResult = result.evaluation;
+          } else {
+            this.guardEvaluationValid = false;
+            this.guardEvaluationResult = "Guard expression must evaluate to true or false. Evaluation is: " + JSON.stringify(result.evaluation, null, 2);
+          }
+        }
+
+
+      }
+
+      const arcs = this.presetArray.concat(this.postsetArray);
+      for (let i = 0; i < arcs.length; i++) {
+        const arc = arcs[i];
+        if (!allSelected) {
+          this.placeEvaluationValid[arc.id] = false;
+          this.placeEvaluationResult[arc.id] = 'Select a complete filter assignment first.';
+        } else if (!this.guardEvaluationValid ) { 
+          allValid = false;
+          this.placeEvaluationValid[arc.id] = false;
+          this.placeEvaluationResult[arc.id] = 'Guard expression must evaluate to true first.';
+        } else {
+          const place = arc.place;
+          const pathExpression = this.selectedPathExpressions[arc.id]
+          let result;
+          if (arc.type === 'preset') {
+            result = <CheckResult>place.removeFragment(pathExpression, true)
+          } else {
+            //todo: ensure key evaluation Results are string or number
+            result = <CheckResult>place.insertFragment(pathExpression, this.fragmentEvaluationResults[arc.fragmentVarName], this.keyEvaluationResults[arc.keyVarName], true);
+          }
+          this.placeEvaluationValid[arc.id] = result.isValid;
+          if (result.isValid) {
+            this.placeEvaluationResult[arc.id] = 'Resulting marking is valid.';
+          } else {
+            allValid = false;
+            this.placeEvaluationResult[arc.id] = String(result.error);
+          }
+
         }
       }
 
+      this.allValid = allValid;
+
 
     },
+    fire() {
+      // Todo: distinguish between syntactical errors and activation
+      if (!this.allValid) {
+        alert("Transition is not enabled under selected filter assignment.")
+      } else {
+        this.net.updateTransition(this.uiStateStore.lastSelectedID, this.transitionName, this.jsonnetPreface, this.jsonnetGuard, this.fragmentVarSnippets, this.keyVarSnippets)
+        const transition = this.net.findTransition(this.uiStateStore.lastSelectedID)
+        if (!transition) return;
+
+        // todo: this logic should probably be transferred to transition
+        for (let i = 0; i < this.presetArray.length; i++) {
+          const arc = this.presetArray[i];
+          const assignment: FilterAssignment = {
+            pathExpression: this.selectedPathExpressions[arc.id],
+            key: String(this.selectedKeyValues[arc.keyVarName]),
+            fragment: this.selectedFragmentValues[arc.fragmentVarName],
+            token: this.selectedTokenValues[arc.tokenVarName]
+          }
+          arc.assignFilter(assignment);
+        }
+
+        for (let i = 0; i < this.postsetArray.length; i++) {
+          const arc = this.postsetArray[i];
+          const assignment: FilterAssignment = {
+            pathExpression: this.selectedPathExpressions[arc.id],
+            key: String(this.keyEvaluationResults[arc.keyVarName]),
+            fragment: this.fragmentEvaluationResults[arc.fragmentVarName],
+            token: this.selectedTokenValues[arc.tokenVarName]
+          }
+          arc.assignFilter(assignment);
+        }
+
+        this.net.fireUnderCurrentAssignment(transition.id);
+        this.selectedFragments = {};
+        this.updateEvaluation();
+        // transition.updateAssignment();
+      }
+    },
     saveChanges() {
-      this.net.updateTransition(this.uiStateStore.lastSelectedID,
-        this.transitionName)
-      // setTransitionContent(
-      // this.uiStateStore.lastSelectedID,
-      // this.uiStateStore.inspectorContent,
-      // this.uiStateStore.itemName
-      // )
-      this.close()
+      // Todo: distinguish between syntactical errors and activation
+      let confirmResult = true;
+      if (!this.allValid) {
+        confirmResult = confirm("Transition is not enabled under selected filter assignment. There may be errors in the inscription. Save anyway?")
+      }
+      // TODO ensure correct start of snippets ' local varname = ' (check strings or make start unchangable)
+
+      if (confirmResult) {
+        this.net.updateTransition(this.uiStateStore.lastSelectedID, this.transitionName, this.jsonnetPreface, this.jsonnetGuard, this.fragmentVarSnippets, this.keyVarSnippets)
+        this.close()
+      }
     },
     close() {
       this.uiStateStore.setModal('none')

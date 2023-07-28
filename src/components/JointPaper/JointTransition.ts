@@ -5,6 +5,7 @@ import ConnectButton from './JointConnectButton'
 import { 
   occur
 } from '@/jsonnets/net'
+import { useUiStateStore } from '@/stores/uiState'
 
 
 export default class Transition extends joint.shapes.pn.Transition {
@@ -68,7 +69,9 @@ export default class Transition extends joint.shapes.pn.Transition {
       },
       rotate: true,
       action: () => {
-        occur(String(this.id))
+        const uiState = useUiStateStore();
+        uiState.onTransitionFireClick(String(this.id));
+        // occur(String(this.id))
       }
     })
     const toolsView = new joint.dia.ToolsView({

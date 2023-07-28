@@ -1,4 +1,4 @@
-import { combineArrays } from '@/util/util'
+import { combineAssignments } from '@/util/util'
 import { evaluate, jsonnetify } from '@/util/jsonnet.js'
 import type { PresetArc } from './presetArc'
 
@@ -96,7 +96,7 @@ export class Transition {
       }
     }
 
-    const combinations = combineArrays(documents)
+    const combinations = combineAssignments(documents)
 
     for (let i = 0; i < combinations.length; i++) {
       const combination = combinations[i]

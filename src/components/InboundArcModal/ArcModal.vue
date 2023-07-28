@@ -3,7 +3,8 @@
     <div class="modal-background"></div>
     <div class="modal-card jsn-modal-wide">
       <header class="modal-card-head">
-        <p class="modal-card-title">Inbound arc inscription</p>
+        <p class="modal-card-title" v-if="uiStateStore.showModal==='preset'">Inbound arc inscription</p>
+        <p class="modal-card-title" v-if="uiStateStore.showModal==='postset'">Outbound arc inscription</p>
         <button class="delete" aria-label="close" @click="close"></button>
       </header>
       <section class="modal-card-body">
@@ -100,7 +101,7 @@
           </div>
           <div class="column is-5">
             <div class="field">
-              <label class="label">Selected Fragments</label>
+              <label class="label">Selected Values</label>
               <div class="control">
               <div v-if="filterAssignments.length === 0"><i>(no fragments selected)</i></div>
               <div v-if="filterAssignments.length > 0" class="tags block">
@@ -117,7 +118,10 @@
             </div>
             <label class="label">Resulting filter assignment</label>
             <div class="columns">
-              <div class="column is-quarter">Fragment to be removed:</div>
+              <div class="column is-quarter">
+                <span v-if="uiStateStore.showModal === 'preset'">Value to be removed:</span>
+                <span v-if="uiStateStore.showModal === 'postset'">Value where fragment will be inserted:</span>
+              </div>
                 <div class="column is-three-quarters">
                     <Codemirror
                     class="scoped-codemirror"
@@ -132,7 +136,7 @@
                   </div>
 
             </div>
-            <div class="columns">
+            <div class="columns" v-if="uiStateStore.showModal === 'preset'">
                     <div class="column is-quarter">Key of fragment:</div>
                     <div class="column is-three-quarters"><code>{{ keyString }}</code></div>
             </div>
@@ -260,8 +264,8 @@ export default defineComponent({
           this.selectedFragmentIndex = -1
           this.fragmentString = ''
           this.tokenString = ''
-          this.pathExpression = 'no fragment assigned'
-          this.keyString = 'no fragment assigned'
+          this.pathExpression = 'no filter assigned'
+          this.keyString = 'no filter assigned'
           this.filterAssignments = arc.applyFilterExpression(jsonPathExpression);
         } else {
           console.log('syntax error')
@@ -269,8 +273,8 @@ export default defineComponent({
           this.selectedFragmentIndex = -1
           this.fragmentString = ''
           this.tokenString = ''
-          this.pathExpression = 'no fragment assigned'
-          this.keyString = 'no fragment assigned'
+          this.pathExpression = 'no filter assigned'
+          this.keyString = 'no filter assigned'
           this.filterAssignments = [];
         }
         // TODO: show error message

@@ -18,7 +18,11 @@ import {
   faPlusCircle,
   faMinusCircle,
   faWandMagicSparkles,
-  faQuestion
+  faQuestion,
+  faPen,
+  faUpRightFromSquare,
+  faFilter,
+  faTriangleExclamation
 } from '@fortawesome/free-solid-svg-icons'
 
 import { createApp } from 'vue'
@@ -39,7 +43,11 @@ library.add(
   faPlusCircle,
   faMinusCircle,
   faWandMagicSparkles,
-  faQuestion
+  faQuestion,
+  faPen,
+  faUpRightFromSquare,
+  faFilter,
+  faTriangleExclamation
 )
 
 import App from './App.vue'

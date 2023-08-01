@@ -3,6 +3,14 @@
 @import '../../node_modules/bulma-tooltip/src/sass/index.sass';
 @import '../../node_modules/jointjs/dist/joint.css';
 
+.cm-lineNumbers {
+    font-size: .8rem;
+}
+
+.cm-line {
+  font-size: .8rem;
+}
+
 body {
   margin: 0;
   padding: 0;

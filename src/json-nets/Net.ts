@@ -149,15 +149,15 @@ export class Net {
    * @param {Object} content
    * @param {String} name
    */
-  updateTransition(transitionID: string, name: string, preface: string, guard: string, fragmentVarSnippets: Record<string, string>, keyVarSnippets: Record<string, string>) {
+  updateTransition(transitionID: string, name: string, preface?: string, guard?: string, fragmentVarSnippets?: Record<string, string>, keyVarSnippets?: Record<string, string>) {
     const transition = this.findTransition(transitionID)
     if (transition) {
       // transition.content = content
       transition.name = name
-      transition.guard = guard
-      transition.preface = preface
-      transition.keyVarSnippets = keyVarSnippets
-      transition.fragmentVarSnippets = fragmentVarSnippets
+      if(guard) transition.guard = guard
+      if(preface) transition.preface = preface
+      if(keyVarSnippets) transition.keyVarSnippets = keyVarSnippets
+      if(fragmentVarSnippets) transition.fragmentVarSnippets = fragmentVarSnippets
       this.notify(EVENT_UPDATE_TRANSITION, { transitionID, name })
     }
   }

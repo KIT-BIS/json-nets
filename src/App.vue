@@ -5,6 +5,7 @@ import ArcModal from './components/InboundArcModal/ArcModal.vue'
 import HelpModal from './components/HelpModal.vue'
 import OutboundArcModal from './components/OutboundArcModal/OutboundArcModal.vue'
 import TransitionModal from './components/TransitionModal/TransitionModal.vue'
+import NewTransitionModal from './components/TransitionModal/NewTransitionModal.vue'
 import PlaceModal from './components/PlaceModal/PlaceModal.vue'
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useUiStateStore } from '@/stores/uiState'
@@ -117,7 +118,8 @@ export const MODE_HELP = 'MODE_HELP'
   <!-- <TransitionModal v-if="uiState.showTransitionModal" /> -->
   <ArcModal v-if="uiState.showModal === 'preset' || uiState.showModal === 'postset'" :net="net"/>
   <PlaceModal v-if="uiState.showModal === 'place'" :net="net"/>
-  <TransitionModal v-if="uiState.showModal === 'transition'" :net="net"/>
+  <NewTransitionModal v-if="uiState.showModal === 'transition'" :net="net"/>
+  <!-- <TestModal v-if="uiState.showModal === 'test'" /> -->
   <!-- <HelpModal v-if="uiState.showHelpModal" /> -->
   <!-- <RouterView /> -->
 </template>

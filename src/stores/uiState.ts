@@ -18,7 +18,7 @@ import { PresetArc } from '@/jsonnets/presetArc'
 import type { Net } from '@/json-nets/Net'
 import type { JSONObject } from '@/util/jsonOperations'
 
-export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition'
+export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' | 'test'
 //TODO: this was built while I was still learning how to use stores
 // some rework required, better architecture
 // also MODES concept needs some rework
@@ -27,7 +27,7 @@ export const useUiStateStore = defineStore('uiState', {
     return {
       net: {} as Net,
       mode: MODE_NONE as string,
-      showModal: 'none' as ShowModal,
+      showModal: 'test' as ShowModal,
       lastSelectedID: '' as string,
       layout: {} as joint.dia.Graph,
       importData: {} as JSONObject,

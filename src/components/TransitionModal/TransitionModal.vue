@@ -367,6 +367,7 @@ export default defineComponent({
   },
   setup() {
     const extensions = [EditorView.lineWrapping, json(), oneDark]
+
     // const view = shallowRef()
     return {
       extensions,

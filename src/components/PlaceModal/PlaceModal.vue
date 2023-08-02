@@ -138,6 +138,7 @@ import { Net } from '@/json-nets/Net'
 import { mock } from 'mock-json-schema'
 import { compileValidator, unCacheSchema, validateJSON } from '@/util/jsonSchema'
 
+import { getNetInstance } from "@/json-nets/Net";
 
 const myStyles = mergeStyles(defaultStyles, testStyle)
 const renderers = [...vanillaRenderers]
@@ -149,12 +150,6 @@ export default defineComponent({
     HelpButton,
     TokenTag,
     Arrow
-  },
-  props: {
-    net: {
-      type: Net,
-      required: true
-    }
   },
   setup() {
     const extensions = [json(), oneDark]
@@ -188,7 +183,7 @@ export default defineComponent({
   computed: {
     ...mapStores(useUiStateStore),
     nameError() {
-      let nameValid = this.net.validatePlaceName(this.placeName, this.uiStateStore.lastSelectedID)
+      let nameValid = getNetInstance().validatePlaceName(this.placeName, this.uiStateStore.lastSelectedID)
       if (!nameValid) {
         return 'Place name must be unique.'
       } else {
@@ -203,7 +198,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    const place = this.net.findPlace(this.uiStateStore.lastSelectedID)
+    const place = getNetInstance().findPlace(this.uiStateStore.lastSelectedID)
     //TODO some error handling
     if (!place) return;
 
@@ -301,7 +296,7 @@ export default defineComponent({
         return;
       }
       const schemaToSave = JSON.parse(this.generatedSchemaString);
-      this.net.updatePlace(this.uiStateStore.lastSelectedID,  this.placeName, schemaToSave ,this.placeTokens)
+      getNetInstance().updatePlace(this.uiStateStore.lastSelectedID,  this.placeName, schemaToSave ,this.placeTokens)
       this.close()
     },
     close() {

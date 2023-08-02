@@ -1,5 +1,6 @@
 import * as JSONPointer from 'json-pointer';
 import type { JSONComplex } from './jsonOperations';
+import { str } from 'ajv';
 
 // TODO: find proper pattern how to deal with errors/exceptions
 
@@ -41,6 +42,12 @@ export function getParentPathExpression(pathExpression: string) {
   } else {
     return '';
   }
+}
+
+export function dotsAndBracketsToJSONPointer(dotsAndBrackets: string) {
+  const regex1 = /\["|\.|\[/g
+  const regex2 = /"\]|\]/g
+  return dotsAndBrackets.replace(regex1, '/').replace(regex2, '');
 }
 
 export function getKey(pathExpression: string): string {

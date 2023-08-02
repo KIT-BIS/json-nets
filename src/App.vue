@@ -6,26 +6,25 @@ import HelpModal from './components/HelpModal.vue'
 import OutboundArcModal from './components/OutboundArcModal/OutboundArcModal.vue'
 import TransitionModal from './components/TransitionModal/TransitionModal.vue'
 import NewTransitionModal from './components/TransitionModal/NewTransitionModal.vue'
+import ExpressionEditor from './components/ExpressionEditor.vue'
 import PlaceModal from './components/PlaceModal/PlaceModal.vue'
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useUiStateStore } from '@/stores/uiState'
 import { download, readFile } from '@/util/files'
 import JointPaper from './components/JointPaper/JointPaper.vue'
 // import { exportNet, importNet } from '@/jsonnets/net'
-import { Net } from './json-nets/Net'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore()
 
 // TODO having the net as reactive property may cause performance issues?
-const net = new Net();
-uiState.setNet(net);
+// uiState.setNet(net);
 
 function exportNet() {
-  const netData = net.export();
+  // const netData = net.export();
   const layoutData = uiState.exportLayout();
-  return JSON.stringify({netData, layoutData}, null, 2);
+  // return JSON.stringify({netData, layoutData}, null, 2);
 }
 
 function importNet(jsonString: string) {
@@ -33,7 +32,7 @@ function importNet(jsonString: string) {
   console.log(jsonString);
   const json = JSON.parse(jsonString);
   console.log(json)
-  net.import(json.netData, json.layoutData)
+  // net.import(json.netData, json.layoutData)
   // uiState.importLayout(json.layoutData);
 }
 </script>
@@ -62,7 +61,7 @@ export const MODE_HELP = 'MODE_HELP'
 </script>
 
 <template>
-  <JointPaper :net="net"/>
+  <JointPaper />
   <div id="menu">
     <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
     <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
@@ -118,7 +117,8 @@ export const MODE_HELP = 'MODE_HELP'
   <!-- <TransitionModal v-if="uiState.showTransitionModal" /> -->
   <ArcModal v-if="uiState.showModal === 'preset' || uiState.showModal === 'postset'" :net="net"/>
   <PlaceModal v-if="uiState.showModal === 'place'" :net="net"/>
-  <NewTransitionModal v-if="uiState.showModal === 'transition'" :net="net"/>
+  <NewTransitionModal v-if="uiState.showModal === 'transition'"/>
+  <ExpressionEditor v-if="uiState.showExpressionEditor"/>
   <!-- <TestModal v-if="uiState.showModal === 'test'" /> -->
   <!-- <HelpModal v-if="uiState.showHelpModal" /> -->
   <!-- <RouterView /> -->

@@ -22,11 +22,17 @@ import {
   faPen,
   faUpRightFromSquare,
   faFilter,
-  faTriangleExclamation
+  faTriangleExclamation,
+  faXmark,
+  faCheck
 } from '@fortawesome/free-solid-svg-icons'
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import type {Pinia} from 'pinia'
+
+import App from './App.vue'
+import { Net } from './json-nets/Net'
 
 /* add icons to the library */
 library.add(
@@ -47,19 +53,14 @@ library.add(
   faPen,
   faUpRightFromSquare,
   faFilter,
-  faTriangleExclamation
+  faTriangleExclamation,
+  faXmark,
+  faCheck
 )
 
-import App from './App.vue'
-import { evaluateExpression, jsonnetify } from './util/jsonnet'
-import { checkSchema, compileValidator, validateJSON, validateSchema } from './util/jsonSchema'
-import { deepRemove, insert, remove, type JSONComplex, deepInsert } from './util/jsonOperations'
-import JsonPointer from 'json-pointer'
-import { Schema } from './json-nets/Schema'
 //import router from './router'
 
 const app = createApp(App).component('font-awesome-icon', FontAwesomeIcon)
-
 app.use(createPinia())
 app.use(VueCodemirror, {
   // keep the global default extensions empty
@@ -67,6 +68,7 @@ app.use(VueCodemirror, {
   extensions: []
 })
 //app.use(router)
+// app.config.globalProperties.$net = net;
 
 app.mount('#app')
 

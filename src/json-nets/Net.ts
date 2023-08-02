@@ -22,6 +22,30 @@ export const EVENT_FIRE_REMOVE_FRAGMENT = 'EVENT_FIRE_REMOVE_FRAGMENT'
 
 export const EVENT_NET_IMPORTED = 'EVENT_NET_IMPORTED'
 
+// Typescript config to make the class available as global property in typescript
+//declare module '@vue/runtime-core' {
+//  interface ComponentCustomProperties {
+//    $net: Net
+//  }
+//}
+//export {}
+export type TransitionData = {
+    name: string,
+    id: string,
+    preface: string,
+    guard: string
+}
+
+// not sure if this actually ensures an app-wide singleton ... let's hope so
+let net: Net | null = null
+export function getNetInstance(): Net {
+  if (net === null) {
+    net = new Net();
+  } 
+  
+  return net;
+}
+
 export class Net {
 
   private _transitions: Array<Transition>
@@ -134,13 +158,15 @@ export class Net {
   /**
    * Creates a new transition and adds it to the net.
    * @param {String} transitionID - id of the transition
-   * @return {Transition} The new transition.
    */
-  addTransition(transitionID: string = uuid()): Transition {
+  addTransition(transitionID: string = uuid()): TransitionData {
     const newTransition = new Transition(transitionID, 'transition')
     this._transitions.push(newTransition)
-    this.notify(EVENT_ADD_TRANSITION, { id: newTransition.id, name: newTransition.name })
-    return newTransition
+    // this.notify(EVENT_ADD_TRANSITION, { id: newTransition.id, name: newTransition.name })
+    return { id: newTransition.id, 
+      name: newTransition.name, 
+      preface: newTransition.preface,
+      guard: newTransition.guard }
   }
 
   /**
@@ -160,6 +186,15 @@ export class Net {
       if(fragmentVarSnippets) transition.fragmentVarSnippets = fragmentVarSnippets
       this.notify(EVENT_UPDATE_TRANSITION, { transitionID, name })
     }
+  }
+
+  updateTransitionSnippets(transitionID: string, arcID: string, keySnippet: string, fragmentSnippet: string) {
+    const transition = this.findTransition(transitionID)
+    const arc = this.findArc(arcID)
+    if (!transition || !arc) return;
+    transition.keyVarSnippets[arc.keyVarName] = keySnippet;
+    transition.fragmentVarSnippets[arc.fragmentVarName] = fragmentSnippet;
+
   }
 
   /**

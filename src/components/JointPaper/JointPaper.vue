@@ -55,10 +55,12 @@ import {
   EVENT_FIRE_ADD_FRAGMENT,
   EVENT_FIRE_REMOVE_FRAGMENT,
   EVENT_NET_IMPORTED,
-  Net
+  Net,
+getNetInstance
 } from '@/json-nets/Net'
 
 import { useUiStateStore } from '@/stores/uiState'
+import { useTransitionsStore } from '@/stores/transitions'
 import { defineComponent } from 'vue'
 import { toRaw } from 'vue'
 
@@ -70,12 +72,6 @@ let _paper: joint.dia.Paper;
 let _graph: joint.dia.Graph;
 
 export default defineComponent({
-  props: {
-    net: {
-      type: Net,
-      required: true
-    }
-  },
   data() {
     return {
       panX: 0,
@@ -95,12 +91,19 @@ export default defineComponent({
     isPanningMode() {
       return this.uiStateStore.mode === MODE_MOVE && this.isPanning
     },
-    ...mapStores(useUiStateStore)
+    ...mapStores(useUiStateStore),
+    ...mapStores(useTransitionsStore)
   },
   watch: {
     'uiStateStore.mode'(newMode) {
       this.onModeChange(newMode)
-    }
+    },
+    // 'transitionsStore.transitions': {
+        // handler: (change) =>  {
+          // console.log(change)
+        // }, 
+        // deep: true
+    // }
   },
   mounted() {
     const pn = joint.shapes.pn;
@@ -180,10 +183,10 @@ export default defineComponent({
       let sourceId = linkView.model.source().id
 
       _graph.removeCells([linkView.model]);
-      this.net.connect(String(sourceId), String(targetId))
+      getNetInstance().connect(String(sourceId), String(targetId))
     })
 
-    this.net.register(this.onJsonnetsEvent)
+    getNetInstance().register(this.onJsonnetsEvent)
   },
   methods: {
     onModeChange(newMode: string) {
@@ -222,7 +225,7 @@ export default defineComponent({
           if (this.uiStateStore.mode !== MODE_PLAY) {
             clearInterval(play)
           } else {
-            this.net.fireAny()
+            getNetInstance().fireAny()
             // occurAny()
           }
         }, 1500)
@@ -233,8 +236,8 @@ export default defineComponent({
         var place = new Place(this.clickX, this.clickY, payload.name, payload.id)
         place.addTo(_graph)
       } else if (event === EVENT_ADD_TRANSITION) {
-        const transition = new Transition(this.clickX, this.clickY, payload.name, payload.id)
-        transition.addTo(_graph)
+        // const transition = new Transition(this.clickX, this.clickY, payload.name, payload.id)
+        // transition.addTo(_graph)
       } else if (event === EVENT_CONNECT) {
         const link = new Link(payload.from, payload.to, payload.arcID, payload.jsonnetsType)
         link.addTo(_graph)
@@ -283,9 +286,13 @@ export default defineComponent({
       this.clickX = clickX
       this.clickY = clickY
       if (this.uiStateStore.mode === MODE_ADD_PLACE) {
-        this.net.addPlace()
+        getNetInstance().addPlace()
       } else if (this.uiStateStore.mode === MODE_ADD_TRANSITION) {
-        this.net.addTransition()
+        const tData = this.transitionsStore.addTransition();
+        const transition = new Transition(this.clickX, this.clickY, tData.name, tData.id)
+        transition.addTo(_graph)
+
+        // getNetInstance().addTransition()
       }
     },
     updateGraphLayout() {

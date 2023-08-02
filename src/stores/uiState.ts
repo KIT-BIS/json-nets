@@ -28,6 +28,8 @@ export const useUiStateStore = defineStore('uiState', {
       net: {} as Net,
       mode: MODE_NONE as string,
       showModal: 'test' as ShowModal,
+      showExpressionEditor: false,
+
       lastSelectedID: '' as string,
       layout: {} as joint.dia.Graph,
       importData: {} as JSONObject,

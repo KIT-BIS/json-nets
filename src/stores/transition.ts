@@ -227,7 +227,8 @@ export const useTransitionsStore = defineStore('transitions', {
         },
         loadEvaluations(){
             const evalResult = getNetInstance().getEvaluations(this.transition.id);
-            console.log(evalResult);
+            if(!this.assignmentComplete) return;
+            // console.log(evalResult);
             if (evalResult) {
                 this.hasAnyError = evalResult.hasAnyError;
                 if(this.hasAnyError) {

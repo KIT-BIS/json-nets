@@ -104,7 +104,7 @@ export default defineComponent({
     watch: {
         'transitionsStore.outputArcs': {
             handler(newValue: string, oldValue: string) {
-                console.log('saving output arcs')
+                // console.log('saving output arcs')
                 this.transitionsStore.saveOutputSnippets();
 
                 this.transitionsStore.loadEvaluations();

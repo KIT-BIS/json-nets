@@ -1,10 +1,9 @@
+import { useNetStore } from '@/stores/net'
+
 import * as joint from 'jointjs'
 import DeleteButton from './JointElementDeleteButton'
 import InspectorButton from './JointElementInspectorButton'
 import ConnectButton from './JointConnectButton'
-import { 
-  occur
-} from '@/jsonnets/net'
 
 
 export default class Transition extends joint.shapes.pn.Transition {
@@ -41,7 +40,7 @@ export default class Transition extends joint.shapes.pn.Transition {
           tagName: 'circle',
           selector: 'button',
           attributes: {
-            r: 7,
+            r: 8,
             fill: 'blue',
             cursor: 'pointer'
           }
@@ -68,7 +67,8 @@ export default class Transition extends joint.shapes.pn.Transition {
       },
       rotate: true,
       action: () => {
-        occur(String(this.id))
+        const netState = useNetStore();
+        netState.fireUnderAnyAssignment(String(this.id));
       }
     })
     const toolsView = new joint.dia.ToolsView({

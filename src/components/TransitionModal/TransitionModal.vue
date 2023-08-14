@@ -1,241 +1,255 @@
 <template>
-  <div class="modal is-active">
-    <div class="modal-background"></div>
-    <div class="modal-card jsn-modal-wide">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Transition inscription</p>
-        <button class="delete" aria-label="close" @click="close"></button>
-      </header>
-      <section class="modal-card-body">
-        <div class="field">
-          <label class="label">Name of the transition</label>
-          <div class="control">
-            <input class="input" type="text" v-model="uiStateStore.itemName" />
-          </div>
-        </div>
-        <label class="label"
-          >Assignment selection
-          <HelpButton 
-            help-text="
-              Table shows tokens from pre-set places, filtered with JSONPath expression. If no
-              tokens are visible, check inbound arc inscription first.
-            "/>
-        </label>
-        <table class="table is-fullwidth is-striped">
-          <thead>
-            <tr>
-              <th>Pre-set place</th>
-              <th>
-                Jsonnet variable
-                <HelpButton help-text="
-                  Click to insert variable at cursor position in Jsonnet code.
-                "/>
-              </th>
-              <th>
-                Input tokens
-                <HelpButton help-text="
-                  Click to select a token for temporary assignment.
-                "/>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="place in uiStateStore.inputTokensArray">
-              <td>{{ place.name }}</td>
-              <td>
-                <code class="is-clickable" @click="insertVariableName(place.name.toLowerCase())">{{
-                  place.name.toLowerCase()
-                }}</code>
-              </td>
-              <td>
-                <div class="tags">
-                  <TokenTag v-for="(doc, index) in place.documents"
-                    :callback="() => { uiStateStore.addDocumentToTempAssignment(place.name, doc, index) }"
-                    :is-selected="isSelected(place.name, index)"
-                    :token="JSON.stringify(doc, null, 2)"
-                  />
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <label class="label">
-          Transition inscription (Jsonnet)
-          <HelpButton help-text="
-            Note that jsonnet expressions in transition inscriptions must evaluate to true
-            or false! For more information about Jsonnet, please visit
-            <a href='https://jsonnet.org/' target='_blank'>https://jsonnet.org/</a>
-          "/>
-        </label>
-        <div class="notification is-info">
-          <div v-if="expandedExamples == false">
-            <div class="block">
-              <span @click="expandExamples" class="icon is-clickable"
-                ><font-awesome-icon icon="fas fa-plus-circle"
-              /></span>
-              <span>Expand example for Jsonnet expressions</span>
-            </div>
-          </div>
-          <div v-if="expandedExamples == true">
-            <!--TODO Könnte man als component verwenden wenn in outbound modal nochmal verwendet-->
-            <div class="block">
-              <span @click="expandExamples" class="icon is-clickable"
-                ><font-awesome-icon icon="fas fa-minus-circle"
-              /></span>
-              <span>Minimize example for Jsonnet expression</span>
-            </div>
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="scoped-modal-container">
+            <PresetFilter />
+            <div class="modal-card scoped-modal-center">
+                <header class="modal-card-head">
+                    <span class="has-text-weight-bold">Transition:</span>
+                    <span class="ml-1">
+                        <span v-if="!showNameInput"
+                            class=" is-ghost icon-text has-text-weight-bold scoped-modal-title is-clickable"
+                            @click="showNameInput = true">
+                            <span>{{ transitionsStore.transition.name }}</span>
+                            <span class="scoped-edit-button icon has-text-grey-light"><font-awesome-icon
+                                    icon="fas fa-pen" /></span>
+                        </span>
+                        <span v-if="showNameInput" class="level">
+                            <input style="width: 100px" class="input is-small level-item"
+                                v-model="transitionsStore.transition.name" />
+                            <button class="ml-1 button is-small level-item" @click="onCancelNameEdit">
+                                <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
+                            </button>
+                            <button @click="onNameSave" class="ml-1 button is-small level-item is-primary">
+                                <span class="icon is-small"><font-awesome-icon icon="fas fa-check" /></span>
+                            </button>
+                        </span>
+                    </span>
+                    <p class="modal-card-title"></p>
+                    <button class="delete" aria-label="close" @click="close"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="block">
+                        <div class="field">
+                            <label class="label is-small">Preface
+                                <HelpButton help-text="
+                                Preface is evaluated before any output expression or guard. Use it to define custom variables and functions.
+                              " />
 
-            <div class="block">
-              <label class="label has-text-white">Example variable assignment</label>
-              <table class="table is-fullwidth is-striped">
-                <thead>
-                  <tr>
-                    <th>Pre-set place</th>
-                    <th>Jsonnet variable</th>
-                    <th>Variables</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Student</td>
-                    <td>student</td>
-                    <td>
-                      <StaticCodeEditor  :content="JSON.stringify(examples.student, null, 2)" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Request</td>
-                    <td>request</td>
-                    <td>
-                      <StaticCodeEditor  :content="JSON.stringify(examples.request, null, 2)" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="block">
-              <OutboundArcModalAccordion :examples="examples.jsonnet"/>
-            </div>
-          </div>
-        </div>
+                                <span @click="() => { uiStateStore.showEditor = 'preface' }"
+                                    class="icon is-small is-pulled-right has-text-grey-light is-clickable">
+                                    <font-awesome-icon icon="fas fa-up-right-from-square"></font-awesome-icon>
+                                </span>
+                            </label>
+                            <div class="control is-small jsn-code">
+                                <Codemirror placeholder="Define preface in Jsonnet" style="height: 50px"
+                                    :indent-with-tab="true" :tab-size="2" :extensions="extensions"
+                                    v-model="transitionsStore.transition.preface" />
+                            </div>
+                            <p v-if="transitionsStore.prefaceHasError" class="help is-danger">
+                                Expression has errors. Use preface only for variable and function definitions.</p>
+                        </div>
+                    </div>
+                    <hr />
+                    <div v-if="transitionsStore.outputArcs.length > 0" class="block">
+                        <div class="field">
+                            <label class="label is-small">Output Expressions
 
-        <div class="block">
-          <Codemirror
-            v-model="uiStateStore.inspectorContent"
-            placeholder="Define transition inscription in Jsonnet"
-            :style="{ height: '200px' }"
-            :autofocus="true"
-            :indent-with-tab="true"
-            :tab-size="2"
-            :extensions="extensions"
-            @ready="onEditorReady"
-          />
-            <!-- @update="handleCodeChange" -->
-        </div>
-        <div class="block">
-          <div class="level">
-            <div class="level-left">
-              <p class="level-item">Inscription evaluates to:</p>
+                            </label>
+                            <div class="select is-small">
+                                <select v-model="transitionsStore.selectedOutputSnippetIndex">
+                                    <option :value="-1" selected disabled>Select output place</option>
+                                    <option v-for="(arc, index) in transitionsStore.outputArcs" :value="index">{{ arc.name
+                                    }}
+                                    </option>
+                                </select>
+
+                            </div>
+
+                            <p v-if="transitionsStore.hasAnyOutputError" class="help is-danger">Some output expressions have
+                                errors.</p>
+                        </div>
+                        <SnippetInput v-if="transitionsStore.selectedOutputSnippetIndex !== -1" />
+
+                    </div>
+                    <div v-else class="block">
+                        <div class="notification is-info is-light is-size-7">Transition has no output places.</div>
+                    </div>
+                    <hr />
+                    <div class="block">
+                        <div class="field">
+                            <label class="label is-small">Guard Expression
+                                <HelpButton help-text="
+                                The guard is a function that evaluates to true or false. Use it to describe rules when the transition is enabled.
+                              " />
+
+                                <span @click="() => { uiStateStore.showEditor = 'guard' }"
+                                    class="icon is-small is-pulled-right has-text-grey-light is-clickable"><font-awesome-icon
+                                        icon="fas fa-up-right-from-square"></font-awesome-icon></span>
+                            </label>
+                            <div class="control is-small jsn-code">
+                                <Codemirror placeholder="Define guard in Jsonnet" style="height: 50px"
+                                    :indent-with-tab="true" :tab-size="2" :extensions="extensions"
+                                    v-model="transitionsStore.transition.guard" />
+                            </div>
+                            <div
+                                v-if="transitionsStore.assignmentComplete && !transitionsStore.prefaceHasError && !transitionsStore.hasAnyError">
+                                <p v-if="transitionsStore.guardHasError" class="help is-danger">Guard expression has errors.
+                                </p>
+                                <p v-if="!transitionsStore.guardHasError" class="help">Result:
+                                    <code class="has-text-grey has-tooltip-bottom"
+                                        :data-tooltip="getFormattedString(transitionsStore.guardEvaluation)">
+                                                    {{ getShortString(transitionsStore.guardEvaluation) }}
+                                                </code>
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div v-if="!transitionsStore.assignmentComplete" class="block">
+                        <div class="notification is-warning is-light is-size-7">
+                            Select a value for each input and output place to see expression evaluations.
+                        </div>
+                    </div>
+                    <div v-else-if="transitionsStore.hasAnyError" class="block">
+                        <div class="notification is-danger is-light is-size-7">
+                            The transition inscription has errors.
+                        </div>
+                    </div>
+                    <div v-else-if="!transitionsStore.isEnabled" class="block">
+                        <div class="notification is-warning is-light is-size-7">
+                            The transition can't fire with selected values.
+                        </div>
+                    </div>
+                    <div v-else-if="transitionsStore.isEnabled" class="block">
+                        <div class="notification is-success is-light is-size-7">
+                            The transition can fire with selected values.
+                        </div>
+                    </div>
+
+                </section>
+                <footer class="modal-card-foot">
+                    <button class="button is-pulled-right is-danger is-small" :disabled="!transitionsStore.isEnabled"
+                        style="margin-left: auto" @click="onFireClick">Fire!</button>
+                </footer>
+
             </div>
-            <p
-              class="level-item"
-              :class="{
-                'jsn-green-background': uiStateStore.transitionInscriptionValid,
-                'jsn-red-background': !uiStateStore.transitionInscriptionValid
-              }"
-            >
-              {{ uiStateStore.inscriptionEvaluationResult }}
-            </p>
-          </div>
+            <PostsetFilter />
         </div>
-      </section>
-      <footer class="modal-card-foot">
-        <button class="button is-success" @click="saveChanges">Save changes</button>
-        <button class="button" @click="close()">Close</button>
-      </footer>
     </div>
-  </div>
 </template>
-
 <script lang="ts">
-import { shallowRef } from 'vue'
+import { defineComponent } from 'vue'
+import { mapStores } from 'pinia';
+
 import { Codemirror } from 'vue-codemirror'
-import { json } from '@codemirror/lang-json'
-import { oneDark } from '@codemirror/theme-one-dark'
-import { useUiStateStore } from '@/stores/uiState'
-import { setTransitionContent } from '@/jsonnets/net'
-import HelpButton from '@/components/_shared/HelpButton.vue'
-import TokenTag from '@/components/_shared/TokenTag.vue'
-import OutboundArcModalAccordion from '@/components/OutboundArcModal/OutboundArcModalAccordion.vue'
-import { examples } from './TransitionModalExamples'
-import StaticCodeEditor from '@/components/_shared/StaticCodeEditor.vue'
-import { mapStores } from 'pinia'
+import { basicSetup } from 'codemirror';
 
-export default {
-  components: {
-    Codemirror,
-    HelpButton,
-    OutboundArcModalAccordion,
-    TokenTag,
-    StaticCodeEditor
-  },
-  setup() {
-    const extensions = [json(), oneDark]
-    const view = shallowRef()
-    return {
-      extensions,
-      view
-    }
-  },
-  data() {
-    return {
-      examples,
-      expandedExamples: false,
-      inscriptionEvaluated: false,
-    }
-  },
-  computed: {
-    ...mapStores(useUiStateStore)
-  },
-  watch: {
-    'uiStateStore.inspectorContent'() {
-      //TODO: better a method of component rather than store?
-      this.uiStateStore.updateTransitionEvaluation()
-    }
-  },
-  methods: {
-    onEditorReady(payload: any) {
-      this.view = payload.view;
-    },
-    insertVariableName(varName: string) {
-      const ranges = this.view.state.selection.ranges
-      const cursor = ranges[0].anchor
+import VueJsonPretty from 'vue-json-pretty';
+import 'vue-json-pretty/lib/styles.css';
 
-      this.view.dispatch({
-        changes: { from: cursor, insert: varName }
-      })
+import { useUiStateStore } from '@/stores/uiState';
+import { useTransitionsStore } from '@/stores/transition';
+
+import SnippetInput from './SnippetInput.vue';
+import PresetFilter from './PresetFilter.vue';
+import PostsetFilter from './PostsetFilter.vue';
+import HelpButton from '../_shared/HelpButton.vue';
+
+export default defineComponent({
+    components: {
+        Codemirror,
+        VueJsonPretty,
+        SnippetInput,
+        PostsetFilter,
+        PresetFilter,
+        HelpButton,
     },
-    isSelected(placeName: string, index: number) {
-      if (this.uiStateStore.selectedForAssignment[placeName] === index) {
-        return true
-      } else {
-        return false
-      }
+    setup() {
+        const extensions = [basicSetup]
+
+        return {
+            extensions,
+        }
     },
-    expandExamples() {
-      this.expandedExamples = !this.expandedExamples
+    data() {
+        return {
+            showNameInput: false
+        }
     },
-    saveChanges() {
-      setTransitionContent(
-        this.uiStateStore.lastSelectedID,
-        this.uiStateStore.inspectorContent,
-        this.uiStateStore.itemName
-      )
-      this.close()
+    computed: {
+        ...mapStores(useUiStateStore),
+        ...mapStores(useTransitionsStore)
     },
-    close() {
-      this.uiStateStore.setShowTransitionModal(false)
+    created() {
+        this.transitionsStore.initSettings();
+        this.transitionsStore.loadTransition(this.uiStateStore.lastSelectedID);
+    },
+    watch: {
+        'transitionsStore.transition.guard'(newValue: string) {
+            this.transitionsStore.saveBasicInscription();
+            this.transitionsStore.loadEvaluations();
+        },
+        'transitionsStore.transition.preface'(newValue: string) {
+            this.transitionsStore.saveBasicInscription();
+            this.transitionsStore.loadEvaluations();
+        }
+    },
+    methods: {
+        onCancelNameEdit() {
+            this.transitionsStore.resetName();
+            this.showNameInput = false;
+        },
+        onNameSave() {
+            this.transitionsStore.saveName();
+            this.showNameInput = false;
+        },
+        close() {
+            this.uiStateStore.showModal = 'none';
+            this.transitionsStore.unsetAssignments();
+        },
+        onFireClick() {
+            if (this.transitionsStore.isEnabled) {
+                this.transitionsStore.fireCurrentTransition()
+            }
+        },
+        getShortString(str: string) {
+            if (str.length > 8) {
+                return str.slice(0, 8) + "..."
+            } else {
+                return str
+            }
+        },
+        getFormattedString(str: string) {
+            return JSON.stringify(JSON.parse(str), null, 2);
+        }
     }
-  }
+
+})
+</script>
+<style scoped>
+.scoped-modal-container {
+    width: 90%;
+    display: flex;
+    height: 90%;
+    align-items: center;
 }
-</script>@/jsonnets/net
+
+.scoped-modal-center {
+    height: 100%;
+    width: 40%;
+}
+
+.scoped-modal-center {
+    border-radius: 0.25rem;
+}
+
+.scoped-edit-button {
+    display: none;
+}
+
+.scoped-modal-title:hover>.scoped-edit-button,
+.scoped-edit-button:hover {
+    display: inline-block;
+}
+</style>

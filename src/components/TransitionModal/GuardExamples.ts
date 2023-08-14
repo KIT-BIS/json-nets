@@ -32,26 +32,26 @@ export const examples: Examples = {
     },
     {
       question: 'Comparison of two attributes of different tokens',
-      answer: 'local check = student.id == request.id;\ncheck',
+      answer: 'input_somplace_token.id == output_otherplace_token.id',
       evaluation: true,
       isExpanded: false
     },
     {
       question: 'Comparison of an attribute with a value',
-      answer: "local check = student.name == 'Tom';\ncheck",
+      answer: "input_someplace_value.name == 'Tom'",
       evaluation: false,
       isExpanded: false
     },
     {
       question: 'Compare whether value is greater or smaller',
-      answer: "local check = student.age > '18';\ncheck",
+      answer: "input_someplace_value.age > 18",
       evaluation: true,
       isExpanded: false
     },
     {
-      question: 'Two conditions have to be true',
+      question: 'Combine multiple conditions',
       answer:
-        "local checkLecture = request.lecture == 'Process Modeling';\nlocal checkStudent = request.id == student.id;\ncheckLecture && checkStudent",
+        "input_someplace_value.name == 'Tom' &&\n input_someplace_value.age > 18",
       evaluation: true,
       isExpanded: false
     }

@@ -11,7 +11,7 @@ export default defineConfig({
       external: ["manual.png"]
     }
   },
-  base: '/json-nets/',
+  // base: '/json-nets/',
   plugins: [vue()],
   resolve: {
     alias: {

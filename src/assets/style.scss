@@ -3,11 +3,23 @@
 @import '../../node_modules/bulma-tooltip/src/sass/index.sass';
 @import '../../node_modules/jointjs/dist/joint.css';
 
+.cm-lineNumbers {
+    font-size: .8rem;
+}
+
+.cm-line {
+  font-size: .8rem;
+}
+
+.jsn-code {
+    border: 1px solid hsl(0, 0%, 86%);
+    border-radius: 4px
+}
+
 body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  // background-color: #f0f0f0;
 }
 
 .jsn-modal-wide {
@@ -18,26 +30,11 @@ body {
   flex-grow: 1;
   display: inline !important;
   margin-left: 15px;
-  // margin-top: 15px;
-  // padding: 5px 10px;
 }
 
-.jsn-green-background {
+.jsn-code-font {
   font-family: monospace;
-  background-color: green;
-  color: white;
-  text-align: center;
-  margin-left: 15px;
-  padding: 5px 10px;
-}
-
-.jsn-red-background {
-  font-family: monospace;
-  background-color: #e20505;
-  color: white;
-  text-align: center;
-  margin-left: 15px;
-  padding: 5px 10px;
+  white-space: pre-wrap;
 }
 
 #menu {
@@ -49,9 +46,9 @@ body {
   border-radius: 3px;
 }
 
-.editor {
-  background-color: #000;
-  font-family: courier new;
-  padding: 8px;
-  color: white;
-}
+// .editor {
+  // background-color: #000;
+  // font-family: courier new;
+  // padding: 8px;
+  // color: white;
+// }

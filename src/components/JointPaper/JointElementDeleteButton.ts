@@ -1,8 +1,6 @@
 import * as joint from 'jointjs';
-import {
-  removePlace,
-  removeTransition
-} from '@/jsonnets/net'
+
+import { useNetStore } from '@/stores/net';
 
 export default class DeleteButton extends joint.elementTools.Button {
     constructor(deleteX: string, element: joint.dia.Element) {
@@ -12,7 +10,7 @@ export default class DeleteButton extends joint.elementTools.Button {
             tagName: 'circle',
             selector: 'button',
             attributes: {
-              r: 7,
+              r: 8,
               fill: '#FF1D00',
               cursor: 'pointer'
             }
@@ -38,10 +36,11 @@ export default class DeleteButton extends joint.elementTools.Button {
         },
         rotate: true,
         action: function () {
+          const netState = useNetStore()
           if (element.get('jsonnetsType') === 'place') {
-            removePlace(String(element.id))
+            netState.deletePlace(String(element.id))
           } else if (element.get('jsonnetsType') === 'transition') {
-            removeTransition(String(element.id))
+            netState.deleteTransition(String(element.id))
           }
         }
       })

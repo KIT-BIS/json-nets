@@ -1,203 +1,197 @@
 <template>
-  <div class="modal is-active">
-    <div class="modal-background"></div>
-    <div class="modal-card jsn-modal-wide">
-      <header class="modal-card-head">
-        <p class="modal-card-title">Place inscription</p>
-        <button class="delete" aria-label="close" @click="close()"></button>
-      </header>
-      <section class="modal-card-body">
-        <div class="field">
-          <label class="label">Name of the place</label>
-          <div class="control">
-            <input class="input" type="text" v-model="uiStateStore.itemName" />
-          </div>
-          <p class="help is-danger">{{ uiStateStore.nameError }}</p>
-        </div>
-        <label class="label">
-          Structure of tokens (JSON Schema)
-          <HelpButton help-text="
-            For more information about JSON Schema, please visit
-            <a href='https://json-schema.org/' target='_blank'>https://json-schema.org/</a>.
-          "/>
-        </label>
-        <div class="columns is-vcentered">
-          <div class="column is-5">
-            <div class="property-box">
-              <json-forms
-                :uischema="uischema"
-                :data="uiStateStore.formsData"
-                :renderers="renderers"
-                :schema="schema"
-                @change="onFormChange"
-              />
+    <div class="modal is-active">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head scoped-modal-header">
+                <span class="has-text-weight-bold">Place:</span>
+                <span class="ml-1">
+                    <span v-if="!showNameInput"
+                        class=" is-ghost icon-text has-text-weight-bold scoped-modal-title is-clickable"
+                        @click="showNameInput = true">
+                        <span>{{ placesStore.place.name }}</span>
+                        <span class="scoped-edit-button icon has-text-grey-light"><font-awesome-icon
+                                icon="fas fa-pen" /></span>
+                    </span>
+                    <span v-if="showNameInput" class="level">
+                        <input style="width: 100px" class="input is-small level-item" v-model="placesStore.place.name" />
+                        <button class="ml-1 button is-small level-item" @click="onCancelNameEdit">
+                            <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
+                        </button>
+                        <button @click="onNameSave" class="ml-1 button is-small level-item is-primary">
+                            <span class="icon is-small"><font-awesome-icon icon="fas fa-check" /></span>
+                        </button>
+                    </span>
+                </span>
+                <p class="modal-card-title"></p>
+                <button class="delete" aria-label="close" @click="close"></button>
+
+            </header>
+            <div class="tabs is-left is-small has-background-light mb-0">
+                <ul>
+                    <li :class="{ 'is-active': shownTab === 'data' }"><a @click="() => { showTab('data') }">Data</a></li>
+                    <li :class="{ 'is-active': shownTab === 'schema' }"><a @click="() => { showTab('schema') }">Schema</a>
+                    </li>
+                </ul>
             </div>
-          </div>
-          <div class="column is-2 has-text-centered">
-            <Arrow />
-          </div>
-          <div class="column is-5">
-            <Codemirror
-              :disabled="true"
-              v-model="uiStateStore.generatedSchemaString"
-              placeholder="Output"
-              :autofocus="true"
-              :indent-with-tab="true"
-              :tab-size="2"
-              :extensions="extensions"
-            />
-          </div>
-        </div>
-        <div class="field">
-          <label class="label">
-            Tokens (JSON)
-            <HelpButton help-text="
-              For more information about JSON, please visit
-              <a href='https://www.json.org/json-en.html' target='_blank'
-                >https://www.json.org/json-en.html</a>.
-            "/>
-          </label>
-        </div>
-        <div class="block">
-          <button
-            @click="uiStateStore.addToken()"
-            class="array-list-add button level-item is-small my-add-button-spacer has-text-white has-text-weight-bold"
-            type="button"
-          >
-            +
-          </button>
-        </div>
-        <div class="tags block">
-          <TokenTag 
-            v-for="(doc, index) in uiStateStore.placeTokens"
-            :callback="() => { uiStateStore.selectToken(index) }"
-            :token="JSON.stringify(doc, null, 2)"
-            :isSelected="uiStateStore.selectedIndex === index"
-            :isDeletable="true"
-            :deletableCallback="() => { uiStateStore.deleteToken(index) }"
-          />
-        </div>
-        <div class="block">
-          <Codemirror
-            v-model="uiStateStore.tokenString"
-            placeholder="Select token to edit content."
-            :autofocus="true"
-            :indent-with-tab="true"
-            :tab-size="2"
-            :extensions="extensions"
-            @update="onTokenEditorUpdate"
-          />
-        </div>
+
+            <section class="modal-card-body">
+                <DataEditor v-if="shownTab === 'data'" :schema="placesStore.place.schema" />
+                <div v-if="shownTab === 'schema'" class="block">
+                    <div class="field">
+                        <label class="label is-small icon-text">Token schema
+                        <HelpButton help-text="
+                          Describe the structure of data tokens stored in the place with 
+                          <a href='https://json-schema.org/' target='_blank'>JSON Schema</a>.
+                        "/>
+
+                        </label>
+                        <div class="control is-small jsn-code">
+                            <Codemirror v-model="placesStore.schemaString" placeholder="Edit place schema."
+                                :autofocus="true" :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }"
+                                :extensions="extensions" />
+ <!-- @change="onSchemaCodeChange" -->
+                        </div>
+                        <p class="help" v-if="!placesStore.place.hasError">
+                            {{ placesStore.place.errorMessage }}
+                        </p>
+                        <p class="help is-danger"
+                            v-if="placesStore.place.hasError && placesStore.place.errorType === 'schema'">
+                            {{ placesStore.place.errorMessage }}
+                        </p>
+
+                    </div>
+                </div>
 
 
-        <div class="block">
-          <div class="level">
-            <div class="level-left">
-              <p class="level-item">Result of schema validation:</p>
-            </div>
-            <p
-              v-html="uiStateStore.placeTokenValidationResult"
-              class="level-item"
-              :class="{
-                'jsn-green-background': uiStateStore.placeTokenValidation,
-                'jsn-red-background': !uiStateStore.placeTokenValidation
-              }"
-            ></p>
-          </div>
-        </div>
-      </section>
 
-      <footer class="modal-card-foot">
-        <button class="button is-success" @click="saveChanges">Save changes</button>
-        <button class="button" @click="close()">Cancel</button>
-      </footer>
+
+                <!-- @update="onMarkingCodeUpdate" -->
+
+            </section>
+            <footer class="modal-card-foot has-background-white scoped-modal-footer">
+
+                <button v-if="shownTab === 'data'" class="button is-pulled-right is-primary is-small"
+                    style="margin-left: auto" @click="onAddTokenClick">Add token</button>
+
+
+            </footer>
+        </div>
     </div>
-  </div>
 </template>
-
 <script lang="ts">
-import type { JsonFormsChangeEvent } from '@jsonforms/vue'
-import { mapStores } from 'pinia'
-import { useUiStateStore } from '@/stores/uiState'
-import { validatePlaceName, setPlaceContent } from '@/jsonnets/net'
-import { defineComponent } from 'vue'
-import { Codemirror } from 'vue-codemirror'
-import { json } from '@codemirror/lang-json'
-import { oneDark } from '@codemirror/theme-one-dark'
-import { JsonForms  } from '@jsonforms/vue'
-import { defaultStyles, mergeStyles, vanillaRenderers } from '@jsonforms/vue-vanilla'
+import { useUiStateStore } from '@/stores/uiState';
+import { usePlacesStore } from '@/stores/place';
+import { mapStores } from 'pinia';
+import { defineComponent } from 'vue';
+import { Codemirror } from 'vue-codemirror';
+import { jsonSchema } from "codemirror-json-schema";
+import { basicSetup } from 'codemirror';
+import type { JSONSchema7 } from "json-schema";
+import { EditorState } from "@codemirror/state";
+import { gutter, EditorView, lineNumbers } from "@codemirror/view";
+import { history } from "@codemirror/commands";
+import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
+import { lintGutter } from "@codemirror/lint";
+import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
+import { oneDarkHighlightStyle, oneDark } from "@codemirror/theme-one-dark";
+import type { ViewUpdate } from "@codemirror/view";
+import DataEditor from './DataEditor.vue'
+import JSONSchema from "@json-schema-tools/meta-schema"
 import HelpButton from '@/components/_shared/HelpButton.vue'
 
-import TokenTag from '@/components/_shared/TokenTag.vue'
-import Arrow from '@/components/_shared/Arrow.vue'
-import { testStyle, schema, uischema } from './PlaceModalSchemaConfig'
-
-
-const myStyles = mergeStyles(defaultStyles, testStyle)
-const renderers = [...vanillaRenderers]
+const schema: JSONSchema7 = {
+    type: "object",
+    properties: {
+        example: {
+            type: "string",
+        },
+    },
+};
 
 export default defineComponent({
-  components: {
-    JsonForms,
-    Codemirror,
-    HelpButton,
-    TokenTag,
-    Arrow
-},
-  setup() {
-    const extensions = [json(), oneDark]
+    components: {
+        Codemirror,
+        DataEditor,
+        HelpButton
+    },
+    setup(props) {
+        console.log(JSONSchema)
+        const extensions = [
+            gutter({ class: "CodeMirror-lint-markers" }),
+            bracketMatching(),
+            basicSetup,
+            closeBrackets(),
+            history(),
+            autocompletion(),
+            lineNumbers(),
+            lintGutter(),
+            EditorView.lineWrapping,
+            EditorState.tabSize.of(2),
+            syntaxHighlighting(oneDarkHighlightStyle),
+            jsonSchema(JSONSchema),
+        ]
 
-    return {
-      extensions,
-    }
-  },
-  data() {
-    return {
-      // freeze renderers for performance gains
-      renderers: Object.freeze(renderers),
-      schema,
-      uischema
-    }
-  },
-  computed: {
-    ...mapStores(useUiStateStore)
-  },
-  provide() {
-    return {
-      styles: myStyles
-    }
-  },
-  methods: {
-    close() {
-      this.uiStateStore.showPlaceModal = false
-    },
-    onFormChange(event: JsonFormsChangeEvent) {
-      this.uiStateStore.formsData = event.data
-      this.uiStateStore.formsDataString = JSON.stringify(this.uiStateStore.formsData, null, 2)
-      this.uiStateStore.updateJsonSchema()
-    },
-    onTokenEditorUpdate() {
-      this.uiStateStore.updateCurrentToken()
-    },
-    saveChanges() {
-      this.uiStateStore.nameError = ''
-      let nameValid = validatePlaceName(this.uiStateStore.itemName, this.uiStateStore.lastSelectedID)
-      if (!nameValid) {
-        this.uiStateStore.nameError = 'Place name must be unique.'
-      } else {
-        const placeContent: { schema: Object, data: Array<Object>} = {
-          schema: {},
-          data: [] 
+        return {
+            extensions,
         }
-        placeContent.schema = JSON.parse(this.uiStateStore.generatedSchemaString)
-        placeContent.data = this.uiStateStore.placeTokens;
-        setPlaceContent(this.uiStateStore.lastSelectedID, placeContent, this.uiStateStore.itemName)
-        this.close()
-      }
+    },
+    data() {
+        return {
+            shownTab: 'data' as 'data' | 'schema',
+            showNameInput: false,
+        }
+    },
+    computed: {
+        ...mapStores(useUiStateStore),
+        ...mapStores(usePlacesStore)
+    },
+    created() {
+        this.placesStore.loadPlace(this.uiStateStore.lastSelectedID);
+    },
+    watch: {
+        'placesStore.schemaString'(newValue: string) {
+            this.placesStore.savePlaceSchema(newValue);
+        }
+    },
+    methods: {
+        close() {
+            this.uiStateStore.showModal = 'none';
+        },
+        onCancelNameEdit() {
+            this.placesStore.resetName();
+            this.showNameInput = false;
+
+        },
+        onNameSave() {
+            this.placesStore.saveName();
+            this.showNameInput = false;
+        },
+        onAddTokenClick() {
+            // todo make token dependent on schema
+            this.placesStore.addToken();
+        },
+
+        showTab(tab: 'data' | 'schema') {
+            this.shownTab = tab;
+        }
     }
-  },
 })
 </script>
-<style>
-@import '../../assets/json-forms.css';
-</style>@/jsonnets/net.js
+<style scoped>
+.scoped-modal-footer {
+    border-top: none;
+}
+
+.scoped-modal-header {
+    border-bottom: none;
+}
+
+.scoped-edit-button {
+    display: none;
+}
+
+.scoped-modal-title:hover>.scoped-edit-button,
+.scoped-edit-button:hover {
+    display: inline-block;
+}
+</style>@/stores/place

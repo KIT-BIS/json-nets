@@ -1,11 +1,11 @@
+import type { AssignmentRef } from "@/json-nets/Transition"
+
 /**
  * TODO: very hacky, needs rework
  * based on odometer solution in
  * https://stackoverflow.com/questions/8936610/how-can-i-create-every-combination-possible-for-the-contents-of-two-arrays
- * @param {Array} arrayOfArrays
- * @return {Array}
  */
-export function combineArrays(arrayOfArrays: any) {
+export function combineAssignments(arrayOfArrays: Array<Array<AssignmentRef>>):Array<Array<AssignmentRef>> {
   if (!arrayOfArrays) {
     return []
   }
@@ -43,11 +43,8 @@ export function combineArrays(arrayOfArrays: any) {
 
 /**
  * Translate "odometer" to combinations from arrayOfArrays
- * @param {Number} odometer
- * @param {Array} arrayOfArrays
- * @return {Array}
  */
-function formCombination(odometer: any, arrayOfArrays: any) {
+function formCombination(odometer: Array<number>, arrayOfArrays: Array<Array<AssignmentRef>>): Array<AssignmentRef> {
   const output = []
   for (let i = 0; i < odometer.length; i++) {
     output.push(arrayOfArrays[i][odometer[i]])
@@ -60,7 +57,7 @@ function formCombination(odometer: any, arrayOfArrays: any) {
  * @param {Array} arrayOfArrays
  * @return {Number}
  */
-function odometerIncrement(odometer: any, arrayOfArrays: any) {
+function odometerIncrement(odometer: Array<number>, arrayOfArrays: Array<Array<AssignmentRef>>) {
   // Basically, work you way from the rightmost digit of the "odometer"...
   // if you're able to increment without cycling that digit back to zero,
   // you're all done, otherwise,

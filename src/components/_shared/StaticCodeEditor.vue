@@ -22,9 +22,10 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+
 import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { basicSetup } from 'codemirror';
 
 export default defineComponent({
   components: {
@@ -39,8 +40,8 @@ export default defineComponent({
     class: String 
   },
   setup() {
-    const jsonExtensions = [json(),oneDark]
-    const jsonnetExtensions = [oneDark]
+    const jsonExtensions = [json()]
+    const jsonnetExtensions = [basicSetup]
     return {
       jsonExtensions,
       jsonnetExtensions

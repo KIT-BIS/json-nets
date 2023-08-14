@@ -25,9 +25,10 @@ export default class Place extends joint.shapes.pn.Place {
           'font-family': 'Courier New',
           'font-size': 20,
           'font-weight': 'bold',
-          'ref-x': 0.5,
-          'ref-y': 0.5,
-          'y-alignment': -0.5,
+          'ref-x': 0,
+          'ref-y': 0,
+          // todo: understand positioning of numbers
+          'y-alignment': -0.2,
         }
       },
       tokens: 0

@@ -75,7 +75,7 @@ export default defineComponent({
   },
   methods: {
     close() {
-      this.uiStateStore.showHelpModal = false
+      this.uiStateStore.showModal = 'none' 
     }
   }
 })

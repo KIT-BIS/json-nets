@@ -4,35 +4,6 @@
 
 import type { JSONValue } from "./jsonOperations"
 
-// window.jsonnet = jsonnet;
-/**
- * Evaluate a document with Jsonnet.
- * @param {Object} jsonnetExpression
- * @return {Object}
- */
-export function evaluate(jsonnetExpression: string) {
-  try {
-    //@ts-ignore
-    const result = jsonnet.EvaluateSnippet('Error: ', jsonnetExpression)
-    // Error thrown is an array with two elements
-    // throw error and return error message
-    if (result[1]['$val']) {
-      const e = new Error(result[1]['s'])
-      console.log('ERROR', result)
-      throw e
-    }
-    return {
-      success: true,
-      data: result[0]
-    }
-  } catch (error: any) {
-  // } catch (error) {
-    return {
-      success: false,
-      data: error.message
-    }
-  }
-}
 
 /**
  * Returns a Jsonnet-snippet as string value
@@ -52,10 +23,11 @@ export function jsonnetify(documents: Object) {
   return jsonnetString
 }
 
-
-// NEW JSON-NET VERSION
-
-export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = '') {
+export type EvaluationResult = {
+  hasError: boolean,
+  evaluation: string 
+}
+export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = ''): EvaluationResult {
   const variableString = jsonnetify(variables)
   jsonnetExpression = variableString + jsonnetExpression;
   // console.log(jsonnetExpression)
@@ -69,21 +41,11 @@ export function evaluateExpression(jsonnetExpression: string, variables: Record<
       const error = new Error(result[1]['s'])
       throw error
     } else {
-      const returnValue = JSON.parse(result[0])
-      return { evaluation: returnValue, hasError: false }
-      //if (returnValue === true) {
-      //  return { evaluation: true, hasError: false }
-      //} else if (returnValue === false) {
-      //  // return false for any not-true value
-      //  return { evaluation: false, hasError: false }
-      //} else {
-      //  const error = new Error('Jsonnet expression for ' + reference + ' does not return boolean value. Returned value is ' + result[0])
-      //  throw error;
-      //}
+      return { evaluation: result[0], hasError: false }
     }
 
   } catch (error: any) {
-    return { evaluation: false, hasError: true, error }
+    return { evaluation: error, hasError: true }
   }
 
 }

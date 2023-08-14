@@ -20,7 +20,6 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  // background-color: #f0f0f0;
 }
 
 .jsn-modal-wide {
@@ -31,28 +30,11 @@ body {
   flex-grow: 1;
   display: inline !important;
   margin-left: 15px;
-  // margin-top: 15px;
-  // padding: 5px 10px;
 }
 
-.jsn-green-background {
+.jsn-code-font {
   font-family: monospace;
-  background-color: green;
-  color: white;
-  text-align: center;
-  // margin-left: 15px;
-  padding: 5px;
-  // padding: 5px 10px;
-}
-
-.jsn-red-background {
-  font-family: monospace;
-  background-color: #e20505;
-  color: white;
-  text-align: center;
-  padding: 5px;
-  // margin-left: 15px;
-  // padding: 5px 10px;
+  white-space: pre-wrap;
 }
 
 #menu {
@@ -64,9 +46,9 @@ body {
   border-radius: 3px;
 }
 
-.editor {
-  background-color: #000;
-  font-family: courier new;
-  padding: 8px;
-  color: white;
-}
+// .editor {
+  // background-color: #000;
+  // font-family: courier new;
+  // padding: 8px;
+  // color: white;
+// }

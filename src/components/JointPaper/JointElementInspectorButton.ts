@@ -1,9 +1,6 @@
 import * as joint from 'jointjs';
+
 import { useUiStateStore } from '@/stores/uiState';
-import {
-  // INSPECTOR_MODE_PLACE,
-  // INSPECTOR_MODE_TRANSITION
-} from '@/App.vue'
 
 
 export default class InspectorButton extends joint.elementTools.Button {
@@ -14,7 +11,7 @@ export default class InspectorButton extends joint.elementTools.Button {
           tagName: 'circle',
           selector: 'button',
           attributes: {
-            r: 7,
+            r: 8,
             fill: 'green',
             cursor: 'pointer'
           }
@@ -42,14 +39,6 @@ export default class InspectorButton extends joint.elementTools.Button {
       action: () => {
         const uiState = useUiStateStore();
         uiState.setModal(element.get('jsonnetsType'), <string>element.id);
-        //if (element.get('jsonnetsType') === 'place') {
-        //  // TODO
-        //  ui
-        //  // uiState.updateInspector(INSPECTOR_MODE_PLACE, <string>element.id)
-        //} else if (element.get('jsonnetsType') === 'transition') {
-        //  // TODO
-        //  // uiState.updateInspector(INSPECTOR_MODE_TRANSITION, <string>element.id)
-        //}
       }
     })
   }

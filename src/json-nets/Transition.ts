@@ -1,13 +1,16 @@
-import { combineAssignments } from '@/util/util'
-import { evaluate, evaluateExpression, jsonnetify } from '@/util/jsonnet.js'
-import type { Arc, FilterAssignment } from './Arc'
+import type {EvaluationResult } from '@/util/jsonnet.js'
 import type { JSONValue } from '@/util/jsonOperations'
-import { checkForConflict, sortByOrder } from '@/util/jsonPointer'
+import type { Arc } from './Arc'
 import type { FragmentOperation } from './Place'
+import type { FireEvent } from './Net'
+
+import { combineAssignments } from '@/util/util'
+import { evaluateExpression } from '@/util/jsonnet.js'
+import { sortByOrder } from '@/util/jsonPointer'
 
 
 export type AssignmentRef = {
-      arc: Arc // 
+      arc: Arc
       assignmentIndex: number
     }
 
@@ -24,7 +27,7 @@ export class Transition {
   // private _state: Record<string, JSONValue> 
   public guard: string
   public preface: string
-  public fragmentVarSnippets: Record<string, string>
+  public valueVarSnippets: Record<string, string>
   public keyVarSnippets: Record<string, string>
 
   constructor(id: string, name:string) {
@@ -32,10 +35,9 @@ export class Transition {
     this.name = name
     this.preset = []
     this.postset = []
-    // this._state = {} // Save each variable
     this.guard = 'true',
     this.preface = ''
-    this.fragmentVarSnippets = {}
+    this.valueVarSnippets = {}
     this.keyVarSnippets = {}
   }
 
@@ -44,8 +46,8 @@ export class Transition {
       this.preset.push(arc)
     } else if (arc.type === 'postset') {
       // existing snippets are not overwritten (important for imports)
-      if (!this.fragmentVarSnippets[arc.fragmentVarName]) {
-        this.fragmentVarSnippets[arc.fragmentVarName] = 'local ' + arc.fragmentVarName + ' = {};';
+      if (!this.valueVarSnippets[arc.valueVarName]) {
+        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = {};';
       }
       if(!this.keyVarSnippets[arc.keyVarName]) {
         this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = '-';";
@@ -54,31 +56,31 @@ export class Transition {
     }
   }
 
-  updateSnippets(oldNames: { fragment: string, key: string, token: string}, newNames: { fragment: string, key: string, token: string }) {
+  updateSnippets(oldNames: { value: string, key: string, token: string}, newNames: { value: string, key: string, token: string }) {
     let newGuard = this.guard;
-    newGuard = newGuard.replace(oldNames.fragment, newNames.fragment);
+    newGuard = newGuard.replace(oldNames.value, newNames.value);
     newGuard = newGuard.replace(oldNames.key, newNames.key);
     newGuard = newGuard.replace(oldNames.token, newNames.token);
     this.guard = newGuard;
 
     let newPreface = this.preface;
-    newPreface = newPreface.replace(oldNames.fragment, newNames.fragment);
+    newPreface = newPreface.replace(oldNames.value, newNames.value);
     newPreface = newPreface.replace(oldNames.key, newNames.key);
     newPreface = newPreface.replace(oldNames.token, newNames.token);
     this.preface = newPreface;
 
-    if(this.fragmentVarSnippets[oldNames.fragment]) {
-      let newFragmentSnippet = this.fragmentVarSnippets[oldNames.fragment];
-      newFragmentSnippet = newFragmentSnippet.replace(oldNames.fragment, newNames.fragment);
+    if(this.valueVarSnippets[oldNames.value]) {
+      let newFragmentSnippet = this.valueVarSnippets[oldNames.value];
+      newFragmentSnippet = newFragmentSnippet.replace(oldNames.value, newNames.value);
       newFragmentSnippet = newFragmentSnippet.replace(oldNames.key, newNames.key);
       newFragmentSnippet = newFragmentSnippet.replace(oldNames.token, newNames.token);
-      delete this.fragmentVarSnippets[oldNames.fragment]
-      this.fragmentVarSnippets[newNames.fragment] = newFragmentSnippet;
+      delete this.valueVarSnippets[oldNames.value]
+      this.valueVarSnippets[newNames.value] = newFragmentSnippet;
     }
 
     if(this.keyVarSnippets[oldNames.key]) {
       let newKeySnippet = this.keyVarSnippets[oldNames.key];
-      newKeySnippet = newKeySnippet.replace(oldNames.fragment, newNames.fragment);
+      newKeySnippet = newKeySnippet.replace(oldNames.value, newNames.value);
       newKeySnippet = newKeySnippet.replace(oldNames.key, newNames.key);
       newKeySnippet = newKeySnippet.replace(oldNames.token, newNames.token);
       delete this.keyVarSnippets[oldNames.key]
@@ -95,7 +97,7 @@ export class Transition {
     } else if (arc.type === 'postset') {
       this.postset = this.postset.filter((currentArc) => {
         if (currentArc.id !== arc.id) {
-          delete this.fragmentVarSnippets[arc.fragmentVarName]
+          delete this.valueVarSnippets[arc.valueVarName]
           delete this.keyVarSnippets[arc.keyVarName]
           return true;
         } else {
@@ -105,45 +107,73 @@ export class Transition {
     }
   }
 
-  fire() {
+  resetAssignments() {
+    for (let i = 0; i < this.preset.length; i++){
+      this.preset[i].resetAssignment();
+    }
+
+    for (let i = 0; i < this.postset.length; i++){
+      this.postset[i].resetAssignment();
+    }
+
+
+  }
+
+  fire(): Array<FireEvent> {
+    const fireData: Array<FireEvent> = []
     for (let i = 0; i < this.preset.length; i++) {
+
       // todo: order by path expression order, use batch operation method!
       const arc = this.preset[i];
+      // todo this should be reworked and part of enabled checking
+      // transition can only fire if pathExpression != null
+      if (arc.currentAssignment.pathExpression === null) return [];
       arc.place.removeFragment(arc.currentAssignment.pathExpression, false);
+      fireData.push({ arcID: arc.id, placeID: arc.place.id, num: arc.place.marking.length })
     }
 
     for (let i = 0; i < this.postset.length; i++) {
       const arc = this.postset[i];
-      arc.place.insertFragment(arc.currentAssignment.pathExpression, arc.currentAssignment.fragment, arc.currentAssignment.key, false);
+      if (arc.currentAssignment.pathExpression === null) return [];
+
+      arc.place.insertFragment(arc.currentAssignment.pathExpression, arc.currentAssignment.value, arc.currentAssignment.key, false);
+
+      fireData.push({ arcID: arc.id, placeID: arc.place.id, num: arc.place.marking.length })
     }
+
+    return fireData;
   }
 
-  // clearAssignment() {
-    // for (var variableKey in this._state) {
-      // if (this._state.hasOwnProperty(variableKey)) {
-        // delete this._state[variableKey];
-      // }
-    // }
-  // }
-
-  // todo: distinguish between logic for ui and net
-  // updateAssignment() {
-    // this.clearAssignment();
-    //todo: more efficient with per arc assignment management
-    // const arcs = this.preset.concat(this.postset);
-
-    // for (let i = 0; i < arcs.length; i++) {
-      // const arc = arcs[i]
-      // const fragment = arc.currentAssignment.fragment;
-      // const key = arc.currentAssignment.key;
-      // const token = arc.currentAssignment.token;
-
-      // this._state[arc.fragmentVarName] = fragment;
-      // this._state[arc.keyVarName] = key;
-      // this._state[arc.tokenVarName] = token;
-    // }
-
-  // }
+  hasCompletePresetAssignment() {
+    const arcs = this.preset;
+    for (let i = 0; i < arcs.length; i++) {
+      const arc = arcs[i];
+      if (arc.currentAssignment.pathExpression === null) {
+        return false;
+      }
+    }
+    return true;
+  }
+  hasCompletePostsetAssignment() {
+    const arcs = this.postset;
+    for (let i = 0; i < arcs.length; i++) {
+      const arc = arcs[i];
+      if (arc.currentAssignment.pathExpression === null) {
+        return false;
+      }
+    }
+    return true;
+  }
+  hasCompleteAssignment() {
+    const arcs = this.preset.concat(this.postset);
+    for (let i = 0; i < arcs.length; i++) {
+      const arc = arcs[i];
+      if (arc.currentAssignment.pathExpression === null) {
+        return false;
+      }
+    }
+    return true;
+  }
   hasAnyCompleteAssignment() {
     const arcs = this.preset.concat(this.postset);
     for (let i = 0; i < arcs.length; i++) {
@@ -156,35 +186,42 @@ export class Transition {
     return true;
   }
 
-  /**
-   * Checks whether all connected preset arcs have
-   * valid documents in their connected places
-   * And all connected postset arc can create valid documents.
-   */
-  isEnabledForCurrentAssignment() {
-    if (!this.hasAnyCompleteAssignment()) return false;
 
+  assembleInputVariables(): Record<string, JSONValue> {
     let variables: Record<string, JSONValue> = {};
     // assemble variables based on selected assignment
     for (let i = 0; i < this.preset.length; i++) {
       const arc = this.preset[i];
       variables[arc.keyVarName] = arc.currentAssignment.key;
-      variables[arc.fragmentVarName] = arc.currentAssignment.fragment;
+      variables[arc.valueVarName] = arc.currentAssignment.value;
       variables[arc.tokenVarName] = arc.currentAssignment.token;
-      // arc.place.removeFragment(arc.currentAssignment.pathExpression, true)
       //TODO: batch operations, input and output arc
       // Todo check fragment removal and adding
-      // arc.place.removeFragment()
     }
+    return variables;
+  }
+
+  assembleOutputTokenVariables() {
+    let variables: Record<string, JSONValue> = {};
     for (let i = 0; i < this.postset.length; i++) {
       const arc = this.postset[i];
       variables[arc.tokenVarName] = arc.currentAssignment.token;
+    }
+    return variables;
+
+  }
+  assembleOutputVariables(inputVariables: Record<string, JSONValue>): Record<string, JSONValue> | false {
+    let outputTokenVariables: Record<string, JSONValue> = this.assembleOutputTokenVariables();
+    let variables = {...inputVariables, ...outputTokenVariables};
+    for (let i = 0; i < this.postset.length; i++) {
+      const arc = this.postset[i];
       let fragmentSnippet = this.preface;
-      fragmentSnippet += this.fragmentVarSnippets[arc.fragmentVarName] + arc.fragmentVarName; 
+      fragmentSnippet += this.valueVarSnippets[arc.valueVarName] + arc.valueVarName; 
       const fragmentResult = evaluateExpression(fragmentSnippet, variables, this.name);
+      console.log(fragmentResult)
       if (fragmentResult.hasError) return false;
-      variables[arc.fragmentVarName] = fragmentResult.evaluation;
-      arc.currentAssignment.fragment = fragmentResult.evaluation;
+      variables[arc.valueVarName] = fragmentResult.evaluation;
+      arc.currentAssignment.value = fragmentResult.evaluation;
 
       let keySnippet = this.preface;
       keySnippet += this.keyVarSnippets[arc.keyVarName] + arc.keyVarName;
@@ -192,18 +229,56 @@ export class Transition {
       if (keyResult.hasError) return false;
       variables[arc.keyVarName] = keyResult.evaluation;
       arc.currentAssignment.key = fragmentResult.evaluation;
-      // let fragmentSnippet = this.preface + this.fragmentVarSnippets[arc.fragmentVarName];
-      // arc.place.insertFragment()
     }
+    return variables;
+  }
 
+  assembleVariables() {
+    let variables: Record<string, JSONValue> = this.assembleInputVariables();
+    let outputVariables = this.assembleOutputVariables(variables);
+    if (!outputVariables) return false;
+    Object.assign(variables, outputVariables);
+    return variables;
+  }
+
+
+  evaluateGuard(): EvaluationResult {
+    const variables = this.assembleVariables();
+    if (!variables) return { hasError: true, evaluation: 'Can\'t evaluate due to errors in variable expressions.'};
 
     let inscription = this.preface;
     // todo: currently, users MAY have (though unlikely) defined
     // additional stuff/variables in jsonnet var snippets
     inscription += this.guard;
     const result = evaluateExpression(inscription, variables, this.name);
+    return result;
+
+  }
+  /**
+   * Checks whether all connected preset arcs have
+   * valid documents in their connected places
+   * And all connected postset arc can create valid documents.
+   */
+  isEnabledForCurrentAssignment() {
+
+    for (let i = 0; i < this.preset.length; i++) {
+
+      // todo: order by path expression order, use batch operation method!
+      const arc = this.preset[i];
+      // todo this should be reworked and part of enabled checking
+      // transition can only fire if pathExpression != null
+      if (arc.currentAssignment.pathExpression === null) return false;
+    }
+
+    for (let i = 0; i < this.postset.length; i++) {
+      const arc = this.postset[i];
+      if (arc.currentAssignment.pathExpression === null) return false;
+    }
+
+    const result = this.evaluateGuard()
     if (result.hasError) return false;
-    if (!result.evaluation === true) return false;
+    const evaluation = JSON.parse(result.evaluation)
+    if (!(evaluation === true)) return false;
 
     // handle preset and preset/postset arcs
     const postsetArcWithPlaceInPreset = [];
@@ -222,8 +297,10 @@ export class Transition {
       }
       if (placeIsPostset && postsetArc) {
         // handling places that are in preset and postset
-        let pathExpressions = [];
+        let pathExpressions: Array<string> = [];
+        if (arc.currentAssignment.pathExpression === null) return false;
         pathExpressions.push(arc.currentAssignment.pathExpression)
+        if (postsetArc.currentAssignment.pathExpression === null) return false;
         pathExpressions.push(postsetArc.currentAssignment.pathExpression)
 
         // TODO: fix in concept/diss => I guess conflict is notrelevant for one transition
@@ -231,7 +308,7 @@ export class Transition {
         // if (checkForConflict(pathExpressions[0], pathExpressions[1])) return false;
 
         pathExpressions = sortByOrder(pathExpressions, arc.place.marking);
-       const insertOperation: FragmentOperation = {
+        const insertOperation: FragmentOperation = {
           // fragment: arc.currentAssignment.fragment,
           // key: arc.currentAssignment.key,
           pathExpression: arc.currentAssignment.pathExpression,
@@ -239,7 +316,7 @@ export class Transition {
         }
 
         const removeOperation: FragmentOperation = {
-          fragment: postsetArc.currentAssignment.fragment,
+          fragment: postsetArc.currentAssignment.value,
           key: postsetArc.currentAssignment.key,
           pathExpression: postsetArc.currentAssignment.pathExpression,
           type: 'insert'
@@ -260,6 +337,7 @@ export class Transition {
 
       } else {
         // check removal of fragment
+        if (arc.currentAssignment.pathExpression === null) return false;
         const result = arc.place.removeFragment(arc.currentAssignment.pathExpression, true);
         if (!result) return false;
       }
@@ -270,27 +348,20 @@ export class Transition {
       // places that are in preset and postset have been handled before
       if (postsetArcWithPlaceInPreset.includes(arc.id)) continue;
 
-      const result = arc.place.insertFragment(arc.currentAssignment.pathExpression, arc.currentAssignment.fragment, arc.currentAssignment.key, true)
+
+      if (arc.currentAssignment.pathExpression === null) return false;
+      const result = arc.place.insertFragment(arc.currentAssignment.pathExpression, arc.currentAssignment.value, arc.currentAssignment.key, true)
       if (!result) return true;
     }
 
     return true;
   }
 
-  // occur() {
-    // for (let i = 0; i < this.preset.length; i++) {
-      // this.preset[i].occur(this._state[this.preset[i].place.name.toLowerCase()])
-    // }
-    // this.postset.forEach((arc) => arc.occur())
-
-  // }
-
   /**
    * Finds a valid assignment of documents to filters.
    * Based on filter expressions and transition inscriptions.
    */
   findAssignment() {
-    console.log('find assignmetn')
     if (!this.hasAnyCompleteAssignment()) return false;
     const assignmentRefsPerArc: Array<Array<AssignmentRef>> = []
 
@@ -314,76 +385,17 @@ export class Transition {
       for (let j = 0; j < combination.length; j++) {
         const assignmentRef = combination[j];
         const arc = assignmentRef.arc; 
-        // const arc = arcs.find((fArc) => { fArc.id === assignmentRef.arcID})
-        // if (!arc) return false;
-        arc.assignFilter(arc.filterAssignments[assignmentRef.assignmentIndex])
+        arc.assignFilter(assignmentRef.assignmentIndex)
         if (this.isEnabledForCurrentAssignment()) {
           return true;
         }
-        // next step: isEnabled()
       }
     }
     return false;
-      // const state: Record<string, JSONValue> = {}
-      // let anyMarkingInvalid = false;
-      // for (let j = 0; j < combination.length; j++) {
-        // const currentVarNames = varNames[j]
-        // const currentAssignment = <FilterAssignment>combination[j]
-        // const currentArc = allArcs[j];
-        // currentArc.assignFilter(currentAssignment);
-        // state[currentVarNames.key] = currentAssignment.key;
-        // state[currentVarNames.fragment] = currentAssignment.fragment;
-        // state[currentVarNames.token] = currentAssignment.token;
-// 
-        // let markingValid;
-        // if (currentArc.type === 'preset') {
-          // markingValid = currentArc.place.removeFragment(currentAssignment.pathExpression, true)
-        // } else {
-          // markingValid = currentArc.place.insertFragment(currentAssignment.pathExpression, currentAssignment.fragment, currentAssignment.key, true)
-        // }
-// 
-        // if (!markingValid) {
-          // anyMarkingInvalid = true;
-          // break;
-        // }
-// 
-      // }
-      // transition inscription must be true
-      // if (this.evaluate(state) && !anyMarkingInvalid) {
-        
-        // return state
-      // }
-    // }
-    // return false
-
-    // this.clearAssignment()
-    // const varNames = []
-    // const allAssignments: Array<Array<FilterAssignment>> = [];
-    // const documents = []
-    // const allArcs = this.preset.concat(this.postset);
-    // for (let i = 0; i < allArcs.length; i++) {
-      // const arc = allArcs[i]
-      // const arcAssignments = arc.applyFilterExpression(arc.filterExpression)
-      // applyFilter();
-      // if (arcAssignments.length == 0) {
-        // return false
-      // } else {
-        // allAssignments.push(arcAssignments)
-        // varNames.push({ key: arc.keyVarName, fragment: arc.fragmentVarName, token: arc.tokenVarName })
-      // }
-    // }
-
-    // const combinations = combineArrays(allAssignments)
-// 
 
   }
 
-  /**
-   * Evaluates the inscribed Jsonnet expression with the given state.
-   * Returns true if the transition can occur, false otherwise.
-   */
-//  evaluate(state: Record<string, JSONValue>): boolean {
-//    const evaluation = evaluateExpression(this.guard, state, this.name);
-//    return evaluation.evaluation;
-//  }
+  checkPreset() {
+
+  }
 }

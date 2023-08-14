@@ -243,7 +243,7 @@ export default defineComponent({
       let fragments: Array<JSONValue> = [];
       for (let i = 0; i < this.filterAssignments.length; i++) {
         //@ts-ignore
-        fragments.push(this.filterAssignments[i].fragment)
+        fragments.push(this.filterAssignments[i].value)
       }
       return JSON.stringify(fragments, null, 2);
     },
@@ -306,7 +306,7 @@ export default defineComponent({
     },
     selectFragment(index: number) {
       this.selectedFragmentIndex = index;
-      this.fragmentString = JSON.stringify(this.filterAssignments[index].fragment, null, 2);
+      this.fragmentString = JSON.stringify(this.filterAssignments[index].value, null, 2);
       this.keyString = this.filterAssignments[index].key;
       this.tokenString = JSON.stringify(this.filterAssignments[index].token, null, 2)
       this.pathExpression = this.filterAssignments[index].pathExpression;

@@ -29,10 +29,8 @@ import {
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import type {Pinia} from 'pinia'
 
 import App from './App.vue'
-import { Net } from './json-nets/Net'
 
 /* add icons to the library */
 library.add(
@@ -59,7 +57,6 @@ library.add(
 )
 
 //import router from './router'
-
 const app = createApp(App).component('font-awesome-icon', FontAwesomeIcon)
 app.use(createPinia())
 app.use(VueCodemirror, {
@@ -67,8 +64,6 @@ app.use(VueCodemirror, {
   // to allow removal of gutters
   extensions: []
 })
-//app.use(router)
-// app.config.globalProperties.$net = net;
 
 app.mount('#app')
 

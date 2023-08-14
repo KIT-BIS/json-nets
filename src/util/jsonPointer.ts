@@ -3,16 +3,11 @@ import type { JSONComplex } from './jsonOperations';
 import { str } from 'ajv';
 
 // TODO: find proper pattern how to deal with errors/exceptions
-
 export function getFragment(document: JSONComplex, pathExpression: string) {
-  // const json = JSON.parse(document);
-  // console.log(pathExpression)
-  // console.log(document)
   return JSONPointer.get(document, pathExpression);
 }
 
 export function isValidForPathExpression(document: JSONComplex, pathExpression: string) {
-  // const json = JSON.parse(document);
   return JSONPointer.has(document, pathExpression);
 }
 
@@ -69,7 +64,6 @@ export function concatPathExpressions(pathExpression: string, token: string) {
 }
 
 export function sortByOrder(pathExpressions: Array<string>, document: JSONComplex) {
-  // const json = JSON.parse(document);
   return pathExpressions.sort((a, b) => {
     if (a === b) {
       return 0
@@ -85,8 +79,6 @@ export function sortByOrder(pathExpressions: Array<string>, document: JSONComple
         return 0
       } else {
         //same parent
-        // console.log(parentAExpr)
-        // 
         const parent = getFragment(document, parentAExpr);
         if (Array.isArray(parent)) {
           // todo: may be necessary to check if keys are actually number
@@ -148,7 +140,6 @@ export function pairwiseCheckForConflict(pathExpressions: Array<string>) {
     ),
   []);
   
-  // let conflict = false;
   for (let i = 0; i < pairwise.length; i++) {
     if(checkForConflict(pairwise[i][0], pairwise[i][1])) {
       // todo: could return all potential conflicts?
@@ -156,6 +147,4 @@ export function pairwiseCheckForConflict(pathExpressions: Array<string>) {
     }
   }
   return false;
-  
-
 }

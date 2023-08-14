@@ -11,7 +11,7 @@ export default class ConnectButton extends joint.elementTools.Connect {
           tagName: 'circle',
           selector: 'button',
           attributes: {
-            r: 7,
+            r: 8,
             fill: '#7a7e9b',
             cursor: 'pointer'
           }

@@ -1,6 +1,10 @@
-import { type JSONObject, type JSONMarking, type JSONValue, deepInsert, deepRemove, type JSONArray } from "@/util/jsonOperations"
+import type { JSONObject, JSONMarking, JSONValue } from "@/util/jsonOperations";
 import type { CheckResult } from "./Schema"
+
+import { deepInsert, deepRemove } from "@/util/jsonOperations"
+
 import { Schema } from "./Schema"
+import { checkSchema } from "@/util/jsonSchema"
 
 export type FragmentOperation = {
   type: "remove"
@@ -49,6 +53,11 @@ export class Place {
 
   get schema(): JSONObject {
     return this._schema.schema;
+  }
+
+  // todo: probably move this to schema class?
+  validateSchema(schema: JSONObject) {
+    return checkSchema(JSON.stringify(schema));
   }
 
   validateToken(token: JSONObject): CheckResult {

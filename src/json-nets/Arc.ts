@@ -1,24 +1,26 @@
-import { getPathExpressions, query } from '@/util/jsonPath'
 import type { Place } from './Place'
 import type { Transition } from './Transition'
-import type { JSONValue, JSONObject } from '@/util/jsonOperations'
-import { getEnvPathExpression, getFragment, getKey } from '@/util/jsonPointer'
+import type { JSONValue, JSONObject, JSONSimple } from '@/util/jsonOperations'
+
+import { getPathExpressions } from '@/util/jsonPath'
+import { getEnvPathExpression, getFragment as getValue, getKey } from '@/util/jsonPointer'
 
 
 type Filter = {
   filterExpression: string,
-  pathExpression: string,
+  pathExpression: string | null,
   key: string,
-  fragment: JSONValue,
+  value: JSONValue,
   token: JSONObject,
 }
 
 export type FilterAssignment = {
   pathExpression: string,
   key: string,
-  fragment: JSONValue,
+  value: JSONValue,
   token: JSONObject
 }
+
 /**
  * Creates a new preset arc that can read and may delete documents in a place
  * and wires the read data to a transition.
@@ -34,7 +36,7 @@ export class Arc {
   private filter: Filter
   public filterAssignments: Array<FilterAssignment>
   private _tokenVarName: string
-  private _fragmentVarName: string
+  private _valueVarName: string
   private _keyVarName: string
 
 
@@ -44,7 +46,7 @@ export class Arc {
     this.place = place
     this.transition = transition
     this._tokenVarName = '';
-    this._fragmentVarName = '';
+    this._valueVarName = '';
     this._keyVarName = '';
     this.updateVarNames(this.place.name, true);
     let filterExpression = '$.*'
@@ -54,9 +56,9 @@ export class Arc {
 
     this.filter = {
       filterExpression,
-      pathExpression: '',
+      pathExpression: null,
       key: '',
-      fragment: '',
+      value: '',
       token: {}
     }
     this.filterAssignments = this.applyFilterExpression(this.filter.filterExpression);
@@ -64,26 +66,26 @@ export class Arc {
 
   updateVarNames(placeName: string, initial = false) {
     const baseName = this.camelize(placeName);
-    let suffix;
+    let prefix;
     if (this.type === 'preset') {
-      suffix = 'Out';
+      prefix = 'input_';
     } else {
-      suffix = 'In';
+      prefix = 'output_';
     }
     
     const oldNames = {
       token: this._tokenVarName,
       key: this._keyVarName,
-      fragment: this._fragmentVarName
+      value: this._valueVarName
     }
-    this._tokenVarName = baseName + suffix;
-    this._fragmentVarName = baseName + 'Fragment' + suffix;
-    this._keyVarName = baseName + 'Key' + suffix;
+    this._tokenVarName = prefix + baseName + '_token';
+    this._valueVarName = prefix + baseName + '_value';
+    this._keyVarName = prefix + baseName + '_key';
 
     const newNames = {
       token: this._tokenVarName,
       key: this._keyVarName,
-      fragment: this._fragmentVarName
+      value: this._valueVarName
     }
 
     if (!initial) {
@@ -101,8 +103,8 @@ export class Arc {
     return this._tokenVarName
   }
 
-  get fragmentVarName() {
-    return this._fragmentVarName;
+  get valueVarName() {
+    return this._valueVarName;
   }
 
   get keyVarName() {
@@ -123,9 +125,9 @@ export class Arc {
       const pathExpression = pathExpressions[i]
       const key = getKey(pathExpression);
       const envPathExpression = getEnvPathExpression(pathExpression);
-      const fragment = getFragment(marking, pathExpression);
-      const token = getFragment(marking, envPathExpression);
-      filterAssignments.push({ pathExpression, key, fragment, token })
+      const value = getValue(marking, pathExpression);
+      const token = getValue(marking, envPathExpression);
+      filterAssignments.push({ pathExpression, key, value: value, token })
     }
     this.filterAssignments = filterAssignments;
     return filterAssignments;
@@ -144,21 +146,47 @@ export class Arc {
     return {
       pathExpression: this.filter.pathExpression,
       key: this.filter.key,
-      fragment: this.filter.fragment,
+      value: this.filter.value,
       token: this.filter.token
     }
   }
 
-  assignFilter(assignment: FilterAssignment) {
+  assignFilter(index: number) {
+    const assignment = this.filterAssignments[index];
     this.filter.pathExpression = assignment.pathExpression
-    this.filter.key = assignment.key;
-    this.filter.fragment = assignment.fragment;
     this.filter.token = assignment.token;
+
+    if (this.type === 'preset') {
+      this.filter.key = assignment.key;
+      this.filter.value = assignment.value;
+    }
+  }
+
+  assignKeyValueFilter(key: string, value: JSONValue) {
+    this.filter.key = key;
+    this.filter.value = value;
+  }
+
+  assignFilterByPath(path: string) {
+    const assignment = this.filterAssignments.find((assignment) => {
+      return assignment.pathExpression === path
+
+    })
+    if(!assignment) return false;
+    this.filter.pathExpression = assignment.pathExpression
+    this.filter.token = assignment.token;
+
+    if (this.type === 'preset') {
+      this.filter.key = assignment.key;
+      this.filter.value = assignment.value;
+    }
+
   }
 
   resetAssignment() {
+    this.filter.pathExpression = null;
     this.filter.key = '';
-    this.filter.fragment = '';
+    this.filter.value = '';
     this.filter.token = {};
   }
 

@@ -1,9 +1,10 @@
-import { unCacheSchema } from "@/util/jsonSchema";
+import type { JSONMarking, JSONObject } from "@/util/jsonOperations";
 import { Arc } from "./Arc";
 import { Place } from "./Place";
 import { Transition } from "./Transition";
-import type { JSONMarking, JSONObject, JSONValue } from "@/util/jsonOperations";
 
+import { unCacheSchema } from "@/util/jsonSchema";
+import { evaluateExpression, type EvaluationResult } from "@/util/jsonnet";
 import { v4 as uuid } from 'uuid'
 
 export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE'
@@ -18,31 +19,69 @@ export const EVENT_CONNECT = 'EVENT_CONNECT'
 export const EVENT_DISCONNECT = 'EVENT_DISCONNECT'
 
 export const EVENT_FIRE_ADD_FRAGMENT = 'EVENT_FIRE_ADD_FRAGMENT'
-export const EVENT_FIRE_REMOVE_FRAGMENT = 'EVENT_FIRE_REMOVE_FRAGMENT' 
+export const EVENT_FIRE_REMOVE_FRAGMENT = 'EVENT_FIRE_REMOVE_FRAGMENT'
 
 export const EVENT_NET_IMPORTED = 'EVENT_NET_IMPORTED'
 
-// Typescript config to make the class available as global property in typescript
-//declare module '@vue/runtime-core' {
-//  interface ComponentCustomProperties {
-//    $net: Net
-//  }
-//}
-//export {}
 export type TransitionData = {
-    name: string,
-    id: string,
-    preface: string,
-    guard: string
+  name: string,
+  id: string,
+  preface: string,
+  guard: string
 }
+
+export type PlaceData = {
+  name: string,
+  id: string,
+  marking: JSONMarking,
+  schema: JSONObject,
+  hasError: boolean,
+  errorType: 'name' | 'schema' | 'data' | 'none',
+  errorMessage: string | null
+}
+
+export type ArcData = {
+  id: string,
+  type: string
+  from: string,
+  to: string
+}
+
+export type FireEvent = {
+  arcID: string,
+  placeID: string,
+  num: number
+}
+
+export type ImportData = {
+  transitions: Array<TransitionData>,
+  places: Array<PlaceData>,
+  arcs: Array<ArcData>
+}
+
+export type AssignmentData = {
+  complete: boolean,
+  presetComplete: boolean,
+  postsetComplete: boolean
+}
+
+export type EvaluationData = {
+  hasAnyError: boolean,
+  preface: EvaluationResult, 
+  hasAnyOutputError?: boolean, 
+  outputValueVariables?: Record<string, EvaluationResult>, 
+  outputKeyVariables?: Record<string, EvaluationResult>, 
+  guard?: EvaluationResult
+} | false
+
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so
 let net: Net | null = null
 export function getNetInstance(): Net {
   if (net === null) {
     net = new Net();
-  } 
-  
+  }
+
   return net;
 }
 
@@ -51,40 +90,13 @@ export class Net {
   private _transitions: Array<Transition>
   private _places: Array<Place>
   private _arcs: Array<Arc>
-  private _notificationReceivers: Array<Function>
 
   constructor() {
     this._transitions = [];
     this._places = [];
     this._arcs = [];
-    this._notificationReceivers = [];
   }
 
-  /**
-   * Notifies the registered observer of events
-   * @param {String} event The event that occured.
-   * @param {Object} payload Message to send to the observer.
-   */
-  notify(event: string, payload: Object) {
-    for (let i = 0; i < this._notificationReceivers.length; i++) {
-      this._notificationReceivers[0](event, payload)
-    }
-  }
-
-  register(notificationReceiver: Function) {
-    this._notificationReceivers.push(notificationReceiver)
-  }
-
-
-  addPlace(placeID = uuid()) {
-    const shortID = placeID.substring(0, 4)
-    // todo: check uniqueness?
-    const name = 'place' + shortID;
-    const newPlace = new Place(placeID, name)
-    this._places.push(newPlace)
-    this.notify(EVENT_ADD_PLACE, { id: newPlace.id, name })
-    return newPlace
-  }
   /**
    * Finds a place by given ID.
    */
@@ -97,18 +109,21 @@ export class Net {
    * arcs that were connected to it.
    * @param {String} placeID The ID of the place to remove.
    */
-  removePlace(placeID: string) {
+  removePlace(placeID: string): Array<string> {
+    const removedElements = []
     this._places = this._places.filter((place) => {
       return place.id !== placeID
     })
-    this.notify(EVENT_REMOVE_PLACE, placeID)
+    removedElements.push(placeID);
 
     const arcsToremove = this._arcs.filter((arc) => {
       return arc.place.id === placeID
     })
     arcsToremove.forEach((arc) => {
       this.disconnect(arc.id)
+      removedElements.push(arc.id)
     })
+    return removedElements;
   }
 
   /**
@@ -117,10 +132,10 @@ export class Net {
    * @param {String} placeID The place to set the content.
    * @param {String} placeName Name of the place.
    */
-  updatePlace(placeID: string, placeName: string, schema: JSONObject, marking: JSONMarking) {
+  updatePlace(placeID: string, placeName: string, schema?: JSONObject, marking?: JSONMarking): PlaceData | false {
     const place = this.findPlace(placeID);
     if (!place) {
-      return;
+      return false;
     }
     if (placeName !== place.name) {
       place.name = placeName;
@@ -131,10 +146,34 @@ export class Net {
         connectedArcs[i].updateVarNames(placeName);
       }
     }
-    place.schema = schema;
-    place.marking = marking;
+    if (schema) place.schema = schema;
+    if (marking) place.marking = marking;
 
-    this.notify(EVENT_UPDATE_PLACE, { id: placeID, name: placeName, num: marking.length })
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
+  }
+
+  updatePlaceMarking(placeID: string, marking: JSONMarking): PlaceData | false {
+    const place = this.findPlace(placeID);
+    if (!place) {
+      return false;
+    }
+    place.marking = marking;
+    const checkResult = place.validateMarking(marking);
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
+  }
+
+  updatePlaceSchema(placeID: string, schema: JSONObject): PlaceData | false {
+    const place = this.findPlace(placeID);
+    if (!place) {
+      return false;
+    }
+
+    const checkResult = place.validateSchema(schema);
+    if (checkResult.schemaValid) {
+      place.schema = schema;
+    }
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
+
   }
 
   /**
@@ -162,12 +201,22 @@ export class Net {
   addTransition(transitionID: string = uuid()): TransitionData {
     const newTransition = new Transition(transitionID, 'transition')
     this._transitions.push(newTransition)
-    // this.notify(EVENT_ADD_TRANSITION, { id: newTransition.id, name: newTransition.name })
-    return { id: newTransition.id, 
-      name: newTransition.name, 
+    return {
+      id: newTransition.id,
+      name: newTransition.name,
       preface: newTransition.preface,
-      guard: newTransition.guard }
+      guard: newTransition.guard
+    }
   }
+
+  addPlace(placeID = uuid()): PlaceData {
+    const shortID = placeID.substring(0, 4)
+    const name = 'place' + shortID;
+    const newPlace = new Place(placeID, name)
+    this._places.push(newPlace)
+    return { id: newPlace.id, name: newPlace.name, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
+  }
+
 
   /**
    * Set the content of a transition (expected to be a Jsonnet string)
@@ -175,17 +224,17 @@ export class Net {
    * @param {Object} content
    * @param {String} name
    */
-  updateTransition(transitionID: string, name: string, preface?: string, guard?: string, fragmentVarSnippets?: Record<string, string>, keyVarSnippets?: Record<string, string>) {
+  updateTransition(transitionID: string, name: string, preface?: string, guard?: string, fragmentVarSnippets?: Record<string, string>, keyVarSnippets?: Record<string, string>): TransitionData | false {
     const transition = this.findTransition(transitionID)
     if (transition) {
-      // transition.content = content
       transition.name = name
-      if(guard) transition.guard = guard
-      if(preface) transition.preface = preface
-      if(keyVarSnippets) transition.keyVarSnippets = keyVarSnippets
-      if(fragmentVarSnippets) transition.fragmentVarSnippets = fragmentVarSnippets
-      this.notify(EVENT_UPDATE_TRANSITION, { transitionID, name })
+      if (guard !== undefined) transition.guard = guard
+      if (preface !== undefined) transition.preface = preface
+      if (keyVarSnippets !== undefined) transition.keyVarSnippets = keyVarSnippets
+      if (fragmentVarSnippets !== undefined) transition.valueVarSnippets = fragmentVarSnippets
+      return transition;
     }
+    return false;
   }
 
   updateTransitionSnippets(transitionID: string, arcID: string, keySnippet: string, fragmentSnippet: string) {
@@ -193,8 +242,7 @@ export class Net {
     const arc = this.findArc(arcID)
     if (!transition || !arc) return;
     transition.keyVarSnippets[arc.keyVarName] = keySnippet;
-    transition.fragmentVarSnippets[arc.fragmentVarName] = fragmentSnippet;
-
+    transition.valueVarSnippets[arc.valueVarName] = fragmentSnippet;
   }
 
   /**
@@ -205,6 +253,16 @@ export class Net {
     return this._transitions.find((transition) => transition.id === transitionID)
   }
 
+  assignFilterByPath(arcID: string, jsonPath: string): AssignmentData | false {
+    const arc = this.findArc(arcID);
+    if (!arc) return false;
+    arc.assignFilterByPath(jsonPath);
+    const complete = arc.transition.hasCompleteAssignment()
+    const presetComplete = arc.transition.hasCompletePresetAssignment()
+    const postsetComplete = arc.transition.hasCompletePostsetAssignment()
+    return { complete, presetComplete, postsetComplete }
+  }
+
 
 
   /**
@@ -212,7 +270,8 @@ export class Net {
    * any connected arcs.
    * @param {String} transitionID The ID of the transition to remove.
    */
-  removeTransition(transitionID: string) {
+  removeTransition(transitionID: string): Array<string> {
+    const removedElements = []
     let transitionToRemove = this.findTransition(transitionID);
     const newTransitionsList = this._transitions.filter((transition) => {
       if (transition.id === transitionID) {
@@ -223,16 +282,19 @@ export class Net {
       }
     })
 
-    if (!transitionToRemove) return;
+    if (!transitionToRemove) return [];
+    removedElements.push(transitionToRemove.id)
 
     transitionToRemove.preset.forEach((arc: Arc) => {
       this.disconnect(arc.id)
+      removedElements.push(arc.id)
     })
     transitionToRemove.postset.forEach((arc) => {
       this.disconnect(arc.id)
+      removedElements.push(arc.id)
     })
     this._transitions = newTransitionsList
-    this.notify(EVENT_REMOVE_TRANSITION, transitionID)
+    return removedElements;
   }
 
   /**
@@ -241,39 +303,30 @@ export class Net {
    * @param {String} toID ID of the incoming node.
    * @param {String} arcID Optional predefined ID of arc.
    */
-  connect(fromID: string, toID: string, arcID: string = uuid()): Arc | false {
-    // console.log('connecting ' + fromID + ' with ' + toID)
-    // const nodes: Array<Place|Transition> = _places.concat(_transitions)
+  connect(fromID: string, toID: string, arcID: string = uuid()): ArcData | false {
     const nodes = [...this._places, ...this._transitions]
     const from = nodes.find((node) => node.id === fromID)
     const to = nodes.find((node) => node.id === toID)
     let arc
     if (from instanceof Place) {
       if (to instanceof Place) {
-        // console.log("Can't connect Place with Place.")
       } else if (to instanceof Transition) {
         arc = new Arc(from, to, "preset", arcID)
         this._arcs.push(arc)
         to.connectArc(arc);
-        // to.preset.push(arc)
       } else {
-        // console.log('Can only connect Places and Transitions.')
       }
     } else if (from instanceof Transition) {
       if (to instanceof Transition) {
-        // console.log("Can't connect Transition with Transition.")
       } else if (to instanceof Place) {
         arc = new Arc(to, from, "postset", arcID)
         this._arcs.push(arc)
         from.connectArc(arc);
-        // from.postset.push(arc)
       } else {
-        // console.log('Can only connect Places and Transitions.')
       }
     }
     if (arc && from && to) {
-      this.notify(EVENT_CONNECT, { from: from.id, to: to.id, arcID, jsonnetsType: arc.type })
-      return arc
+      return { id: arc.id, type: arc.type, from: from.id, to: to.id }
     } else {
       return false
     }
@@ -287,21 +340,8 @@ export class Net {
     const arc = this.findArc(arcID);
     if (!arc) return;
     arc.transition.disconnectArc(arc);
-    // remove from all transitions
-    // this._transitions.forEach((transition) => {
-          // transition.disconnectArc(arcID)
-          // transition.preset = transition.preset.filter((arc) => {
-            // return arc.id !== arcID
-          // })
-          // transition.postset = transition.postset.filter((arc) => {
-            // return arc.id !== arcID
-          // })
-        // })
-
     this._arcs = this._arcs.filter((arc) => {
       if (arc.id === arcID) {
-        this.notify(EVENT_DISCONNECT, arcID)
-
         return false
       } else {
         return true
@@ -322,59 +362,47 @@ export class Net {
    * @param {String} arcID The ID of the arc to add the label to.
    * @param {Object} label The label to set.
    */
-  updateArc(arcID: string, inscription: string) {
+  updateArc(arcID: string, inscription: string): ArcData | false {
     const arc = this._arcs.find((arc) => arc.id === arcID)
-    if (!arc) return;
+    if (!arc) return false;
     arc.filterExpression = inscription;
-    // if (arc instanceof PostsetArc) {
-    // arc.label = String(label)
-    // } else if (arc instanceof PresetArc){
-    //Todo: this doesn't feel right
-    // arc.label = <PresetArcLabel>label
-    // }
-  }
-
-  fireUnderCurrentAssignment(transitionID: string) {
-    const transition = this.findTransition(transitionID);
-    if(!transition) return;
-    if(!transition.isEnabledForCurrentAssignment()) return;
-    transition.fire()
-    transition.preset.forEach((arc) =>
-      this.notify(EVENT_FIRE_REMOVE_FRAGMENT, {
-        arcID: arc.id,
-        placeID: arc.place.id,
-        num: arc.place.marking.length
-      })
-    )
-    transition.postset.forEach((arc) =>
-      this.notify(EVENT_FIRE_ADD_FRAGMENT, {
-        arcID: arc.id,
-        placeID: arc.place.id,
-        num: arc.place.marking.length
-      })
-    )
-  }
-
-  fireUnderAnyAssignment(transitionID: string) {
-    const transition = this.findTransition(transitionID);
-    if(!transition) return;
-    const hasValidAssignment = transition.findAssignment();
-    if(hasValidAssignment) {
-      this.fireUnderCurrentAssignment(transitionID);
-      return true;
+    let from, to = '';
+    if (arc.type === 'preset') {
+      from = arc.place.id
+      to = arc.transition.id
     } else {
-      return false;
+      from = arc.transition.id
+      to = arc.place.id
+    }
+    return { from, to, id: arc.id, type: arc.type }
+  }
+
+  fireUnderCurrentAssignment(transitionID: string): Array<FireEvent> {
+    const transition = this.findTransition(transitionID);
+    if (!transition) return [];
+
+    return transition.fire();
+  }
+
+  fireUnderAnyAssignment(transitionID: string): Array<FireEvent> {
+    const transition = this.findTransition(transitionID);
+    if (!transition) return [];
+    const hasValidAssignment = transition.findAssignment();
+    if (hasValidAssignment) {
+      return this.fireUnderCurrentAssignment(transitionID);
+    } else {
+      return [];
     }
   }
 
-  fireAny() {
+  fireAny(): Array<FireEvent> {
     for (let i = 0; i < this._transitions.length; i++) {
       let transition = this._transitions[i]
       if (transition.findAssignment()) {
-        this.fireUnderCurrentAssignment(transition.id)
-        break
+        return this.fireUnderCurrentAssignment(transition.id)
       }
     }
+    return []
   }
 
   export() {
@@ -400,7 +428,7 @@ export class Net {
         preface: transition.preface,
         guard: transition.guard,
         keyVarSnippets: transition.keyVarSnippets,
-        fragmentVarSnippets: transition.fragmentVarSnippets
+        fragmentVarSnippets: transition.valueVarSnippets
       })
     }
 
@@ -417,8 +445,6 @@ export class Net {
 
       arcsExportArray.push({
         id: arc.id,
-        // type: arc.type,
-        // label: arc.label,
         filter: arc.filterExpression,
         fromId,
         toId
@@ -430,11 +456,24 @@ export class Net {
       arcs: arcsExportArray
     }
 
-    // Convert JSON string to BLOB.
-    // const json = JSON.stringify(exportData)
     return exportData
+  }
 
-    // return ''
+  assignOutputVariables(id: string) {
+    const transition = this.findTransition(id);
+    if(!transition) return;
+
+
+    for (let i = 0; i < transition.postset.length; i++) {
+      const arc = transition.postset[i];
+      const variables = transition.assembleOutputVariables(transition.assembleInputVariables());
+      if (variables) {
+        // todo: ensure that keys are always strings
+        //@ts-ignore
+        arc.assignKeyValueFilter(JSON.parse((variables[arc.keyVarName])), JSON.parse(variables[arc.valueVarName]));
+      }
+    }
+
   }
 
   clear() {
@@ -448,41 +487,99 @@ export class Net {
     }
   }
 
-  import(json: any, layout: JSONObject) {
+  import(json: any): ImportData {
     this.clear()
-    console.log(json)
-
-    // let isExample = false
-    // if (json === 'example') {
-      // isExample = true
-      // data = JSON.parse('{}')
-    // } else {
-    // }
-    // else {
-      // data = JSON.parse(json)
-    // }
+    const importData: ImportData = {
+      places: [],
+      transitions: [],
+      arcs: []
+    }
 
     for (let i = 0; i < json.places.length; i++) {
       let place = json.places[i]
       this.addPlace(place.id)
-      this.updatePlace(place.id, place.name, place.schema, place.marking);
+      const placeData = this.updatePlace(place.id, place.name, place.schema, place.marking)
+      if (placeData) {
+        importData.places.push(placeData);
+      }
     }
 
     for (let i = 0; i < json.transitions.length; i++) {
       let transition = json.transitions[i]
       this.addTransition(transition.id)
-      console.log(transition)
-      this.updateTransition(transition.id, transition.name, transition.preface, transition.guard, transition.fragmentVarSnippets, transition.keyVarSnippets)
+      const transitionData = this.updateTransition(transition.id, transition.name, transition.preface, transition.guard, transition.fragmentVarSnippets, transition.keyVarSnippets)
+      if (transitionData) {
+        importData.transitions.push(transitionData);
+
+      }
     }
 
+    // todo: probably makes sense to also return arcData, but current editor doesn't need this
     for (let i = 0; i < json.arcs.length; i++) {
       let arc = json.arcs[i]
       this.connect(arc.fromId, arc.toId, arc.id)
-      this.updateArc(arc.id, arc.filter)
-      // setArcLabel(arc.id, arc.label)
+      const arcData = this.updateArc(arc.id, arc.filter)
+      if (arcData) {
+        importData.arcs.push(arcData);
+      }
     }
 
-    this.notify(EVENT_NET_IMPORTED, { layout })
+    return importData;
+  }
 
+  getEvaluations(id: string): EvaluationData {
+    const transition = this.findTransition(id);
+    if (!transition) return false;
+
+    let hasAnyError = false;
+    let hasAnyOutputError = false;
+    const preface = evaluateExpression(transition.preface + ' true')
+    if (preface.hasError) {
+      hasAnyError = true;
+      return { hasAnyError, preface }
+    }
+
+    const inputVariables = transition.assembleInputVariables();
+    const outputTokenVariables = transition.assembleOutputTokenVariables();
+    const variables = { ...inputVariables, ...outputTokenVariables };
+
+    const valueVariables = Object.keys(transition.valueVarSnippets);
+    const outputValueVariables: Record<string, EvaluationResult> = {};
+    // this is somewhat duplicated with transition logic, but I want this function
+    // to give more verbose info to the ui
+    for (let i = 0; i < valueVariables.length; i++) {
+      const varName = valueVariables[i];
+      let valueVarSnippet = transition.preface;
+      valueVarSnippet += transition.valueVarSnippets[varName] + varName;
+      const valueResult = evaluateExpression(valueVarSnippet, variables);
+      outputValueVariables[varName] = valueResult;
+      if (valueResult.hasError) {
+        hasAnyError = true;
+        hasAnyOutputError = true;
+      }
+    }
+
+    const keyVariables = Object.keys(transition.keyVarSnippets);
+    const outputKeyVariables: Record<string, EvaluationResult> = {};
+    for (let i = 0; i < keyVariables.length; i++) {
+      const varName = keyVariables[i];
+      let keyVarSnippet = transition.preface;
+      keyVarSnippet += transition.keyVarSnippets[varName] + varName;
+      const valueResult = evaluateExpression(keyVarSnippet, variables);
+      outputKeyVariables[varName] = valueResult;
+      if (valueResult.hasError) {
+        hasAnyError = true;
+        hasAnyOutputError = true;
+      }
+    }
+
+    if (hasAnyOutputError) {
+      return { hasAnyError, hasAnyOutputError, preface, outputKeyVariables, outputValueVariables }
+    }
+
+
+    const guard = transition.evaluateGuard()
+    if (guard.hasError) hasAnyError = true;
+    return { hasAnyOutputError, hasAnyError, preface, outputValueVariables, outputKeyVariables, guard }
   }
 }

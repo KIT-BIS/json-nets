@@ -111,12 +111,7 @@ export function deepRemove(pathExpression: string, complexValue: JSONComplex) {
     const parentPathExpression = getParentPathExpression(pathExpression);
     const key = getKey(pathExpression);
     const parent = getFragment(complexValue, parentPathExpression);
-    // console.log('before:')
-    // console.log(JSON.stringify(parent))
-    // console.log(JSON.stringify(complexValue))
     remove(key, parent);
-    // console.log('after:') // console.log(JSON.stringify(parent))
-    // console.log(JSON.stringify(complexValue))
     return complexValue;
 
 }
@@ -127,6 +122,7 @@ export function deepInsert(pathExpression: string, complexValue: JSONComplex, ke
         throw Error('value not valid for path expression')
     }
 
+    console.log('deep insert')
     const parent = getFragment(complexValue, pathExpression);
     if (isComplex(parent)) {
         insert(key, parent, toInsert);

@@ -13,7 +13,7 @@
                             </p>
                             <p class="control">
                                 <span class="select is-small">
-                                    <select v-model="transitionsStore.selectedOutputIndex" @change="onOutputSelect">
+                                    <select v-model="transitionsStore.selectedOutputPlaceIndex" @change="onOutputPlaceSelect">
                                         <option v-for="(arc, index) in transitionsStore.outputArcs" :value="index">{{ arc.name }}</option>
                                     </select>
                                 </span>
@@ -22,16 +22,16 @@
                         </div>
                     </div>
                </div>
-                <!-- <div class="level-right">
+                <div v-if="!transitionsStore.postsetAssignmentComplete" class="level-right">
                     <div class="level-item">
-                        <span class="icon is-small has-text-danger"><font-awesome-icon
-                                icon="fas fa-triangle-exclamation"></font-awesome-icon>
+                        <span 
+                            class="icon is-small has-text-warning is-clickable mr-2 has-tooltip-bottom"
+                            data-tooltip="Some places have unselected values."
+                        >
+                            <font-awesome-icon icon="fas fa-triangle-exclamation"></font-awesome-icon>
                         </span>
-
                     </div>
                 </div>
- -->
-
             </div>
             <div class="level mb-4">
                 <div class="level-left">
@@ -41,7 +41,16 @@
                         <font-awesome-icon icon="fas fa-filter"></font-awesome-icon>
                     </span>
  
-                    <span class="has-text-grey" >{{ transitionsStore.outputArcs[transitionsStore.selectedOutputIndex].filtered.length }} selectable values</span>
+                    <span class="has-text-grey" >{{ transitionsStore.outputArcs[transitionsStore.selectedOutputPlaceIndex].filtered.length }} selectable values</span>
+                    &nbsp;<HelpButton class="has-text-grey-light"
+                      help-text="
+                      You can edit the filter to make other values selectable. Filter expressions are written in 
+                      <a href='https://goessner.net/articles/JSONPath/' target='_blank'>
+                        JsonPath
+                      </a>.
+                      "
+                    />
+ 
                    </span>
                 </div>
                 <div v-else class="level-item">
@@ -50,8 +59,8 @@
                     </span>
  
                     <input 
-                        @input="transitionsStore.updateOutputFilter"
-                        style="width: 100px" class="input is-small mr-1" v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputIndex].filter"/>
+                        @input="onFilterOutput"
+                        style="width: 100px" class="input is-small mr-1" v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputPlaceIndex].filter"/>
                     <button class="mr-1 button is-small " @click="cancelFilterEdit">
                         <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
                     </button>
@@ -64,18 +73,16 @@
             </div>
             <div class="scoped-scrollable jsn-code p-2">
                 <vue-json-pretty 
-                    :data="transitionsStore.outputArcs[transitionsStore.selectedOutputIndex].marking" 
-                    @selected-change="onSelectClick" 
-                    :selected-value="transitionsStore.selectedOutputValue"
+                    :key="transitionsStore.outputDataKey"
+                    :data="transitionsStore.outputArcs[transitionsStore.selectedOutputPlaceIndex].marking" 
+                    @selected-change="onSelectValueClick" 
+                    :selected-value="selectedOutputValueDotsBracketsPath"
                     selectable-type="single"
                     :select-on-click-node="true"
                     :show-select-controller="true"
                     :node-selectable="valueSelectable"
                     :show-icon="true" />
 
-                    <!-- @node-click="onValueClick" -->
-                <!-- :virtual="true" -->
-                <!-- :render-node-value="({node, defaultValue}) => { return createNode(node)}" -->
             </div>
             </div>
             <div v-else class="notification is-info is-light is-size-7">Transition has no output places.</div>
@@ -87,23 +94,46 @@
 import VueJsonPretty from 'vue-json-pretty';
 import 'vue-json-pretty/lib/styles.css';
 
-import { defineComponent } from 'vue';
+import { defineComponent, toRaw } from 'vue';
 import { mapStores } from 'pinia';
-import { useTransitionsStore } from '@/stores/transitions';
+import { useTransitionsStore } from '@/stores/transition';
 import type { NodeDataType } from 'vue-json-pretty/types/components/TreeNode';
 import { dotsAndBracketsToJSONPointer } from '@/util/jsonPointer'
+import HelpButton from '../_shared/HelpButton.vue';
 
 export default defineComponent({
     components: {
-        VueJsonPretty
+        VueJsonPretty,
+        HelpButton
     },
     data() {
         return {
             showFilterOutput: false,
+            pathDictionary: {} as Record<string, string>
         }
     },
     computed: {
-        ...mapStores(useTransitionsStore)
+        ...mapStores(useTransitionsStore),
+        selectedOutputValueDotsBracketsPath: {
+            get(): string {
+                const path = this.transitionsStore.selectedOutputValueJsonPath
+                if (path === 'none') {
+                    return 'none'
+                }
+                const dotsBracketsPath = this.pathDictionary[path];
+                if(dotsBracketsPath) {
+                    return dotsBracketsPath;
+                } else {
+                    return 'none';
+                };               
+            },
+            set(value: string) {
+
+            }
+        }
+    },
+    created() {
+        this.pathDictionary = {};
     },
     methods: {
         cancelFilterEdit() {
@@ -114,44 +144,44 @@ export default defineComponent({
             this.transitionsStore.saveOutputFilter();
             this.showFilterOutput = false;
         },
-        onOutputSelect() {
-            // this.transitionsStore.updateInput();
+        onFilterOutput() {
+            this.transitionsStore.unsetCurrentOutputAssignment()
+            this.pathDictionary = {};
+            this.transitionsStore.loadAvailableOutputAssignments()
+        },
+        onOutputPlaceSelect() {
             this.showFilterOutput = false;
+            this.pathDictionary = {};
+            this.transitionsStore.loadCurrentOutputAssignment();
+
         },
+
         valueSelectable(node: NodeDataType) {
-            const stripRoot = node.path.substring(4);
-            const jsonPath = dotsAndBracketsToJSONPointer(stripRoot);
-            // console.log(jsonPath);
-            const filteredPaths = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputIndex].filtered;
-            // console.log(selectedPaths);
-            return filteredPaths.includes(jsonPath);
+            let jsonPath = '';
+                const stripRoot = node.path.substring(4);
+                jsonPath = dotsAndBracketsToJSONPointer(stripRoot);
+
+            const filteredPaths = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputPlaceIndex].filtered;
+            const isSelectable = filteredPaths.includes(jsonPath);
+
+            if (isSelectable) {
+                this.pathDictionary[jsonPath] = node.path;
+            }
+            return isSelectable;
         },
-        // onValueClick(node: NodeDataType) {
-//            if (this.valueSelectable(node)) {
-//                console.log('selectable')
-//                console.log(node.path)
-//                this.transitionsStore.selectedValue = node.path
-//                console.log(this.transitionsStore.selectedValue)
-        // },
-        onSelectClick(newValue: string | string[], oldValue: string | string[]) {
-            // console.log('onSelectClick')
-            // console.log(oldValue)
-            // console.log(newValue)
+        onSelectValueClick(newValue: string | string[], oldValue: string | string[]) {
             if(Array.isArray(newValue)) return;
 
-            this.transitionsStore.selectedOutputValue = newValue;
             const stripRoot = newValue.substring(4);
             const jsonPath = dotsAndBracketsToJSONPointer(stripRoot);
 
-            this.transitionsStore.setSelectedOutputValue(jsonPath);
+            this.transitionsStore.saveSelectedAssignment(jsonPath, 'output');
         }
     }
  
 })
 </script>
 <style scoped>
-
-
 .scoped-modal-side {
     width: 30%;
     height: 80%;

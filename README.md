@@ -6,16 +6,12 @@ This editor is available to try at https://kit-bis.github.io/json-nets/.
 
 Different JSON technologies can be used for inscriptions:
 - Places are inscribed with [JSON-Schema](https://json-schema.org/).
-- Arcs from places to transitions are inscribed with a [JSONPath-filter](https://github.com/dchester/jsonpath).
-- Transitions and arcs from transitions to places are inscribed with [Jsonnet](https://jsonnet.org/).
+- Arcs are inscribed with a [JSONPath-filter](https://github.com/dchester/jsonpath).
+- Transitions are inscribed with [Jsonnet](https://jsonnet.org/).
 
 **Disclaimer:** The editor is currently under heavy development and not production-ready. If you want to contribute, or have any comments, write an email to andreas.fritsch@kit.edu
 
 Main Developer: Andreas Fritsch. Contributions: Martin Forell, Hanna Lagemann.
-
-## Known issues
-
-Email format is currently not supported for the JSON schema implementation.
 
 ## Development 
 ### Recommended IDE Setup

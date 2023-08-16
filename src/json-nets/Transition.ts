@@ -218,7 +218,7 @@ export class Transition {
       let fragmentSnippet = this.preface;
       fragmentSnippet += this.valueVarSnippets[arc.valueVarName] + arc.valueVarName; 
       const fragmentResult = evaluateExpression(fragmentSnippet, variables, this.name);
-      console.log(fragmentResult)
+      // console.log(fragmentResult)
       if (fragmentResult.hasError) return false;
       variables[arc.valueVarName] = fragmentResult.evaluation;
       arc.currentAssignment.value = fragmentResult.evaluation;
@@ -269,11 +269,16 @@ export class Transition {
       // transition can only fire if pathExpression != null
       if (arc.currentAssignment.pathExpression === null) return false;
     }
+    const variables = this.assembleVariables();
+    if(!variables) return false;
 
     for (let i = 0; i < this.postset.length; i++) {
       const arc = this.postset[i];
       if (arc.currentAssignment.pathExpression === null) return false;
+      arc.assignKeyValueFilter(JSON.parse(variables[arc.keyVarName]), JSON.parse(variables[arc.valueVarName]));
     }
+
+    // todo: assign key/value for eachpstset arc
 
     const result = this.evaluateGuard()
     if (result.hasError) return false;

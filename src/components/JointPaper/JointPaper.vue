@@ -83,10 +83,13 @@ export default defineComponent({
       place.attr('.label/text', placeData.name)
 
     },
-    'netStore.lastUpdatedTransition'(transData: TransitionData) {
-      const transition = _graph.getCell(transData.id)
-      transition.attr('.label/text', transData.name)
-
+    'netStore.lastUpdatedTransition.name'(name: string) {
+        console.log('name changed')
+        console.log(name)
+        const transition = _graph.getCell(this.netStore.lastUpdatedTransition.id)
+        if (transition) {
+          transition.attr('.label/text', name)
+        }
     },
     'netStore.lastFiredArcs'(fireData: Array<FireEvent>) {
       for (let i = 0; i < fireData.length; i++) {

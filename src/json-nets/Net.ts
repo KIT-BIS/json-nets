@@ -232,7 +232,7 @@ export class Net {
       if (preface !== undefined) transition.preface = preface
       if (keyVarSnippets !== undefined) transition.keyVarSnippets = keyVarSnippets
       if (fragmentVarSnippets !== undefined) transition.valueVarSnippets = fragmentVarSnippets
-      return transition;
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard };
     }
     return false;
   }

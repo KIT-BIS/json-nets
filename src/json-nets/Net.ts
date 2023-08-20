@@ -1,4 +1,4 @@
-import type { JSONMarking, JSONObject } from "@/util/jsonOperations";
+import type { JSONMarking, JSONObject, JSONValue } from "@/util/jsonOperations";
 import { Arc } from "./Arc";
 import { Place } from "./Place";
 import { Transition } from "./Transition";
@@ -6,22 +6,6 @@ import { Transition } from "./Transition";
 import { unCacheSchema } from "@/util/jsonSchema";
 import { evaluateExpression, type EvaluationResult } from "@/util/jsonnet";
 import { v4 as uuid } from 'uuid'
-
-export const EVENT_ADD_PLACE = 'EVENT_ADD_PLACE'
-export const EVENT_REMOVE_PLACE = 'EVENT_REMOVE_PLACE'
-export const EVENT_UPDATE_PLACE = 'EVENT_UPDATE_PLACE'
-
-export const EVENT_ADD_TRANSITION = 'EVENT_ADD_TRANSITION'
-export const EVENT_REMOVE_TRANSITION = 'EVENT_REMOVE_TRANSITION'
-export const EVENT_UPDATE_TRANSITION = 'EVENT_UPDATE_TRANSITION'
-
-export const EVENT_CONNECT = 'EVENT_CONNECT'
-export const EVENT_DISCONNECT = 'EVENT_DISCONNECT'
-
-export const EVENT_FIRE_ADD_FRAGMENT = 'EVENT_FIRE_ADD_FRAGMENT'
-export const EVENT_FIRE_REMOVE_FRAGMENT = 'EVENT_FIRE_REMOVE_FRAGMENT'
-
-export const EVENT_NET_IMPORTED = 'EVENT_NET_IMPORTED'
 
 export type TransitionData = {
   name: string,
@@ -67,6 +51,7 @@ export type AssignmentData = {
 
 export type EvaluationData = {
   hasAnyError: boolean,
+  variables: Record<string, JSONValue>,
   preface: EvaluationResult, 
   hasAnyOutputError?: boolean, 
   outputValueVariables?: Record<string, EvaluationResult>, 
@@ -256,7 +241,12 @@ export class Net {
   assignFilterByPath(arcID: string, jsonPath: string): AssignmentData | false {
     const arc = this.findArc(arcID);
     if (!arc) return false;
-    arc.assignFilterByPath(jsonPath);
+
+    if (arc.type === 'preset') {
+      arc.assignVariablesByPathExpression(jsonPath);
+    } else if (arc.type === 'postset') {
+      arc.assignTokenVariableByPathExpression(jsonPath);
+    }
     const complete = arc.transition.hasCompleteAssignment()
     const presetComplete = arc.transition.hasCompletePresetAssignment()
     const postsetComplete = arc.transition.hasCompletePostsetAssignment()
@@ -387,9 +377,10 @@ export class Net {
   fireUnderAnyAssignment(transitionID: string): Array<FireEvent> {
     const transition = this.findTransition(transitionID);
     if (!transition) return [];
+
     const hasValidAssignment = transition.findAssignment();
     if (hasValidAssignment) {
-      return this.fireUnderCurrentAssignment(transitionID);
+      return transition.fire();
     } else {
       return [];
     }
@@ -399,7 +390,7 @@ export class Net {
     for (let i = 0; i < this._transitions.length; i++) {
       let transition = this._transitions[i]
       if (transition.findAssignment()) {
-        return this.fireUnderCurrentAssignment(transition.id)
+        return transition.fire();
       }
     }
     return []
@@ -465,12 +456,12 @@ export class Net {
 
 
     for (let i = 0; i < transition.postset.length; i++) {
-      const arc = transition.postset[i];
-      const variables = transition.assembleOutputVariables(transition.assembleInputVariables());
+      const arc: Arc = transition.postset[i];
+      const variablesFromPathAssignments = transition.assembleVariablesFromPathAssignments();
+      const variables = transition.assignOutputKeyValueVariables(variablesFromPathAssignments);
       if (variables) {
         // todo: ensure that keys are always strings
-        //@ts-ignore
-        arc.assignKeyValueFilter(JSON.parse((variables[arc.keyVarName])), JSON.parse(variables[arc.valueVarName]));
+        arc.assignKeyAndValueVariables(String(variables[arc.keyVarName]), variables[arc.valueVarName]);
       }
     }
 
@@ -527,21 +518,32 @@ export class Net {
     return importData;
   }
 
+  //getVariablesFromPathAssignments(id: string) {
+  //  const transition = this.findTransition(id);
+  //  if (!transition) return {};
+
+  //  const variables = transition.assembleVariablesFromPathAssignments();
+  //  return variables;
+  //}
+
   getEvaluations(id: string): EvaluationData {
     const transition = this.findTransition(id);
     if (!transition) return false;
 
+
+
+    // const inputVariables = transition.assembleInputVariables();
+    // const outputTokenVariables = transition.assembleOutputTokenVariables();
+    // const variables = { ...inputVariables, ...outputTokenVariables };
+    const variables = transition.assembleVariablesFromPathAssignments();
+
     let hasAnyError = false;
     let hasAnyOutputError = false;
-    const preface = evaluateExpression(transition.preface + ' true')
+    const preface = evaluateExpression(transition.preface + ' true', variables)
     if (preface.hasError) {
       hasAnyError = true;
-      return { hasAnyError, preface }
+      return { hasAnyError, preface, variables }
     }
-
-    const inputVariables = transition.assembleInputVariables();
-    const outputTokenVariables = transition.assembleOutputTokenVariables();
-    const variables = { ...inputVariables, ...outputTokenVariables };
 
     const valueVariables = Object.keys(transition.valueVarSnippets);
     const outputValueVariables: Record<string, EvaluationResult> = {};
@@ -574,12 +576,17 @@ export class Net {
     }
 
     if (hasAnyOutputError) {
-      return { hasAnyError, hasAnyOutputError, preface, outputKeyVariables, outputValueVariables }
+      return { hasAnyError, variables, hasAnyOutputError, preface, outputKeyVariables, outputValueVariables }
     }
 
 
-    const guard = transition.evaluateGuard()
+    const allVars = transition.assignOutputKeyValueVariables(variables)
+    if (!allVars) {
+      // todo: better solution than this if
+      return { hasAnyOutputError, hasAnyError, variables, preface, outputValueVariables, outputKeyVariables, guard: { evaluation: 'Output expressions have errors.', hasError: true } }
+    }
+    const guard = transition.evaluateGuard(allVars);
     if (guard.hasError) hasAnyError = true;
-    return { hasAnyOutputError, hasAnyError, preface, outputValueVariables, outputKeyVariables, guard }
+    return { hasAnyOutputError, hasAnyError, preface, variables: allVars, outputValueVariables, outputKeyVariables, guard }
   }
 }

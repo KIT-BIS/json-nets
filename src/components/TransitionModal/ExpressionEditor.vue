@@ -28,7 +28,7 @@
                                             <ul v-if="activeItems.includes(arc.name)">
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.keyVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.keyVar)"
                                                         @click="() => { insertVariableName(arc.keyVar) }">
                                                         <span class="has-text-weight-semibold">Key </span><br />
                                                         <span class="is-family-code">{{ arc.keyVar }}</span>
@@ -36,7 +36,7 @@
                                                 </li>
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.valueVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.valueVar)"
                                                         @click="() => { insertVariableName(arc.valueVar) }">
                                                         <span class="has-text-weight-semibold">Value </span><br />
                                                         <span class="is-family-code">{{ arc.valueVar }}</span>
@@ -44,7 +44,7 @@
                                                 </li>
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.tokenVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.tokenVar)"
                                                         @click="() => { insertVariableName(arc.tokenVar) }">
                                                         <span class="has-text-weight-semibold">Token </span><br />
                                                         <span class="is-family-code">{{ arc.tokenVar }}</span>
@@ -62,7 +62,7 @@
                                             <ul v-if="activeItems.includes(arc.name)">
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.keyVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.keyVar)"
                                                         @click="() => { insertVariableName(arc.keyVar) }">
                                                         <span class="has-text-weight-semibold">Key </span><br />
                                                         <span class="is-family-code">{{ arc.keyVar }}</span>
@@ -70,7 +70,7 @@
                                                 </li>
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.valueVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.valueVar)"
                                                         @click="() => { insertVariableName(arc.valueVar) }">
                                                         <span class="has-text-weight-semibold">Value </span><br />
                                                         <span class="is-family-code">{{ arc.valueVar }}</span>
@@ -78,7 +78,7 @@
                                                 </li>
                                                 <li>
                                                     <a class="has-tooltip-bottom"
-                                                        :data-tooltip="JSON.stringify(transitionsStore.variables[arc.tokenVar], null, 2)"
+                                                        :data-tooltip="getVariableTooltip(arc.tokenVar)"
                                                         @click="() => { insertVariableName(arc.tokenVar) }">
                                                         <span class="has-text-weight-semibold">Token </span><br />
                                                         <span class="is-family-code">{{ arc.tokenVar }}</span>
@@ -132,16 +132,24 @@
                                 <div class="control is-small jsn-code">
                                     <Codemirror v-if="uiStateStore.showEditor === 'guard'" placeholder="Enter guard expression ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                        v-model="transitionsStore.transition.guard" />
+                                        v-model="transitionsStore.transition.guard" 
+                                        @ready="onEditorReady"
+                                        />
                                     <Codemirror v-if="uiStateStore.showEditor === 'preface'" placeholder="Enter preface ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                        v-model="transitionsStore.transition.preface" />
+                                        v-model="transitionsStore.transition.preface" 
+                                        @ready="onEditorReady"
+                                        />
                                     <Codemirror v-if="uiStateStore.showEditor === 'key'" placeholder="Enter output key expression ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                        v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].keySnippet" />
+                                        v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].keySnippet" 
+                                        @ready="onEditorReady"
+                                        />
                                     <Codemirror v-if="uiStateStore.showEditor === 'value'" placeholder="Enter output value expression ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                        v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].valueSnippet" />
+                                        v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].valueSnippet" 
+                                        @ready="onEditorReady"
+                                        />
                                 </div>
 
                             </div>
@@ -319,8 +327,6 @@ export default defineComponent({
             return this.transitionsStore.valueEvaluationResults[valueVar].evaluation;
         },
 
-
-
         ...mapStores(useUiStateStore),
         ...mapStores(useTransitionsStore)
     },
@@ -335,6 +341,14 @@ export default defineComponent({
         }
     },
     methods: {
+        getVariableTooltip(varName: string) {
+            if (this.transitionsStore.variables[varName] !== undefined) {
+                return JSON.stringify(this.transitionsStore.variables[varName], null, 2);
+            } else {
+                return "Variable has no value assigned.";
+            }
+        },
+
         expandExamples() {
             this.expandedExamples = !this.expandedExamples;
         },

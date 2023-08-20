@@ -116,12 +116,12 @@ export const useTransitionsStore = defineStore('transitions', {
                 this.presetAssignmentComplete = assignment.presetComplete;
                 this.postsetAssignmentComplete = assignment.postsetComplete;
 
-                if (assignment.complete) {
+                // if (assignment.complete) {
                     this.loadEvaluations()
                     if (!this.hasAnyError) {
                         getNetInstance().assignOutputVariables(arcID)
                     }
-                }
+                // }
             }
             // else some error
         },
@@ -131,8 +131,8 @@ export const useTransitionsStore = defineStore('transitions', {
             const arc = getNetInstance().findArc(arcID);
             if (!arc) return;
 
-            if (arc.currentAssignment.pathExpression !== null) {
-                this.selectedInputValueJsonPath = arc.currentAssignment.pathExpression;
+            if (arc.assignedPathExpression !== null) {
+                this.selectedInputValueJsonPath = arc.assignedPathExpression;
             } else {
                 this.selectedInputValueJsonPath = 'none';
             }
@@ -142,8 +142,8 @@ export const useTransitionsStore = defineStore('transitions', {
             const arc = getNetInstance().findArc(arcID);
             if (!arc) return;
 
-            if (arc.currentAssignment.pathExpression !== null) {
-                this.selectedOutputValueJsonPath = arc.currentAssignment.pathExpression;
+            if (arc.assignedPathExpression !== null) {
+                this.selectedOutputValueJsonPath = arc.assignedPathExpression;
             } else {
                 this.selectedOutputValueJsonPath = 'none';
             }
@@ -157,7 +157,7 @@ export const useTransitionsStore = defineStore('transitions', {
             const filtered = []
             const filterAssignments = arc.applyFilterExpression(arcData.filter);
             for (let j = 0; j < filterAssignments.length; j++) {
-                filtered.push(filterAssignments[j].pathExpression)
+                filtered.push(filterAssignments[j])
             }           
 
             arcData.filtered = filtered;
@@ -170,7 +170,7 @@ export const useTransitionsStore = defineStore('transitions', {
             const filtered = []
             const filterAssignments = arc.applyFilterExpression(arcData.filter);
             for (let j = 0; j < filterAssignments.length; j++) {
-                filtered.push(filterAssignments[j].pathExpression)
+                filtered.push(filterAssignments[j])
             }           
 
             arcData.filtered = filtered;
@@ -219,19 +219,22 @@ export const useTransitionsStore = defineStore('transitions', {
         },
 
         // evaluations
-        loadVariables() {
-            const transition = getNetInstance().findTransition(this.transition.id)
-            if(!transition) return;
-
-            const variables = transition.assembleVariables();
-            if(!variables) return
-            this.variables = variables;
-        },
+        //loadVariables() {
+        //    const variables = getNetInstance().getVariablesFromPathAssignments(this.transition.id)
+//      //      findTransition(this.transition.id)
+//      //      if(!transition) return;
+//
+//      //      const variables = transition.assembleVariables();
+//      //      if(!variables) return
+        //    this.variables = variables;
+        //},
         loadEvaluations(){
             const evalResult = getNetInstance().getEvaluations(this.transition.id);
-            if(!this.assignmentComplete) return;
             // console.log(evalResult);
             if (evalResult) {
+                this.variables = evalResult.variables;
+                if(!this.assignmentComplete) return;
+
                 this.hasAnyError = evalResult.hasAnyError;
                 if(this.hasAnyError) {
                     this.isEnabled = false;
@@ -254,8 +257,6 @@ export const useTransitionsStore = defineStore('transitions', {
                 if (evalResult.guard) {
                     this.guardHasError = evalResult.guard.hasError;
                     if (this.guardHasError) {
-                        console.log('loading error')
-                        console.log(evalResult.guard.evaluation)
                         this.guardEvaluation = evalResult.guard.evaluation;
                     } else {
                         this.guardEvaluation = evalResult.guard.evaluation;
@@ -290,7 +291,7 @@ export const useTransitionsStore = defineStore('transitions', {
                     const filtered = []
                     const filterAssignments = arc.applyFilterExpression(arc.filterExpression);
                     for (let j = 0; j < filterAssignments.length; j++) {
-                        filtered.push(filterAssignments[j].pathExpression)
+                        filtered.push(filterAssignments[j])
                     }
 
 
@@ -318,7 +319,7 @@ export const useTransitionsStore = defineStore('transitions', {
                     const filtered = []
                     const filterAssignments = arc.applyFilterExpression(arc.filterExpression);
                     for (let j = 0; j < filterAssignments.length; j++) {
-                        filtered.push(filterAssignments[j].pathExpression)
+                        filtered.push(filterAssignments[j])
                     }
 
                     const arcData = {
@@ -352,6 +353,12 @@ export const useTransitionsStore = defineStore('transitions', {
             this.unsetAssignments();
             this.loadAvailableInputAssignments();
             this.loadAvailableOutputAssignments();
+            this.loadEvaluations();
+            this.assignmentComplete = false;
+            this.presetAssignmentComplete = false;
+            this.postsetAssignmentComplete = false;
+
+
             this.forceRender()
         }
     }

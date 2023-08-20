@@ -68,7 +68,7 @@ export class Place {
     return this._schema.validateMarking(marking);
   }
 
-  insertFragment(pathExpression: string, fragment: JSONValue, key: string | number, check = false) {
+  insertValue(pathExpression: string, fragment: JSONValue, key: string | number, check = false) {
     if (!check) {
       deepInsert(pathExpression, this.marking, key, fragment);
       return true;
@@ -80,7 +80,7 @@ export class Place {
     }
   }
 
-  removeFragment(pathExpression: string, check = false) {
+  removeValue(pathExpression: string, check = false) {
     if (!check) {
       deepRemove(pathExpression, this.marking)
       return true;

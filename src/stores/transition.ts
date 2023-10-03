@@ -151,6 +151,7 @@ export const useTransitionsStore = defineStore('transitions', {
 
         loadAvailableInputAssignments() {
             const arcData = this.inputArcs[this.selectedInputPlaceIndex]
+            if(!arcData) return;
             const arc = getNetInstance().findArc(arcData.id)
             if(!arc) return;
 
@@ -164,6 +165,7 @@ export const useTransitionsStore = defineStore('transitions', {
         },
         loadAvailableOutputAssignments() {
             const arcData = this.outputArcs[this.selectedOutputPlaceIndex]
+            if(!arcData) return;
             const arc = getNetInstance().findArc(arcData.id)
             if(!arc) return;
 
@@ -178,6 +180,7 @@ export const useTransitionsStore = defineStore('transitions', {
 
         unsetCurrentInputAssignment() {
             const arcData = this.inputArcs[this.selectedInputPlaceIndex]
+            if(!arcData) return;
             const arc = getNetInstance().findArc(arcData.id)
             if(!arc) return;
 
@@ -185,7 +188,8 @@ export const useTransitionsStore = defineStore('transitions', {
             this.selectedInputValueJsonPath = 'none';
         },
         unsetCurrentOutputAssignment() {
-            const arcData = this.inputArcs[this.selectedOutputPlaceIndex]
+            const arcData = this.outputArcs[this.selectedOutputPlaceIndex]
+            if(!arcData) return;
             const arc = getNetInstance().findArc(arcData.id)
             if(!arc) return;
 

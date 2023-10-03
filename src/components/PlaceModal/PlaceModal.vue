@@ -115,7 +115,6 @@ export default defineComponent({
         HelpButton
     },
     setup(props) {
-        console.log(JSONSchema)
         const extensions = [
             gutter({ class: "CodeMirror-lint-markers" }),
             bracketMatching(),

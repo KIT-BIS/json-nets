@@ -122,7 +122,6 @@ export function deepInsert(pathExpression: string, complexValue: JSONComplex, ke
         throw Error('value not valid for path expression')
     }
 
-    console.log('deep insert')
     const parent = getFragment(complexValue, pathExpression);
     if (isComplex(parent)) {
         insert(key, parent, toInsert);

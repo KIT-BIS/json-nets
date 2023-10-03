@@ -33,8 +33,6 @@ export const useNetStore = defineStore('net', {
             return JSON.stringify({netData, layoutData}, null, 2);
         },
         import(json: JSONObject) {
-            console.log('json')
-            console.log(json);
             const layoutData = <JSONObject>json.layoutData;
             const netData = <ImportData> getNetInstance().import(json.netData)
             this.transitions = netData.transitions;

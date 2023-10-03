@@ -38,8 +38,7 @@ import { closeBrackets } from "@codemirror/autocomplete";
 import { lintGutter } from "@codemirror/lint";
 import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle } from "@codemirror/theme-one-dark";
-import type { ViewUpdate } from "@codemirror/view";
-
+import type { JSONSchema7 } from 'json-schema';
 import HelpButton from '@/components/_shared/HelpButton.vue'
 
 import { usePlacesStore } from '@/stores/place';
@@ -64,7 +63,7 @@ export default defineComponent({
             EditorView.lineWrapping,
             EditorState.tabSize.of(2),
             syntaxHighlighting(oneDarkHighlightStyle),
-            jsonSchema(props.schema)
+            jsonSchema(props.schema as JSONSchema7)
         ]
         return {
             extensions,

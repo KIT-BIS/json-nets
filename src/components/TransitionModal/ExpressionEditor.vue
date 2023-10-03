@@ -284,7 +284,7 @@ export default defineComponent({
         }
     },
     computed: {
-        getCurrentExample() {
+        getCurrentExample(): { question: string, answer: string, evaluation: any, isExpanded: boolean}[] {
             if (this.uiStateStore.showEditor === 'guard') {
                 return this.guardExamples.jsonnet
             } else if (this.uiStateStore.showEditor === 'value') {
@@ -295,7 +295,7 @@ export default defineComponent({
                 return this.prefaceExamples.jsonnet
             }
         },
-        title() {
+        title(): string {
             if (this.uiStateStore.showEditor === 'guard') {
                 return this.transitionsStore.transition.name + ' guard'
             } else if (this.uiStateStore.showEditor === 'preface') {
@@ -307,22 +307,23 @@ export default defineComponent({
                 const arc = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex]
                 return arc.name + ' value'
             }
+            return '';
         },
-        keyHasError() {
+        keyHasError():boolean {
             const keyVar = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex].keyVar
             return this.transitionsStore.keyEvaluationResults[keyVar].hasError
         },
-        keyEvaluation() {
+        keyEvaluation():string {
             const keyVar = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex].keyVar
             return this.transitionsStore.keyEvaluationResults[keyVar].evaluation;
 
         },
-        valueHasError() {
+        valueHasError():boolean {
             const valueVar = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex].valueVar
             return this.transitionsStore.valueEvaluationResults[valueVar].hasError
 
         },
-        valueEvaluation() {
+        valueEvaluation():string {
             const valueVar = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex].valueVar
             return this.transitionsStore.valueEvaluationResults[valueVar].evaluation;
         },

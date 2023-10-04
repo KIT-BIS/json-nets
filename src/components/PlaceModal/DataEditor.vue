@@ -7,8 +7,12 @@
               <a href='https://www.json.org/json-en.html' target='_blank'
                 >Click here</a> for more information about JSON.
             "/>
+            <button class="button is-pulled-right is-small is-ghost"
+                    style="margin-left: auto" @click="onAddTokenClick">Add token</button>
+
 
             </label>
+
             <div class="control is-small jsn-code">
                 <Codemirror v-model="placesStore.markingString" placeholder="Edit place data." :autofocus="true"
                     :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }" :extensions="extensions"
@@ -82,6 +86,11 @@ export default defineComponent({
         }
     },
     methods: {
+        onAddTokenClick() {
+            // todo make token dependent on schema
+            this.placesStore.addToken();
+        }
+
         // onMarkingCodeChange(value: string, update: ViewUpdate) {
             // this way (passing along the onChange value)
             // seems to catch all changes - are there potential inconsistencies with vmodel?

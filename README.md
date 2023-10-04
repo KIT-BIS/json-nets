@@ -62,3 +62,7 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+### Deployment on github pages
+
+- paths in index.html need to be manually changed from /* to /json-nets/* (can this be automated?)

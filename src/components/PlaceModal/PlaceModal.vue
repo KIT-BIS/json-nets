@@ -68,13 +68,6 @@
                 <!-- @update="onMarkingCodeUpdate" -->
 
             </section>
-            <footer class="modal-card-foot has-background-white scoped-modal-footer">
-
-                <button v-if="shownTab === 'data'" class="button is-pulled-right is-primary is-small"
-                    style="margin-left: auto" @click="onAddTokenClick">Add token</button>
-
-
-            </footer>
         </div>
     </div>
 </template>
@@ -164,10 +157,6 @@ export default defineComponent({
         onNameSave() {
             this.placesStore.saveName();
             this.showNameInput = false;
-        },
-        onAddTokenClick() {
-            // todo make token dependent on schema
-            this.placesStore.addToken();
         },
 
         showTab(tab: 'data' | 'schema') {

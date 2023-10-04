@@ -2,7 +2,10 @@
 import { useUiStateStore } from '@/stores/uiState'
 import { useNetStore } from './stores/net'
 
-import { data as example } from '@/examples/production'
+//import { data as example } from '@/examples/production'
+import { data as example1 } from '@/examples/project1'
+import { data as example2 } from '@/examples/project2'
+import { data as example3 } from '@/examples/project3'
 import { download, readFile } from '@/util/files'
 
 import JointPaper from './components/JointPaper/JointPaper.vue'
@@ -23,8 +26,12 @@ function exportNet() {
 
 function importNet(jsonString: string) {
   let json;
-  if (jsonString === 'example') {
-    json = example
+  if (jsonString === 'example1') {
+    json = JSON.parse(JSON.stringify(example1))
+  } else if (jsonString === 'example2') {
+    json = JSON.parse(JSON.stringify(example2))
+  } else if (jsonString === 'example3') {
+    json = JSON.parse(JSON.stringify(example3))
   } else {
     json = JSON.parse(jsonString);
   }
@@ -82,13 +89,39 @@ export const MODE_HELP = 'MODE_HELP'
       @click.stop="
         () => {
           uiState.setMode(MODE_EXAMPLE)
-          importNet('example')
+          importNet('example1')
         }
       "
       class="button is-primary is-outlined"
     >
-      Load Example
+      Ex1
     </button>
+    <button
+      style="margin-left: 15px"
+      @click.stop="
+        () => {
+          uiState.setMode(MODE_EXAMPLE)
+          importNet('example2')
+        }
+      "
+      class="button is-primary is-outlined"
+    >
+      Ex2
+    </button>
+    <button
+      style="margin-left: 15px"
+      @click.stop="
+        () => {
+          uiState.setMode(MODE_EXAMPLE)
+          importNet('example3')
+        }
+      "
+      class="button is-primary is-outlined"
+    >
+      Ex3
+    </button>
+
+
     <ModeButton
       icon="fas fa-question"
       :mode="MODE_HELP"

@@ -59,6 +59,20 @@ export type EvaluationData = {
   guard?: EvaluationResult
 } | false
 
+const defaultSchema = {
+  type: "object",
+  properties: {
+    "name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "unit": {
+      "enum": ["cm2", "g"]
+    }
+  }
+}
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so
 let net: Net | null = null
@@ -198,6 +212,7 @@ export class Net {
     const shortID = placeID.substring(0, 4)
     const name = 'place' + shortID;
     const newPlace = new Place(placeID, name)
+    newPlace.schema = defaultSchema;
     this._places.push(newPlace)
     return { id: newPlace.id, name: newPlace.name, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }

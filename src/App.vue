@@ -84,7 +84,7 @@ export const MODE_HELP = 'MODE_HELP'
         }
       "
     />
-    <button
+    <!-- <button
       style="margin-left: 15px"
       @click.stop="
         () => {
@@ -119,7 +119,7 @@ export const MODE_HELP = 'MODE_HELP'
       class="button is-primary is-outlined"
     >
       Ex3
-    </button>
+    </button> -->
 
 
     <ModeButton

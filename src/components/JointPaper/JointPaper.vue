@@ -117,7 +117,7 @@ export default defineComponent({
       const places = netData.places;
       for (let i = 0; i < places.length; i++) {
         const placeData = places[i];
-        const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id)
+        const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id, placeData.marking.length)
         place.addTo(_graph)
         place.set('tokens', placeData.marking.length)
       }
@@ -154,7 +154,7 @@ export default defineComponent({
     'netStore.lastCreatedPlaces'(places: Array<PlaceData>) {
       for (let i = 0; i < places.length; i++) {
         const placeData = places[i];
-        const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id)
+        const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id, placeData.marking.length)
         place.addTo(_graph)
       }
 

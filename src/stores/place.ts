@@ -6,13 +6,15 @@ import { useNetStore } from "./net";
 import { getNetInstance } from "@/json-nets/Net";
 
 import { mock } from "mock-json-schema";
+import { toRaw } from "vue";
 
 export const usePlacesStore = defineStore('places', {
     state: () => {
         return {
             place: {} as PlaceData,
             markingString: '' as string,
-            schemaString: '' as string
+            schemaString: '' as string,
+            formsData: {}
         }
     },
     actions: {
@@ -25,14 +27,24 @@ export const usePlacesStore = defineStore('places', {
                 useNetStore().lastUpdatedPlace = placeData;
             }
         },
+        setUserMode(mode: "assisted" | "expert") {
+            const placeData = getNetInstance().updatePlaceMode(this.place.id, mode);
+            if (placeData) {
+                this.place.mode = placeData.mode;
+                useNetStore().lastUpdatedPlace = placeData;
+            }
+        },
         addToken() {
             let token = mock(this.place.schema.items)
             this.place.marking.push(token)
-            this.savePlaceMarking(JSON.stringify(this.place.marking, null, 2));
+            this.savePlaceMarkingFromEditor(JSON.stringify(this.place.marking, null, 2));
         },
-        savePlaceMarking(markingString: string) {
+        savePlaceMarkingFromEditor(markingString: string) {
             try {
                 const marking = JSON.parse(markingString)
+                this.formsData = marking;
+                console.log('new formsdata from editor')
+                console.log(this.formsData)
                 this.markingString = markingString;
                 const placeData = getNetInstance().updatePlaceMarking(this.place.id, marking)
                 if (placeData) {
@@ -43,11 +55,30 @@ export const usePlacesStore = defineStore('places', {
                     useNetStore().lastUpdatedPlace = placeData;
                 }
 
-                
             } catch (e: any){
                 // parsing failed
             }
 
+        },
+        savePlaceMarkingFromForm(newValue) {
+            try {
+                // console.log('new data from form')
+                // console.log(newValue);
+                // console.log(toRaw(newValue.data));
+                this.formsData = newValue;
+                this.markingString = JSON.stringify(this.formsData, null, 2)
+                const placeData = getNetInstance().updatePlaceMarking(this.place.id, newValue)
+                if (placeData) {
+                    this.place.marking = placeData.marking;
+                    this.place.errorMessage = placeData.errorMessage;
+                    this.place.hasError = placeData.hasError;
+                    this.place.errorType = placeData.errorType;
+                    useNetStore().lastUpdatedPlace = placeData;
+                }
+
+            } catch (e: any) {
+
+            }
         },
         savePlaceSchema(schemaString: string) {
             try {
@@ -86,8 +117,9 @@ export const usePlacesStore = defineStore('places', {
                     this.place.schema = place.schema;
                 }
                 this.markingString = JSON.stringify(placeData.marking, null, 2)
+                this.formsData = JSON.parse(JSON.stringify(placeData.marking));
                 // only the schema for root array elements is shown in editor
-                this.schemaString = JSON.stringify(placeData.schema.items, null, 2)
+                this.schemaString = JSON.stringify(placeData.schema, null, 2)
             }
         },
     }

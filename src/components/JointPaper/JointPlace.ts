@@ -4,7 +4,7 @@ import InspectorButton from './JointElementInspectorButton';
 import ConnectButton from './JointConnectButton'
 
 export default class Place extends joint.shapes.pn.Place {
-  constructor(x: number, y: number, name: string, id: string) {
+  constructor(x: number, y: number, name: string, id: string, num: number) {
     super({
       // TODO: actually calculate this position to center it
       position: { x: x - 25, y: y - 25 },
@@ -31,7 +31,7 @@ export default class Place extends joint.shapes.pn.Place {
           'y-alignment': -0.2,
         }
       },
-      tokens: 0
+      tokens: num
     });
     this.set('id', id)
     this.prop('jsonnetsType', 'place')

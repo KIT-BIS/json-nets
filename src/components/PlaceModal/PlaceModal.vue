@@ -35,25 +35,6 @@
             </div>
 
             <section class="modal-card-body">
-                <div class="block is-flex is-justify-content-center">
-                    <div class="field has-addons">
-                        <p class="control">
-                            <button class="button is-small">
-                                <span>Assisted</span>
-                            </button>
-                        </p>
-                        <p class="control">
-                            <button class="button is-small">
-                                <span>Expert</span>
-                            </button>
-                        </p>
-                    </div>
-                    <!-- <div class="field">
-                        <input id="switchSmall" type="checkbox" name="switchSmall"
-                            class="switch is-small is-rounded is-rtl">
-                        <label for="switchSmall">Expert mode</label>
-                    </div> -->
-                </div>
                 <DataEditor v-if="shownTab === 'data'" :schema="placesStore.place.schema" />
                 <div v-if="shownTab === 'schema'" class="block">
                     <div class="field">

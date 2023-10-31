@@ -17,6 +17,7 @@ export type TransitionData = {
 export type PlaceData = {
   name: string,
   id: string,
+  mode: "assisted" | "expert",
   marking: JSONMarking,
   schema: JSONObject,
   hasError: boolean,
@@ -58,6 +59,33 @@ export type EvaluationData = {
   outputKeyVariables?: Record<string, EvaluationResult>, 
   guard?: EvaluationResult
 } | false
+
+const defaultSchema = {
+  type: "array",
+  minItems: 1,
+  maxItems: 1,
+  items: {
+    type: "object",
+    properties: {
+      "ghgFactor": {
+        "type": "number"
+      },
+      "amount": {
+        "type": "number"
+      },
+      "unit": {
+        "type": "string",
+        "enum": ["cm2", "g"]
+      }
+    }
+  }
+};
+
+const defaultMarking = [{
+  ghgFactor: 0,
+  amount: 0,
+  unit: "g"
+}]
 
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so
@@ -134,7 +162,7 @@ export class Net {
     if (schema) place.schema = schema;
     if (marking) place.marking = marking;
 
-    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
+    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
   updatePlaceMarking(placeID: string, marking: JSONMarking): PlaceData | false {
@@ -144,7 +172,7 @@ export class Net {
     }
     place.marking = marking;
     const checkResult = place.validateMarking(marking);
-    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
+    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
   }
 
   updatePlaceSchema(placeID: string, schema: JSONObject): PlaceData | false {
@@ -157,8 +185,20 @@ export class Net {
     if (checkResult.schemaValid) {
       place.schema = schema;
     }
-    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
+    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
 
+  }
+
+  updatePlaceMode(placeID: string, mode: "assisted" | "expert"): PlaceData | false {
+    const place = this.findPlace(placeID);
+    if (!place) {
+      return false;
+    }
+
+    place.mode = mode;
+
+
+    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
   /**
@@ -198,8 +238,10 @@ export class Net {
     const shortID = placeID.substring(0, 4)
     const name = 'place' + shortID;
     const newPlace = new Place(placeID, name)
+    newPlace.schema = defaultSchema;
+    newPlace.marking = defaultMarking;
     this._places.push(newPlace)
-    return { id: newPlace.id, name: newPlace.name, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
+    return { id: newPlace.id, name: newPlace.name, mode: newPlace.mode, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
 
@@ -452,7 +494,7 @@ export class Net {
 
   assignOutputVariables(id: string) {
     const transition = this.findTransition(id);
-    if(!transition) return;
+    if (!transition) return;
 
 
     for (let i = 0; i < transition.postset.length; i++) {

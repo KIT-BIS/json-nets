@@ -1,23 +1,46 @@
 <template>
-    <div class="block">
+    <div class="block is-flex is-justify-content-center">
+        <div class="field has-addons">
+            <p class="control">
+                <button @click="onUserModeClick('assisted')" class="button is-small"
+                    :class="placesStore.place.mode === 'assisted' ? 'is-primary' : ''">
+                    <span>Assisted</span>
+                </button>
+            </p>
+            <p class="control">
+                <button @click="onUserModeClick('expert')" class="button is-small"
+                    :class="placesStore.place.mode === 'expert' ? 'is-primary' : ''">
+                    <span>Expert</span>
+                </button>
+            </p>
+        </div>
+    </div>
+
+    <div class="block" v-if="placesStore.place.mode === 'assisted'">
+        <json-forms :data="placesStore.formsData" :schema="schema" :renderers="renderers" @change="onFormChange"/>
+
+        <!-- :uischema="uischema" -->
+        <!-- @change="onChange" -->
+    </div>
+
+    <div class="block" v-if="placesStore.place.mode === 'expert'">
         <div class="field">
             <label class="label is-small icon-text">Place marking
-            <HelpButton help-text="
+                <HelpButton help-text="
               Edit the JSON array to insert or remove data. 
               <a href='https://www.json.org/json-en.html' target='_blank'
                 >Click here</a> for more information about JSON.
-            "/>
-            <button class="button is-pulled-right is-small is-ghost"
-                    style="margin-left: auto" @click="onAddTokenClick">Add token</button>
+            " />
+                <button class="button is-pulled-right is-small is-ghost" style="margin-left: auto"
+                    @click="onAddTokenClick">Add token</button>
 
 
             </label>
 
             <div class="control is-small jsn-code">
                 <Codemirror v-model="placesStore.markingString" placeholder="Edit place data." :autofocus="true"
-                    :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }" :extensions="extensions"
-                    />
-                    <!-- @change="onMarkingCodeChange"  -->
+                    :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }" :extensions="extensions" />
+                <!-- @change="onMarkingCodeChange"  -->
             </div>
             <p class="help" v-if="!placesStore.place.hasError">
                 {{ placesStore.place.errorMessage }} &nbsp;
@@ -43,16 +66,55 @@ import { lintGutter } from "@codemirror/lint";
 import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle } from "@codemirror/theme-one-dark";
 import type { JSONSchema7 } from 'json-schema';
-import HelpButton from '@/components/_shared/HelpButton.vue'
+import HelpButton from '@/components/_shared/HelpButton.vue';
 
+import type { JSONMarking } from '@/util/jsonOperations';
 import { usePlacesStore } from '@/stores/place';
+
+import { JsonForms } from '@jsonforms/vue';
+import {
+  defaultStyles,
+  mergeStyles,
+  vanillaRenderers,
+} from '@jsonforms/vue-vanilla';
+import { toRaw } from 'vue';
+
+const singleTokenStyle = mergeStyles(defaultStyles, {
+  arrayList: { 
+    addButton: 'is-hidden',
+    itemContent: 'expanded',
+    itemToolbar: 'is-hidden'
+ },
+
+});
+
+const renderers = [
+    ...vanillaRenderers,
+    // here you can add custom renderers
+];
+
 export default defineComponent({
     props: {
         schema: {}
     },
     components: {
         Codemirror,
-        HelpButton
+        HelpButton,
+        JsonForms
+    },
+    provide() {
+        if (this.schema.minItems && 
+        this.schema.maxItems && 
+        this.schema.minItems === 1 && 
+        this.schema.maxItems === 1) {
+            return {
+                styles: singleTokenStyle,
+            };
+        } else {
+            return {
+                styles: defaultStyles
+            }
+        }
     },
     setup(props) {
 
@@ -75,6 +137,9 @@ export default defineComponent({
     },
     data() {
         return {
+
+            renderers: Object.freeze(renderers),
+            schema: this.$props.schema
         }
     },
     computed: {
@@ -82,19 +147,23 @@ export default defineComponent({
     },
     watch: {
         'placesStore.markingString'(newValue: string) {
-            this.placesStore.savePlaceMarking(newValue);
-        }
+            console.log('saving marking from string watcher')
+            this.placesStore.savePlaceMarkingFromEditor(newValue);
+        },
     },
     methods: {
         onAddTokenClick() {
             // todo make token dependent on schema
             this.placesStore.addToken();
+        },
+        onUserModeClick(mode: "assisted" | "expert") {
+            this.placesStore.setUserMode(mode)
+        },
+        onFormChange(newValue) {
+            this.placesStore.savePlaceMarkingFromForm(newValue.data);
         }
 
-        // onMarkingCodeChange(value: string, update: ViewUpdate) {
-            // this way (passing along the onChange value)
-            // seems to catch all changes - are there potential inconsistencies with vmodel?
-        // },
+
     }
 })
-</script>@/stores/place
+</script>

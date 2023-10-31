@@ -21,6 +21,7 @@ export class Place {
   readonly id: string
   private _name: string
   private _schema: Schema 
+  private _mode: "assisted" | "expert"
   public marking: JSONMarking
 
   /**
@@ -32,11 +33,11 @@ export class Place {
     this.id = id // id of the place
     this._name = name // name of the place
     this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object"} })
+    this._mode = "expert";
     this.marking = []
   }
 
   set name(name: string) {
-
     this._name = name;
   }
 
@@ -47,12 +48,25 @@ export class Place {
 
   // expects 
   set schema(schema: JSONObject) {
-    const arraySchema = { $id: this.id, type: "array", items: schema }
-    this._schema.update(arraySchema)
+    // to ensure $id doesn't get changed by user
+    schema['$id'] = this.id;
+    // const arraySchema = { $id: this.id, type: "array", items: schema }
+    // let newSchema = { $id: this.id }
+    // Object.assign(newSchema, schema);
+    // this._schema.update(arraySchema)
+    this._schema.update(schema);
   }
 
   get schema(): JSONObject {
     return this._schema.schema;
+  }
+
+  set mode(mode: "assisted" | "expert") {
+    this._mode = mode;
+  }
+
+  get mode() {
+    return this._mode;
   }
 
   // todo: probably move this to schema class?

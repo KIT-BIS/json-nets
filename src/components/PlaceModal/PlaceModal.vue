@@ -39,17 +39,17 @@
                 <div v-if="shownTab === 'schema'" class="block">
                     <div class="field">
                         <label class="label is-small icon-text">Token schema
-                        <HelpButton help-text="
+                            <HelpButton help-text="
                           Describe the structure of data tokens stored in the place with 
                           <a href='https://json-schema.org/' target='_blank'>JSON Schema</a>.
-                        "/>
+                        " />
 
                         </label>
                         <div class="control is-small jsn-code">
                             <Codemirror v-model="placesStore.schemaString" placeholder="Edit place schema."
                                 :autofocus="true" :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }"
                                 :extensions="extensions" />
- <!-- @change="onSchemaCodeChange" -->
+                            <!-- @change="onSchemaCodeChange" -->
                         </div>
                         <p class="help" v-if="!placesStore.place.hasError">
                             {{ placesStore.place.errorMessage }}

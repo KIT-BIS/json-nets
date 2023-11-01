@@ -51,7 +51,8 @@ export class Arc {
     this.updateVarNames(this.place.name, true);
     this._filterExpression = '$.*'
     if (type === "postset") {
-      this._filterExpression = '$'
+      //this._filterExpression = '$'
+      this._filterExpression = '$.*'
     }
 
     this.assignedPathExpression = null;

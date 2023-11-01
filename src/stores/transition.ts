@@ -6,7 +6,6 @@ import { defineStore } from "pinia"
 
 import { getNetInstance } from "@/json-nets/Net";
 import { useNetStore } from "./net";
-import { toRaw } from "vue";
 
 export const useTransitionsStore = defineStore('transitions', {
     state: () => {
@@ -64,6 +63,14 @@ export const useTransitionsStore = defineStore('transitions', {
             const transitionData = getNetInstance().updateTransition(this.transition.id, this.transition.name);
             if  (transitionData) {
                 this.transition.name = transitionData.name;
+                useNetStore().lastUpdatedTransition = transitionData;
+            }
+        },
+        switchMode() {
+            this.transition.readonly = !this.transition.readonly;
+            const transitionData = getNetInstance().updateTransitionMode(this.transition.id, this.transition.readonly);
+            if  (transitionData) {
+                this.transition.readonly = transitionData.readonly
                 useNetStore().lastUpdatedTransition = transitionData;
             }
         },

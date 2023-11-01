@@ -22,6 +22,8 @@ export type AssignmentRef = {
 export class Transition {
   readonly id: string
   public name: string
+  // todo: should probably be an edge setting
+  public readonly: boolean
   public preset: Array<Arc>
   public postset: Array<Arc>
   // private _state: Record<string, JSONValue> 
@@ -39,6 +41,7 @@ export class Transition {
       this.preface = ''
     this.valueVarSnippets = {}
     this.keyVarSnippets = {}
+    this.readonly = false;
   }
 
   connectArc(arc: Arc) {
@@ -126,7 +129,14 @@ export class Transition {
       // todo this should be reworked and part of enabled checking
       // transition can only fire if pathExpression != null
       if (arc.assignedPathExpression === null) return [];
-      arc.place.removeValue(arc.assignedPathExpression, false);
+      
+      if (!this.readonly)  {
+        console.log('removing')
+        console.log(arc.assignedPathExpression);
+        console.log(JSON.stringify(arc.place.marking))
+        arc.place.removeValue(arc.assignedPathExpression, false);
+        console.log(JSON.stringify(arc.place.marking))
+      }
       fireData.push({ arcID: arc.id, placeID: arc.place.id, num: arc.place.marking.length })
     }
 

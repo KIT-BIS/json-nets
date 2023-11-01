@@ -23,6 +23,7 @@
 
                             </div>
                         </div>
+
                     </div>
                     <div v-if="!transitionsStore.presetAssignmentComplete" class="level-right">
                         <div class="level-item">
@@ -69,7 +70,6 @@
                             </button>
                         </div>
                     </div>
-
                 </div>
                 <div class="scoped-scrollable jsn-code p-2">
                     <vue-json-pretty :key="transitionsStore.inputDataKey"

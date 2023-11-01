@@ -14,6 +14,20 @@ export type AssignmentRef = {
   assignmentIndex: number
 }
 
+//const defaultKeySnippet = "'-'"";
+const defaultKeySnippet = "'ghgFactor';";
+
+//const defaultValueSnippet = "{};";
+const defaultValueSnippet = "totalFootprint;";
+
+//const defaultPreface = '';
+const defaultPreface = `local calculateTotalFootprint(arr, n) = 
+  if (n <= 0) then 0 
+  else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
+
+local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`;
+
+
 /**
  * Creates a new Transition object.
  * @param {String} id ID of the transition.
@@ -37,11 +51,11 @@ export class Transition {
     this.name = name
     this.preset = []
     this.postset = []
-    this.guard = 'true',
-      this.preface = ''
+    this.guard = 'true';
+    this.preface = defaultPreface;
     this.valueVarSnippets = {}
     this.keyVarSnippets = {}
-    this.readonly = false;
+    this.readonly = true;
   }
 
   connectArc(arc: Arc) {
@@ -50,10 +64,10 @@ export class Transition {
     } else if (arc.type === 'postset') {
       // existing snippets are not overwritten (important for imports)
       if (!this.valueVarSnippets[arc.valueVarName]) {
-        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = {};';
+        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = ' + defaultValueSnippet;
       }
       if (!this.keyVarSnippets[arc.keyVarName]) {
-        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = '-';";
+        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = " + defaultKeySnippet;
       }
       this.postset.push(arc)
     }
@@ -131,11 +145,7 @@ export class Transition {
       if (arc.assignedPathExpression === null) return [];
       
       if (!this.readonly)  {
-        console.log('removing')
-        console.log(arc.assignedPathExpression);
-        console.log(JSON.stringify(arc.place.marking))
         arc.place.removeValue(arc.assignedPathExpression, false);
-        console.log(JSON.stringify(arc.place.marking))
       }
       fireData.push({ arcID: arc.id, placeID: arc.place.id, num: arc.place.marking.length })
     }
@@ -383,6 +393,7 @@ export class Transition {
   }
 
   assembleVariablesFromPathAssignments() {
+    const inputValues = [];
     const variables: Record<string,JSONValue> = {}
     for (let i = 0; i < this.preset.length; i++) {
       const arc = this.preset[i]
@@ -391,6 +402,7 @@ export class Transition {
       variables[arc.tokenVarName] = arc.tokenVarValue;
       variables[arc.keyVarName] = arc.keyVarValue;
       variables[arc.valueVarName] = arc.valueVarValue;
+      inputValues.push(arc.valueVarValue);
     }
 
     for (let i = 0; i < this.postset.length; i++) {
@@ -399,6 +411,7 @@ export class Transition {
       if (arc.assignedPathExpression === null) continue;
       variables[arc.tokenVarName] = arc.tokenVarValue;
     }
+    variables['input_values'] = inputValues;
     return variables;
   }
 
@@ -442,6 +455,8 @@ export class Transition {
       // assign path expressions and token for postset
       // collect all token vars, and preset value, key vars first
       // as these are needed to evaluate postset key, value vars
+      // todo: there is some duplicate code with other function that assembles variables
+      const inputValues = [];
       let combinationHasAnyVariableError = false;
       for (let j = 0; j < combination.length; j++) {
         const assignmentRef = combination[j];
@@ -455,6 +470,7 @@ export class Transition {
           tokenVariables[arc.tokenVarName] = arcVariables.token;
           keyVariables[arc.keyVarName] = arcVariables.key;
           valueVariables[arc.valueVarName] = arcVariables.value;
+          inputValues.push(arcVariables.value);
         } else {
           const arcVariables = arc.assignTokenVariableByIndex(assignmentRef.assignmentIndex)
           if (!arcVariables) {
@@ -467,7 +483,7 @@ export class Transition {
       if (combinationHasAnyVariableError) continue;
 
       // for the postset arcs, evaluate key, value snippets
-      const variables = this.assignOutputKeyValueVariables({ ...keyVariables, ...valueVariables, ...tokenVariables })
+      const variables = this.assignOutputKeyValueVariables({ 'input_values': inputValues, ...keyVariables, ...valueVariables, ...tokenVariables })
       if (!variables) continue;
 
       // check whether guard evaluates to true (and not only truthy), otherwise check next combination

@@ -61,6 +61,7 @@ export type EvaluationData = {
   guard?: EvaluationResult
 } | false
 
+//const defaultSchema = { type: "array", items: { "type": "object" }}
 const defaultSchema = {
   type: "array",
   minItems: 1,
@@ -76,17 +77,19 @@ const defaultSchema = {
       },
       "unit": {
         "type": "string",
-        "enum": ["cm2", "g"]
+        "enum": ["cm2", "g", "pieces"]
       }
     }
   }
 };
 
+//const defaultMarking = [];
 const defaultMarking = [{
   ghgFactor: 0,
-  amount: 0,
-  unit: "g"
-}]
+  amount: 1,
+  unit: "pieces"
+}];
+
 
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so

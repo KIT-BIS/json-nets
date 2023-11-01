@@ -33,7 +33,7 @@ export class Place {
     this.id = id // id of the place
     this._name = name // name of the place
     this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object"} })
-    this._mode = "expert";
+    this._mode = "assisted";
     this.marking = []
   }
 

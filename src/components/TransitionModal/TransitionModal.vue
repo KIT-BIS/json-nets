@@ -99,11 +99,27 @@
                                 <p v-if="!transitionsStore.guardHasError" class="help">Result:
                                     <code class="has-text-grey has-tooltip-bottom"
                                         :data-tooltip="getFormattedString(transitionsStore.guardEvaluation)">
-                                                    {{ getShortString(transitionsStore.guardEvaluation) }}
-                                                </code>
+                                                        {{ getShortString(transitionsStore.guardEvaluation) }}
+                                                    </code>
                                 </p>
                             </div>
 
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="block">
+                        <div class="field">
+                            <label class="label is-small">Settings</label>
+                            <div class="control">
+                                <div class="field">
+                                    <input @click="transitionsStore.switchMode()"
+                                        id="readonly-switch" type="checkbox" name="readonly-switch"
+                                        class="switch is-rtl is-small" :checked="transitionsStore.transition.readonly">
+                                    <label for="readonly-switch">Only read input values</label>
+                                </div>
+                                <!-- <input id="filter-read-setting" type="checkbox" name="filter-read-setting" -->
+                                <!-- class="switch is-rounded is-outlined is-rtl is-small" checked> -->
+                            </div>
                         </div>
                     </div>
                     <div v-if="!transitionsStore.assignmentComplete" class="block">

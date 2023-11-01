@@ -11,7 +11,8 @@ export type TransitionData = {
   name: string,
   id: string,
   preface: string,
-  guard: string
+  guard: string,
+  readonly: boolean
 }
 
 export type PlaceData = {
@@ -230,7 +231,8 @@ export class Net {
       id: newTransition.id,
       name: newTransition.name,
       preface: newTransition.preface,
-      guard: newTransition.guard
+      guard: newTransition.guard,
+      readonly: newTransition.readonly
     }
   }
 
@@ -238,8 +240,8 @@ export class Net {
     const shortID = placeID.substring(0, 4)
     const name = 'place' + shortID;
     const newPlace = new Place(placeID, name)
-    newPlace.schema = defaultSchema;
-    newPlace.marking = defaultMarking;
+    newPlace.schema = JSON.parse(JSON.stringify(defaultSchema));
+    newPlace.marking = JSON.parse(JSON.stringify(defaultMarking));
     this._places.push(newPlace)
     return { id: newPlace.id, name: newPlace.name, mode: newPlace.mode, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
@@ -259,9 +261,21 @@ export class Net {
       if (preface !== undefined) transition.preface = preface
       if (keyVarSnippets !== undefined) transition.keyVarSnippets = keyVarSnippets
       if (fragmentVarSnippets !== undefined) transition.valueVarSnippets = fragmentVarSnippets
-      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard };
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly };
     }
     return false;
+  }
+
+  updateTransitionMode(transitionID: string, readonly: boolean) {
+    const transition = this.findTransition(transitionID)
+    if (transition) {
+      console.log('readonly')
+      console.log(readonly)
+      transition.readonly = readonly
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly };
+    }
+    return false;
+
   }
 
   updateTransitionSnippets(transitionID: string, arcID: string, keySnippet: string, fragmentSnippet: string) {

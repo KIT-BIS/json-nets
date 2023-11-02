@@ -2,7 +2,9 @@
   <div id="canvasContainer" :class="{
     'scoped-canvas-add': isAddingElements,
     'scoped-canvas-panning': isPanningMode,
-    'scoped-canvas-pannable': isPannableMode
+    'scoped-canvas-pannable': isPannableMode,
+    'elements-unmovable': !isInteractive,
+    'places-clickable': isPlacesClickable,
   }">
     <div id="jointCanvas"></div>
   </div>
@@ -16,6 +18,7 @@ import { mapStores } from 'pinia'
 import { useUiStateStore } from '@/stores/uiState'
 import { useTransitionsStore } from '@/stores/transition'
 import { usePlacesStore } from '@/stores/place'
+import { useIndicatorStore } from '@/stores/indicator'
 import { useNetStore } from '@/stores/net'
 
 import * as joint from 'jointjs'
@@ -33,7 +36,8 @@ import {
   MODE_ADD_TRANSITION,
   MODE_CONNECT_START,
   MODE_MOVE,
-  MODE_NONE
+  MODE_NONE,
+  MODE_INDICATOR
 } from '@/App.vue'
 
 //Todo: not sure if having a variable declared outside of component
@@ -54,6 +58,15 @@ export default defineComponent({
     }
   },
   computed: {
+    isPlacesClickable() {
+      return this.uiStateStore.mode === MODE_INDICATOR
+    },
+    isInteractive() {
+      return this.uiStateStore.mode === MODE_MOVE 
+        || this.uiStateStore.mode == MODE_ADD_PLACE
+        || this.uiStateStore.mode == MODE_ADD_TRANSITION
+        || this.uiStateStore.mode === MODE_CONNECT_START
+    },
     isAddingElements() {
       return this.uiStateStore.mode === MODE_ADD_PLACE || this.uiStateStore.mode === MODE_ADD_TRANSITION
     },
@@ -185,6 +198,14 @@ export default defineComponent({
       background: {
         color: '#f6f6f6'
       },
+      interactive: (cellView, method) => {
+        return this.isInteractive;
+//        if (useUiStateStore().mode === MODE_MOVE) {
+//          return true;
+//        } else {
+//          return false;
+//        }
+      },
       linkPinning: false,
       defaultLink: () => new standard.Link(),
       defaultAnchor: { name: 'modelCenter' },
@@ -215,8 +236,20 @@ export default defineComponent({
     })
 
     _paper.on('element:mouseleave', (elementView) => {
-      elementView.hideTools()
+      if (this.uiStateStore.mode !== MODE_INDICATOR) {
+        elementView.hideTools()
+      }
     })
+
+    _paper.on('element:pointerclick', (elementView) => {
+      if (this.uiStateStore.mode === MODE_INDICATOR) {
+        _paper.hideTools();
+        elementView.showTools()
+        let currentElement = elementView.model;
+        useIndicatorStore().selectPlace(currentElement.get('id'))
+      }
+    })
+
 
     _paper.on('link:mouseenter', (linkView) => {
       if (this.uiStateStore.mode === MODE_CONNECT_START || this.uiStateStore.mode === MODE_MOVE) {
@@ -254,7 +287,14 @@ export default defineComponent({
   },
   methods: {
     onModeChange(newMode: string) {
-      _paper.removeTools()
+      _paper.removeTools();
+      //reset cursors
+      const elements = _graph.getElements()
+      for (let i = 0; i < elements.length; i++) {
+        const element = <Place | Transition>elements[i];
+        element.attr({ body: { cursor: 'auto'}, label: { cursor: 'auto'}});
+      }
+     
       if (newMode === MODE_CONNECT_START) {
         // append connect tools
         const elements = _graph.getElements()
@@ -292,6 +332,16 @@ export default defineComponent({
             this.netStore.fireAny();
           }
         }, 1500)
+      } else if (newMode === MODE_INDICATOR) {
+        const elements = _graph.getElements()
+        for (let i = 0; i < elements.length; i++) {
+          const element = elements[i];
+          if (element.get('jsonnetsType') === "place") {
+            const place = <Place>element;
+            place.addIndicatorTools(_paper)
+          }
+        }
+
       }
     },
     onPaperClick(clickX: number, clickY: number) {

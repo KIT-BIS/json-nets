@@ -11,7 +11,7 @@ export default class Place extends joint.shapes.pn.Place {
       attrs: {
         '.label': {
           text: name,
-          fill: '#7a7e9b'
+          fill: '#7a7e9b',
         },
         '.root': {
           stroke: 'hsl(204, 71%, 39%)',
@@ -35,7 +35,6 @@ export default class Place extends joint.shapes.pn.Place {
     });
     this.set('id', id)
     this.prop('jsonnetsType', 'place')
-
   }
 
   addInteractionTools(paper: joint.dia.Paper) {
@@ -58,6 +57,17 @@ export default class Place extends joint.shapes.pn.Place {
     const connectButton = new ConnectButton();
     const toolsView = new joint.dia.ToolsView({
       tools: [connectButton]
+    })
+
+    const elementView = this.findView(paper)
+    elementView.addTools(toolsView)
+    elementView.hideTools()
+  }
+
+  addIndicatorTools(paper: joint.dia.Paper) {
+    var boundaryTool = new joint.elementTools.Boundary();
+    const toolsView = new joint.dia.ToolsView({
+      tools: [boundaryTool]
     })
 
     const elementView = this.findView(paper)

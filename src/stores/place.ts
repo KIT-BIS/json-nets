@@ -6,7 +6,6 @@ import { useNetStore } from "./net";
 import { getNetInstance } from "@/json-nets/Net";
 
 import { mock } from "mock-json-schema";
-import { toRaw } from "vue";
 
 export const usePlacesStore = defineStore('places', {
     state: () => {

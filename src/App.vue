@@ -15,10 +15,12 @@ import TransitionModal from './components/TransitionModal/TransitionModal.vue'
 import ExpressionEditor from './components/TransitionModal/ExpressionEditor.vue'
 
 import ModeButton from './components/_shared/ModeButton.vue'
+import { useIndicatorStore } from './stores/indicator'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
-const uiState = useUiStateStore()
+const uiState = useUiStateStore();
+const indicatorState = useIndicatorStore();
 
 function exportNet() {
   return useNetStore().export();
@@ -52,6 +54,7 @@ export const MODE_EXPORT = 'MODE_EXPORT'
 export const MODE_EXAMPLE = 'MODE_EXAMPLE'
 export const MODE_PLAY = 'MODE_PLAY'
 export const MODE_HELP = 'MODE_HELP'
+export const MODE_INDICATOR = 'MODE_INDICATOR'
 
 </script>
 
@@ -63,6 +66,7 @@ export const MODE_HELP = 'MODE_HELP'
     <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
     <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
     <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
+    <ModeButton icon="fas fa-chart-simple" :mode="MODE_INDICATOR" />
     <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
     <ModeButton
       icon="fas fa-file-arrow-down"
@@ -131,6 +135,16 @@ export const MODE_HELP = 'MODE_HELP'
         }
       "
     />
+  </div>
+  <div v-if="uiState.mode === MODE_INDICATOR" id="indicator-panel" class="has-text-centered p-5" style="border: dashed grey;">
+    <div v-if="indicatorState.selectedPlaceID !== 'none'">    
+      <p class="title is-3">{{ indicatorState.indicatorValue }} kgCO2eq</p>
+      <p class="subtitle is-5">{{ indicatorState.placeName }}</p>
+    </div>
+    <div v-else>
+      <span>Select place to show indicator value.</span>
+    </div>
+
   </div>
   <TransitionModal v-if="uiState.showModal === 'transition'"/>
   <PlaceModal v-if="uiState.showModal === 'place'" />

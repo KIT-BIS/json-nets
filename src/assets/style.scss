@@ -49,6 +49,26 @@ body {
   border-radius: 3px;
 }
 
+#indicator-panel {
+  position: absolute;
+  right: 30px;
+  top: 30px;
+  padding: 5px;
+  background-color: white;
+  border-radius: 3px;
+}
+
+
+.elements-unmovable .joint-element {
+  cursor: auto;
+}
+.elements-unmovable .joint-link path {
+  cursor: auto;
+}
+
+.places-clickable .joint-type-pn-place {
+  cursor: pointer;
+}
 // .editor {
   // background-color: #000;
   // font-family: courier new;

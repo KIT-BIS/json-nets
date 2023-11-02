@@ -24,7 +24,8 @@ import {
   faFilter,
   faTriangleExclamation,
   faXmark,
-  faCheck
+  faCheck,
+  faChartSimple
 } from '@fortawesome/free-solid-svg-icons'
 
 import { createApp } from 'vue'
@@ -53,7 +54,8 @@ library.add(
   faFilter,
   faTriangleExclamation,
   faXmark,
-  faCheck
+  faCheck,
+  faChartSimple
 )
 
 //import router from './router'

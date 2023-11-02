@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import {
   MODE_NONE,
 } from '@/App.vue'
+import { useIndicatorStore } from './indicator'
 
 export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' | 'test' | 'help'
 
@@ -17,6 +18,7 @@ export const useUiStateStore = defineStore('uiState', {
   },
   actions: {
     setMode(mode: string) {
+      useIndicatorStore().reset();
       this.mode = mode
     },
     setModal(modal: ShowModal, selectedID = '') {

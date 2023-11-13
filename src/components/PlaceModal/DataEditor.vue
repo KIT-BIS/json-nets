@@ -17,6 +17,12 @@
     </div>
 
     <div class="block" v-if="placesStore.place.mode === 'assisted'">
+
+        <div class="notification is-info is-light is-size-7">
+            <a>Load primary data</a> from supply chain repository or enter secondary data below:
+        </div>
+
+        <!-- <p class="is-size-7 pl-4 mb-3"></p> -->
         <json-forms :data="placesStore.formsData" :schema="schema" :renderers="renderers" @change="onFormChange"/>
 
         <!-- :uischema="uischema" -->

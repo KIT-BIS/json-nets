@@ -68,6 +68,11 @@
                 <!-- @update="onMarkingCodeUpdate" -->
 
             </section>
+
+            <footer class="modal-card-foot">
+                <button class="button is-pulled-right is-primary is-small" 
+                        style="margin-left: auto" @click="">Publish</button>
+            </footer>
         </div>
     </div>
 </template>

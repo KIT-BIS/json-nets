@@ -1,0 +1,109 @@
+<template>
+
+                <!-- <pre v-if="data">{{ data }}</pre> -->
+                <div v-if="data">
+                    <table class="table is-size-7">
+                        <thead>
+                            <th>Name</th>
+                            <th>Actions</th>
+                        </thead>
+                        <tbody>
+                            <tr v-for="element in data.data">
+                                <td>
+                                    {{ element.name }}
+                                </td>
+                                <td>
+                                    <a @click="setPlaceData(element)">Load</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            <!-- <footer v-if="isScope3" class="modal-card-foot"></footer> -->
+</template>
+<script lang="ts">
+import { useUiStateStore } from '@/stores/uiState';
+import { usePlacesStore } from '@/stores/place';
+import { mapStores } from 'pinia';
+import { defineComponent } from 'vue';
+import { Codemirror } from 'vue-codemirror';
+import { jsonSchema } from "codemirror-json-schema";
+import { basicSetup } from 'codemirror';
+import type { JSONSchema7 } from "json-schema";
+import { EditorState } from "@codemirror/state";
+import { gutter, EditorView, lineNumbers } from "@codemirror/view";
+import { history } from "@codemirror/commands";
+import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
+import { lintGutter } from "@codemirror/lint";
+import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
+import { oneDarkHighlightStyle, oneDark } from "@codemirror/theme-one-dark";
+import type { ViewUpdate } from "@codemirror/view";
+import DataEditor from './DataEditor.vue'
+import JSONSchema from "@json-schema-tools/meta-schema"
+import HelpButton from '@/components/_shared/HelpButton.vue'
+import { primarySchema } from '@/json-nets/Net';
+
+export default defineComponent({
+    setup(props) {
+    },
+    data() {
+        return {
+            data: null
+        }
+    },
+    computed: {
+        ...mapStores(useUiStateStore),
+        ...mapStores(usePlacesStore)
+    },
+    created() {
+        this.load();
+    },
+    watch: {
+    },
+    methods: {
+        close() {
+            // this.uiStateStore. = false;
+        },
+        async load() {
+            const response = await fetch('http://localhost:3030/footprints')
+            this.data = await response.json();
+            // .then(response => response.json())
+            // .then(data => { console.log(data); this.uiStateStore.databaseID = data._id; })
+        },
+        setPlaceData(data) {
+            console.log(data);
+            this.placesStore.place.name = data.name;
+            this.placesStore.saveName();
+            this.placesStore.schemaString = JSON.stringify(primarySchema);
+            this.placesStore.savePlaceSchema(JSON.stringify(primarySchema));
+            this.$forceUpdate();
+            // this.placesStore.place.schema = JSON.parse(JSON.stringify(primarySchema));
+            const marking = data.marking;
+            marking[0].type = "primary";
+            this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
+
+            this.uiStateStore.showSupplyChainData = false;
+        }
+
+    }
+})
+</script>
+<style scoped>
+.scoped-modal-footer {
+    border-top: none;
+}
+
+.scoped-modal-header {
+    border-bottom: none;
+}
+
+.scoped-edit-button {
+    display: none;
+}
+
+.scoped-modal-title:hover>.scoped-edit-button,
+.scoped-edit-button:hover {
+    display: inline-block;
+}
+</style>

@@ -62,34 +62,92 @@ export type EvaluationData = {
 } | false
 
 //const defaultSchema = { type: "array", items: { "type": "object" }}
-const defaultSchema = {
-  type: "array",
-  minItems: 1,
-  maxItems: 1,
-  items: {
-    type: "object",
-    properties: {
-      "ghgFactor": {
-        "type": "number"
-      },
-      "amount": {
-        "type": "number"
-      },
-      "unit": {
-        "type": "string",
-        "enum": ["cm2", "g", "pieces"]
+//const defaultMarking = [];
+const defaultConfig = {
+  schema: { type: "array", items: { "type": "object", "properties": { "case_id": { "type": "number" } }, "required": ["case_id"] }},
+  marking: [],
+  keySnippet: "'-';",
+  valueSnippet: "{};",
+  preface: '',
+  postsetFilter: '$',
+  readonly: false
+}
+
+const secondarySchema = {
+    type: "array",
+    minItems: 1,
+    maxItems: 1,
+    items: {
+      type: "object",
+      properties: {
+        "ghgFactor": {
+          "type": "number"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["cm2", "g", "pieces"]
+        },
+        "type": {
+          "type": "string",
+          "const": "secondary",
+          "readOnly": true
+        }
       }
     }
-  }
-};
+  };
 
-//const defaultMarking = [];
-const defaultMarking = [{
-  ghgFactor: 0,
-  amount: 1,
-  unit: "pieces"
-}];
+export const primarySchema = {
+    type: "array",
+    minItems: 1,
+    maxItems: 1,
+    items: {
+      type: "object",
+      properties: {
+        "ghgFactor": {
+          "type": "number",
+          "readOnly": true
+        },
+        "amount": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["cm2", "g", "pieces"],
+          "readOnly": true
+        },
+        "type": {
+          "type": "string",
+          "const": "primary",
+          "readOnly": true
+        }
+      }
+    }
+  };
 
+const scope3Config = {
+  schema: secondarySchema,
+  marking: [{
+    ghgFactor: 0,
+    amount: 1,
+    unit: "pieces",
+    type: "secondary"
+  }],
+  keySnippet: "'ghgFactor';",
+  valueSnippet: "totalFootprint;",
+  preface: `local calculateTotalFootprint(arr, n) = 
+  if (n <= 0) then 0 
+  else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
+
+local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`,
+  postsetFilter: '$.*',
+  readonly: true
+}
+
+// export const config = defaultConfig;
+export const config = scope3Config;
 
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so
@@ -243,8 +301,8 @@ export class Net {
     const shortID = placeID.substring(0, 4)
     const name = 'place' + shortID;
     const newPlace = new Place(placeID, name)
-    newPlace.schema = JSON.parse(JSON.stringify(defaultSchema));
-    newPlace.marking = JSON.parse(JSON.stringify(defaultMarking));
+    newPlace.schema = JSON.parse(JSON.stringify(config.schema));
+    newPlace.marking = JSON.parse(JSON.stringify(config.marking));
     this._places.push(newPlace)
     return { id: newPlace.id, name: newPlace.name, mode: newPlace.mode, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
@@ -466,7 +524,8 @@ export class Net {
         id: place.id,
         name: place.name,
         marking: place.marking,
-        schema: place.schema.items
+        // schema: place.schema.items
+        schema: place.schema
       })
     }
 

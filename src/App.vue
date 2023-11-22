@@ -39,6 +39,9 @@ function importNet(jsonString: string) {
   }
   useNetStore().import(json)
 }
+
+//TODO: should be in some general config store
+const isScope3 = true;
 </script>
 <script lang="ts">
 export const MODE_NONE = 'MODE_NONE'
@@ -66,7 +69,7 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
     <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
     <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
-    <ModeButton icon="fas fa-chart-simple" :mode="MODE_INDICATOR" />
+    <ModeButton v-if="isScope3" icon="fas fa-chart-simple" :mode="MODE_INDICATOR" />
     <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
     <ModeButton
       icon="fas fa-file-arrow-down"
@@ -150,5 +153,6 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
   <PlaceModal v-if="uiState.showModal === 'place'" />
   <ExpressionEditor v-if="uiState.showEditor !== 'none'"/>
   <HelpModal v-if="uiState.showModal === 'help'" />
+  <!-- <Scope3Modal v-if="uiState.showScope3Data" /> -->
   <!-- <RouterView /> -->
 </template>

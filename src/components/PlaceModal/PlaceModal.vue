@@ -35,7 +35,9 @@
             </div>
 
             <section class="modal-card-body">
-                <DataEditor v-if="shownTab === 'data'" :schema="placesStore.place.schema" />
+                <DataEditor v-if="shownTab === 'data'"  />
+                <!-- :schema="placesStore.place.schema" /> -->
+
                 <div v-if="shownTab === 'schema'" class="block">
                     <div class="field">
                         <label class="label is-small icon-text">Token schema
@@ -69,9 +71,9 @@
 
             </section>
 
-            <footer class="modal-card-foot">
+            <footer v-if="isScope3" class="modal-card-foot">
                 <button class="button is-pulled-right is-primary is-small" 
-                        style="margin-left: auto" @click="">Publish</button>
+                        style="margin-left: auto" @click="publish()">Publish</button>
             </footer>
         </div>
     </div>
@@ -96,6 +98,7 @@ import type { ViewUpdate } from "@codemirror/view";
 import DataEditor from './DataEditor.vue'
 import JSONSchema from "@json-schema-tools/meta-schema"
 import HelpButton from '@/components/_shared/HelpButton.vue'
+import { getCurrentInstance } from 'vue';
 
 const schema: JSONSchema7 = {
     type: "object",
@@ -136,6 +139,8 @@ export default defineComponent({
         return {
             shownTab: 'data' as 'data' | 'schema',
             showNameInput: false,
+            // TODO: should be in general configuration store
+            isScope3: true
         }
     },
     computed: {
@@ -147,7 +152,10 @@ export default defineComponent({
     },
     watch: {
         'placesStore.schemaString'(newValue: string) {
+            console.log('on my watch')
+            console.log(newValue)
             this.placesStore.savePlaceSchema(newValue);
+            // this.$forceUpdate();
         }
     },
     methods: {
@@ -166,6 +174,29 @@ export default defineComponent({
 
         showTab(tab: 'data' | 'schema') {
             this.shownTab = tab;
+        },
+        async publish() {
+            if (this.uiStateStore.databaseID === '') {
+                await fetch('http://localhost:3030/footprints', {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
+                }).then(response => response.json()).then(data => { console.log(data); this.uiStateStore.databaseID = data._id; })
+            } else {
+                console.log('patching')
+                console.log(this.uiStateStore.databaseID)
+                await fetch('http://localhost:3030/footprints/' + this.uiStateStore.databaseID, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
+                }).then(response => response.json()).then(data => { console.log(data); console.log('patched'); })
+            }
+
+
         }
     }
 })

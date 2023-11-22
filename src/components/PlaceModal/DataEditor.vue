@@ -18,12 +18,13 @@
 
     <div class="block" v-if="placesStore.place.mode === 'assisted'">
 
-        <div class="notification is-info is-light is-size-7">
-            <a>Load primary data</a> from supply chain repository or enter secondary data below:
+        <div v-if="isScope3" class="notification is-info is-light is-size-7">
+            <a @click="() => { uiStateStore.showSupplyChainData = true; }">Load primary data</a> from supply chain repository or enter secondary data below:
         </div>
 
         <!-- <p class="is-size-7 pl-4 mb-3"></p> -->
-        <json-forms :data="placesStore.formsData" :schema="schema" :renderers="renderers" @change="onFormChange"/>
+        <json-forms v-if="!uiStateStore.showSupplyChainData" :data="placesStore.formsData" :schema="schema" :renderers="renderers" @change="onFormChange"/>
+        <SupplyChainData v-else />
 
         <!-- :uischema="uischema" -->
         <!-- @change="onChange" -->
@@ -73,6 +74,7 @@ import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle } from "@codemirror/theme-one-dark";
 import type { JSONSchema7 } from 'json-schema';
 import HelpButton from '@/components/_shared/HelpButton.vue';
+import SupplyChainData from './SupplyChainData.vue';
 
 import type { JSONMarking } from '@/util/jsonOperations';
 import { usePlacesStore } from '@/stores/place';
@@ -84,6 +86,7 @@ import {
   vanillaRenderers,
 } from '@jsonforms/vue-vanilla';
 import { toRaw } from 'vue';
+import { useUiStateStore } from '@/stores/uiState';
 
 const singleTokenStyle = mergeStyles(defaultStyles, {
   arrayList: { 
@@ -106,7 +109,8 @@ export default defineComponent({
     components: {
         Codemirror,
         HelpButton,
-        JsonForms
+        JsonForms,
+        SupplyChainData
     },
     provide() {
         if (this.schema.minItems && 
@@ -145,11 +149,14 @@ export default defineComponent({
         return {
 
             renderers: Object.freeze(renderers),
-            schema: this.$props.schema
+            schema: this.$props.schema,
+            // TODO: should be in general configuration store
+            isScope3: true 
         }
     },
     computed: {
-        ...mapStores(usePlacesStore)
+        ...mapStores(usePlacesStore),
+        ...mapStores(useUiStateStore)
     },
     watch: {
         'placesStore.markingString'(newValue: string) {

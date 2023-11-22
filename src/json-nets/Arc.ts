@@ -21,6 +21,8 @@ import { getEnvPathExpression, getFragment as getValue, getKey } from '@/util/js
 //  token: JSONObject
 //}
 
+import { config } from './Net'
+
 export class Arc {
   readonly id: string
   readonly type: "preset" | "postset"
@@ -52,7 +54,8 @@ export class Arc {
     this._filterExpression = '$.*'
     if (type === "postset") {
       //this._filterExpression = '$'
-      this._filterExpression = '$.*'
+      // this._filterExpression = '$.*'
+      this._filterExpression = config.postsetFilter;
     }
 
     this.assignedPathExpression = null;

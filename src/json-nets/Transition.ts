@@ -8,24 +8,13 @@ import { combineAssignments } from '@/util/util'
 import { evaluateExpression } from '@/util/jsonnet.js'
 import { sortByOrder } from '@/util/jsonPointer'
 
+import { config } from './Net'
 
 export type AssignmentRef = {
   arc: Arc
   assignmentIndex: number
 }
 
-//const defaultKeySnippet = "'-'"";
-const defaultKeySnippet = "'ghgFactor';";
-
-//const defaultValueSnippet = "{};";
-const defaultValueSnippet = "totalFootprint;";
-
-//const defaultPreface = '';
-const defaultPreface = `local calculateTotalFootprint(arr, n) = 
-  if (n <= 0) then 0 
-  else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
-
-local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`;
 
 
 /**
@@ -52,10 +41,10 @@ export class Transition {
     this.preset = []
     this.postset = []
     this.guard = 'true';
-    this.preface = defaultPreface;
+    this.preface = config.preface;
     this.valueVarSnippets = {}
     this.keyVarSnippets = {}
-    this.readonly = true;
+    this.readonly = config.readonly;
   }
 
   connectArc(arc: Arc) {
@@ -64,10 +53,10 @@ export class Transition {
     } else if (arc.type === 'postset') {
       // existing snippets are not overwritten (important for imports)
       if (!this.valueVarSnippets[arc.valueVarName]) {
-        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = ' + defaultValueSnippet;
+        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = ' + config.valueSnippet;
       }
       if (!this.keyVarSnippets[arc.keyVarName]) {
-        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = " + defaultKeySnippet;
+        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = " + config.keySnippet;
       }
       this.postset.push(arc)
     }

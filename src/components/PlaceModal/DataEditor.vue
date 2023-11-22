@@ -1,36 +1,5 @@
 <template>
-    <div class="block is-flex is-justify-content-center">
-        <div class="field has-addons">
-            <p class="control">
-                <button @click="onUserModeClick('assisted')" class="button is-small"
-                    :class="placesStore.place.mode === 'assisted' ? 'is-primary' : ''">
-                    <span>Assisted</span>
-                </button>
-            </p>
-            <p class="control">
-                <button @click="onUserModeClick('expert')" class="button is-small"
-                    :class="placesStore.place.mode === 'expert' ? 'is-primary' : ''">
-                    <span>Expert</span>
-                </button>
-            </p>
-        </div>
-    </div>
-
-    <div class="block" v-if="placesStore.place.mode === 'assisted'">
-
-        <div v-if="isScope3" class="notification is-info is-light is-size-7">
-            <a @click="() => { uiStateStore.showSupplyChainData = true; }">Load primary data</a> from supply chain repository or enter secondary data below:
-        </div>
-
-        <!-- <p class="is-size-7 pl-4 mb-3"></p> -->
-        <json-forms v-if="!uiStateStore.showSupplyChainData" :data="placesStore.formsData" :schema="schema" :renderers="renderers" @change="onFormChange"/>
-        <SupplyChainData v-else />
-
-        <!-- :uischema="uischema" -->
-        <!-- @change="onChange" -->
-    </div>
-
-    <div class="block" v-if="placesStore.place.mode === 'expert'">
+    <div class="block">
         <div class="field">
             <label class="label is-small icon-text">Place marking
                 <HelpButton help-text="
@@ -60,8 +29,6 @@
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { mapStores } from 'pinia';
-
 import { basicSetup } from 'codemirror';
 import { Codemirror } from 'vue-codemirror';
 import { jsonSchema } from "codemirror-json-schema";
@@ -73,60 +40,21 @@ import { lintGutter } from "@codemirror/lint";
 import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle } from "@codemirror/theme-one-dark";
 import type { JSONSchema7 } from 'json-schema';
-import HelpButton from '@/components/_shared/HelpButton.vue';
-import SupplyChainData from './SupplyChainData.vue';
 
-import type { JSONMarking } from '@/util/jsonOperations';
+
 import { usePlacesStore } from '@/stores/place';
-
-import { JsonForms } from '@jsonforms/vue';
-import {
-  defaultStyles,
-  mergeStyles,
-  vanillaRenderers,
-} from '@jsonforms/vue-vanilla';
-import { toRaw } from 'vue';
-import { useUiStateStore } from '@/stores/uiState';
-
-const singleTokenStyle = mergeStyles(defaultStyles, {
-  arrayList: { 
-    addButton: 'is-hidden',
-    itemContent: 'expanded',
-    itemToolbar: 'is-hidden'
- },
-
-});
-
-const renderers = [
-    ...vanillaRenderers,
-    // here you can add custom renderers
-];
+import { mapStores } from 'pinia';
+import HelpButton from '@/components/_shared/HelpButton.vue';
 
 export default defineComponent({
-    props: {
-        schema: {}
-    },
     components: {
         Codemirror,
         HelpButton,
-        JsonForms,
-        SupplyChainData
     },
-    provide() {
-        if (this.schema.minItems && 
-        this.schema.maxItems && 
-        this.schema.minItems === 1 && 
-        this.schema.maxItems === 1) {
-            return {
-                styles: singleTokenStyle,
-            };
-        } else {
-            return {
-                styles: defaultStyles
-            }
-        }
-    },
-    setup(props) {
+
+    setup() {
+
+        const placesStore = usePlacesStore();
 
         const extensions = [
             gutter({ class: "CodeMirror-lint-markers" }),
@@ -139,44 +67,23 @@ export default defineComponent({
             EditorView.lineWrapping,
             EditorState.tabSize.of(2),
             syntaxHighlighting(oneDarkHighlightStyle),
-            jsonSchema(props.schema as JSONSchema7)
+            jsonSchema(placesStore.place.schema as JSONSchema7)
         ]
         return {
             extensions,
         }
     },
-    data() {
-        return {
-
-            renderers: Object.freeze(renderers),
-            schema: this.$props.schema,
-            // TODO: should be in general configuration store
-            isScope3: true 
-        }
-    },
     computed: {
         ...mapStores(usePlacesStore),
-        ...mapStores(useUiStateStore)
-    },
-    watch: {
-        'placesStore.markingString'(newValue: string) {
-            console.log('saving marking from string watcher')
-            this.placesStore.savePlaceMarkingFromEditor(newValue);
-        },
     },
     methods: {
         onAddTokenClick() {
             // todo make token dependent on schema
             this.placesStore.addToken();
         },
-        onUserModeClick(mode: "assisted" | "expert") {
-            this.placesStore.setUserMode(mode)
-        },
-        onFormChange(newValue) {
-            this.placesStore.savePlaceMarkingFromForm(newValue.data);
-        }
-
 
     }
+
+
 })
 </script>

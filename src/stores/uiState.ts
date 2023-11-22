@@ -14,6 +14,7 @@ export const useUiStateStore = defineStore('uiState', {
       showModal: 'test' as ShowModal,
       showEditor: 'none' as string,
       showSupplyChainData: false as boolean,
+      isScope3: true as boolean,
 
       lastSelectedID: '' as string,
     }

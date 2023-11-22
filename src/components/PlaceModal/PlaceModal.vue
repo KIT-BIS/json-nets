@@ -35,7 +35,7 @@
             </div>
 
             <section class="modal-card-body">
-                <DataEditor v-if="shownTab === 'data'"  />
+                <DataTab v-if="shownTab === 'data'"  />
                 <!-- :schema="placesStore.place.schema" /> -->
 
                 <div v-if="shownTab === 'schema'" class="block">
@@ -99,6 +99,7 @@ import DataEditor from './DataEditor.vue'
 import JSONSchema from "@json-schema-tools/meta-schema"
 import HelpButton from '@/components/_shared/HelpButton.vue'
 import { getCurrentInstance } from 'vue';
+import DataTab from './DataTab.vue';
 
 const schema: JSONSchema7 = {
     type: "object",
@@ -111,10 +112,11 @@ const schema: JSONSchema7 = {
 
 export default defineComponent({
     components: {
-        Codemirror,
-        DataEditor,
-        HelpButton
-    },
+    Codemirror,
+    DataEditor,
+    HelpButton,
+    DataTab
+},
     setup(props) {
         const extensions = [
             gutter({ class: "CodeMirror-lint-markers" }),

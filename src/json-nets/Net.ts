@@ -73,12 +73,13 @@ const defaultConfig = {
   readonly: false
 }
 
-export const secondarySchema = {
+export const onSiteSchema = {
     type: "array",
     minItems: 1,
     maxItems: 1,
     items: {
       type: "object",
+      properties: { data: { type: "object",
       properties: {
         "ghgFactor": {
           "type": "number"
@@ -92,19 +93,25 @@ export const secondarySchema = {
         },
         "type": {
           "type": "string",
-          "const": "secondary",
+          "enum": ["primary", "secondary"],
+          // "readOnly": true
+        },
+        "pds": {
+          "type": "number",
           "readOnly": true
         }
       }
+    }}
     }
   };
 
-export const primarySchema = {
+export const supplyChainSchema = {
     type: "array",
     minItems: 1,
     maxItems: 1,
     items: {
       type: "object",
+      properties: { data: { type: "object",
       properties: {
         "ghgFactor": {
           "type": "number",
@@ -120,28 +127,54 @@ export const primarySchema = {
         },
         "type": {
           "type": "string",
-          "const": "primary",
+          "const": "supply-chain",
+          "readOnly": true
+        },
+        "pds": {
+          "type": "number",
           "readOnly": true
         }
       }
+    }}
     }
   };
 
 const scope3Config = {
-  schema: secondarySchema,
-  marking: [{
-    ghgFactor: 0,
+  schema: onSiteSchema,
+  marking: [ {data:{
+    ghgFactor: 1,
     amount: 1,
     unit: "pieces",
-    type: "secondary"
-  }],
-  keySnippet: "'ghgFactor';",
-  valueSnippet: "totalFootprint;",
-  preface: `local calculateTotalFootprint(arr, n) = 
+    type: "primary",
+    pds: 1,
+  }}],
+  keySnippet: "'data';",
+  valueSnippet: "{ ghgFactor: totalFootprint, amount: 1, unit: 'pieces', type: 'primary', pds: outputPDS};",
+  preface: `local sum(arr, n) = 
   if (n <= 0) then 0 
-  else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
+  else sum(arr, n-1) + arr[n-1];
 
-local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`,
+local calculateFootprint(component) = component.data.amount * component.data.ghgFactor;
+
+local individualFootprints = std.map(calculateFootprint,input_values);
+
+local totalFootprint = sum(individualFootprints, std.length(individualFootprints));
+
+local calculatePCFShare(partFootprint) = partFootprint/totalFootprint;
+
+local footprintShares = std.map(calculatePCFShare,individualFootprints);
+
+local calculatePrimaryDataShare(index) = if input_values[index].data.type == "primary" then footprintShares[index] * 1
+  else if input_values[index].data.type == "supply-chain" then footprintShares[index] * input_values[index].data.pds else 0;
+
+local primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));
+
+local outputPDS = sum(primaryDataShares,std.length(primaryDataShares));`,
+  // preface: `local calculateTotalFootprint(arr, n) = 
+  // if (n <= 0) then 0 
+  // else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
+// 
+// local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`,
   postsetFilter: '$.*',
   readonly: true
 }

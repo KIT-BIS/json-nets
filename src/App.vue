@@ -71,26 +71,14 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
     <ModeButton v-if="isScope3" icon="fas fa-chart-simple" :mode="MODE_INDICATOR" />
     <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
-    <ModeButton
-      icon="fas fa-file-arrow-down"
-      :mode="MODE_EXPORT"
-      :callback="
-        () => {
-          download(exportNet(), 'export.json', 'application/json')
-        }
-      "
-    />
-    <input
-      class="button is-primary is-outlined"
-      style="margin-left: 15px"
-      type="file"
-      name="netfile"
-      @change="
-        (event) => {
-          readFile(event, importNet)
-        }
-      "
-    />
+    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_EXPORT" :callback="() => {
+        download(exportNet(), 'export.json', 'application/json')
+      }
+      " />
+    <input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="netfile" @change="(event) => {
+        readFile(event, importNet)
+      }
+      " />
     <!-- <button
       style="margin-left: 15px"
       @click.stop="
@@ -129,19 +117,21 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     </button> -->
 
 
-    <ModeButton
-      icon="fas fa-question"
-      :mode="MODE_HELP"
-      :callback="
-        () => {
-          uiState.showModal = 'help' 
-        }
-      "
-    />
+    <ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => {
+        uiState.showModal = 'help'
+      }
+      " />
   </div>
-  <div v-if="uiState.mode === MODE_INDICATOR" id="indicator-panel" class="has-text-centered p-5" style="border: dashed grey;">
-    <div v-if="indicatorState.selectedPlaceID !== 'none'">    
-      <p class="title is-3">{{ indicatorState.indicatorValue }} kgCO2eq</p>
+  <div v-if="uiState.mode === MODE_INDICATOR" id="indicator-panel" class="has-text-centered p-5"
+    style="border: dashed grey;">
+    <div class="select mb-5 is-small">
+      <select v-model="indicatorState.indicatorType" @change="indicatorState.updateIndicator()">
+        <option value="pcf">Carbon Footprint</option>
+        <option value="pds">Primary Data Share</option>
+      </select>
+    </div>
+    <div v-if="indicatorState.selectedPlaceID !== 'none'">
+      <p class="title is-3">{{ indicatorState.indicatorValue }}</p>
       <p class="subtitle is-5">{{ indicatorState.placeName }}</p>
     </div>
     <div v-else>
@@ -149,9 +139,9 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     </div>
 
   </div>
-  <TransitionModal v-if="uiState.showModal === 'transition'"/>
+  <TransitionModal v-if="uiState.showModal === 'transition'" />
   <PlaceModal v-if="uiState.showModal === 'place'" />
-  <ExpressionEditor v-if="uiState.showEditor !== 'none'"/>
+  <ExpressionEditor v-if="uiState.showEditor !== 'none'" />
   <HelpModal v-if="uiState.showModal === 'help'" />
   <!-- <Scope3Modal v-if="uiState.showScope3Data" /> -->
   <!-- <RouterView /> -->

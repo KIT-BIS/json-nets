@@ -6,7 +6,8 @@ export const useIndicatorStore = defineStore('indicator', {
         return {
             selectedPlaceID: 'none' as string,
             placeName: '' as string,
-            indicatorValue: 0 as number
+            indicatorValue: "... loading" as string,
+            indicatorType: 'pcf' as string
         }
     },
     actions: {
@@ -16,12 +17,25 @@ export const useIndicatorStore = defineStore('indicator', {
         selectPlace(id: string) {
             this.selectedPlaceID = id;
 
-            const placeData = getNetInstance().findPlace(id)
+            this.updateIndicator();
+        },
+        updateIndicator() {
+            const placeData = getNetInstance().findPlace(this.selectedPlaceID)
             if (placeData) {
                 this.placeName = placeData.name;
-                const content = placeData.marking[0];
-                this.indicatorValue = <number>content['ghgFactor'] * <number>content['amount'];
+                const content = <{ ghgFactor: number, amount: number, pds:number, type: string}>placeData.marking[0].data;
+
+                if (this.indicatorType === 'pcf') {
+                    this.indicatorValue = (content.ghgFactor * content.amount) + " kgCO2eq";
+                } else if (this.indicatorType === 'pds') {
+                    if (content.type === "secondary") {
+                        this.indicatorValue = "0% Primary Data"
+                    } else {
+                        this.indicatorValue = (content.pds * 100) + "% Primary Data";
+                    }
+                }
             }
+
         }
 
     }

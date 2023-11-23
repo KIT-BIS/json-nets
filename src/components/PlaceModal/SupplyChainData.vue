@@ -26,8 +26,8 @@
 import { useUiStateStore } from '@/stores/uiState';
 import { usePlacesStore } from '@/stores/place';
 import { mapStores } from 'pinia';
-import { defineComponent } from 'vue';
-import { primarySchema } from '@/json-nets/Net';
+import { defineComponent, toRaw } from 'vue';
+import { supplyChainSchema } from '@/json-nets/Net';
 
 export default defineComponent({
     setup(props) {
@@ -59,12 +59,15 @@ export default defineComponent({
         setPlaceData(data) {
             this.placesStore.place.name = data.name;
             this.placesStore.saveName();
-            this.placesStore.schemaString = JSON.stringify(primarySchema);
-            this.placesStore.savePlaceSchema(JSON.stringify(primarySchema));
+            this.placesStore.schemaString = JSON.stringify(supplyChainSchema);
+            this.placesStore.savePlaceSchema(JSON.stringify(supplyChainSchema));
             // this.$forceUpdate();
             // this.placesStore.place.schema = JSON.parse(JSON.stringify(primarySchema));
+            
             const marking = data.marking;
-            marking[0].type = "primary";
+            console.log('setting supply chain data')
+            marking[0].data.type = "supply-chain";
+            console.log(marking);
             this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
 
             this.uiStateStore.showSupplyChainData = false;

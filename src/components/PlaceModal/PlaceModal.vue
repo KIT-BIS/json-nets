@@ -71,7 +71,7 @@
 
             </section>
 
-            <footer v-if="isScope3" class="modal-card-foot">
+            <footer v-if="uiStateStore.isScope3" class="modal-card-foot">
                 <button class="button is-pulled-right is-primary is-small" 
                         style="margin-left: auto" @click="publish()">Publish</button>
             </footer>
@@ -142,7 +142,7 @@ export default defineComponent({
             shownTab: 'data' as 'data' | 'schema',
             showNameInput: false,
             // TODO: should be in general configuration store
-            isScope3: true
+            // isScope3: true
         }
     },
     computed: {

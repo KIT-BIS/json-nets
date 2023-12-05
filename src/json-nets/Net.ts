@@ -64,7 +64,7 @@ export type EvaluationData = {
 //const defaultSchema = { type: "array", items: { "type": "object" }}
 //const defaultMarking = [];
 const defaultConfig = {
-  schema: { type: "array", items: { "type": "object", "properties": { "case_id": { "type": "number" } }, "required": ["case_id"] }},
+  schema: { type: "array", items: { "type": "object", "properties": { "instance_id": { "type": "number" } }, "required": ["instance_id"] }},
   marking: [],
   keySnippet: "'-';",
   valueSnippet: "{};",

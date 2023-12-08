@@ -26,7 +26,6 @@
     "@fortawesome/fontawesome-svg-core": "^6.4.0",
     "@fortawesome/free-solid-svg-icons": "^6.4.0",
     "@fortawesome/vue-fontawesome": "^3.0.3",
-    "@grapoza/vue-tree": "^5.2.0",
     "@json-schema-tools/meta-schema": "^1.7.0",
     "@jsonforms/core": "^3.1.0",
     "@jsonforms/vue": "^3.1.0",
@@ -40,6 +39,7 @@
     "bulma-tooltip": "^3.0.2",
     "codemirror": "^6.0.1",
     "codemirror-json-schema": "^0.4.0",
+    "echarts": "^5.4.3",
     "jointjs": "^3.7.2",
     "js-beautify": "^1.14.7",
     "json-beautify": "^1.1.1",
@@ -52,6 +52,7 @@
     "uuid": "^9.0.0",
     "vue": "^3.3.2",
     "vue-codemirror": "^6.1.1",
+    "vue-echarts": "^6.6.2",
     "vue-json-pretty": "^2.2.4",
     "vue-router": "^4.2.0"
   },

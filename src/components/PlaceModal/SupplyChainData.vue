@@ -1,11 +1,16 @@
 <template>
 
                 <!-- <pre v-if="data">{{ data }}</pre> -->
+                <div class="notification is-info is-light is-size-7">
+                    Komponente zum Laden aus dem Lieferketten-Verzeichnsi auswählen oder 
+                    <a @click="() => uiStateStore.showSupplyChainData = false">Abbrechen</a>.
+                </div>
+
                 <div v-if="data">
                     <table class="table is-size-7 is-fullwidth">
                         <thead>
-                            <th>Name</th>
-                            <th>Actions</th>
+                            <th>Komponente</th>
+                            <th>Aktionen</th>
                         </thead>
                         <tbody>
                             <tr v-for="element in data.data">
@@ -13,7 +18,7 @@
                                     {{ element.name }}
                                 </td>
                                 <td>
-                                    <a @click="setPlaceData(element)">Load</a>
+                                    <a @click="setPlaceData(element)">Laden</a>
                                 </td>
                             </tr>
                         </tbody>
@@ -27,7 +32,7 @@ import { useUiStateStore } from '@/stores/uiState';
 import { usePlacesStore } from '@/stores/place';
 import { mapStores } from 'pinia';
 import { defineComponent, toRaw } from 'vue';
-import { supplyChainSchema } from '@/json-nets/Net';
+import { supplyChainSchema } from '@/examples/scope3transparent';
 
 export default defineComponent({
     setup(props) {
@@ -65,8 +70,8 @@ export default defineComponent({
             // this.placesStore.place.schema = JSON.parse(JSON.stringify(primarySchema));
             
             const marking = data.marking;
-            console.log('setting supply chain data')
-            marking[0].data.type = "supply-chain";
+            marking[0].data.scope = 3;
+            marking[0].data.fromSupplyChain = true;
             console.log(marking);
             this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
 

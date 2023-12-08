@@ -9,7 +9,6 @@ export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' |
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
     return {
-      databaseID: '' as String,
       mode: MODE_NONE as string,
       showModal: 'test' as ShowModal,
       showEditor: 'none' as string,

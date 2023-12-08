@@ -383,6 +383,7 @@ export class Transition {
 
   assembleVariablesFromPathAssignments() {
     const inputValues = [];
+    const inputNames = [];
     const variables: Record<string,JSONValue> = {}
     for (let i = 0; i < this.preset.length; i++) {
       const arc = this.preset[i]
@@ -392,6 +393,7 @@ export class Transition {
       variables[arc.keyVarName] = arc.keyVarValue;
       variables[arc.valueVarName] = arc.valueVarValue;
       inputValues.push(arc.valueVarValue);
+      inputNames.push(arc.place.name)
     }
 
     for (let i = 0; i < this.postset.length; i++) {
@@ -401,6 +403,7 @@ export class Transition {
       variables[arc.tokenVarName] = arc.tokenVarValue;
     }
     variables['input_values'] = inputValues;
+    variables['input_names'] = inputNames;
     return variables;
   }
 
@@ -446,6 +449,7 @@ export class Transition {
       // as these are needed to evaluate postset key, value vars
       // todo: there is some duplicate code with other function that assembles variables
       const inputValues = [];
+      const inputNames = [];
       let combinationHasAnyVariableError = false;
       for (let j = 0; j < combination.length; j++) {
         const assignmentRef = combination[j];
@@ -460,6 +464,7 @@ export class Transition {
           keyVariables[arc.keyVarName] = arcVariables.key;
           valueVariables[arc.valueVarName] = arcVariables.value;
           inputValues.push(arcVariables.value);
+          inputNames.push(arc.place.name);
         } else {
           const arcVariables = arc.assignTokenVariableByIndex(assignmentRef.assignmentIndex)
           if (!arcVariables) {
@@ -472,7 +477,7 @@ export class Transition {
       if (combinationHasAnyVariableError) continue;
 
       // for the postset arcs, evaluate key, value snippets
-      const variables = this.assignOutputKeyValueVariables({ 'input_values': inputValues, ...keyVariables, ...valueVariables, ...tokenVariables })
+      const variables = this.assignOutputKeyValueVariables({ 'input_values': inputValues, 'input_names': inputNames, ...keyVariables, ...valueVariables, ...tokenVariables })
       if (!variables) continue;
 
       // check whether guard evaluates to true (and not only truthy), otherwise check next combination

@@ -7,6 +7,8 @@ import { unCacheSchema } from "@/util/jsonSchema";
 import { evaluateExpression, type EvaluationResult } from "@/util/jsonnet";
 import { v4 as uuid } from 'uuid'
 
+import { s3tPreface, s3tvalueSnippet, scope3Marking, scope3Schema } from '@/examples/scope3transparent';
+
 export type TransitionData = {
   name: string,
   id: string,
@@ -73,103 +75,81 @@ const defaultConfig = {
   readonly: false
 }
 
-export const onSiteSchema = {
-    type: "array",
-    minItems: 1,
-    maxItems: 1,
-    items: {
-      type: "object",
-      properties: { data: { type: "object",
-      properties: {
-        "ghgFactor": {
-          "type": "number"
-        },
-        "amount": {
-          "type": "number"
-        },
-        "unit": {
-          "type": "string",
-          "enum": ["cm2", "g", "pieces"]
-        },
-        "type": {
-          "type": "string",
-          "enum": ["primary", "secondary"],
-          // "readOnly": true
-        },
-        "pds": {
-          "type": "number",
-          "readOnly": true
-        }
-      }
-    }}
-    }
-  };
+//export const onSiteSchema = {
+//    type: "array",
+//    minItems: 1,
+//    maxItems: 1,
+//    items: {
+//      type: "object",
+//      properties: { data: { type: "object",
+//      properties: {
+//        "ghgFactor": {
+//          "type": "number",
+//          "title": "Emissionsfaktor",
+//          "description": "Angabe des Emissionsfaktors je Mengeneinheit in kgCO2eq."
+//        },
+//        "amount": {
+//          "type": "number",
+//          "title": "Menge",
+//        },
+//        "unit": {
+//          "type": "string",
+//          "title": "Mengeneinheit",
+//          "enum": ["cm2 (Flaeche)", "g (Gewicht)", "Stueck (Stueckzahl)", "kWh (Energie)"]
+//        },
+//        "type": {
+//          "type": "string",
+//          "enum": ["Primaerdaten", "Sekundaerdaten"],
+//          "title": "Datentyp",
+//          // "readOnly": true
+//        },
+//        // "pds": {
+//          // "type": "number",
+//          // "readOnly": true
+//        // }
+//      }
+//    }}
+//    }
+//  };
 
-export const supplyChainSchema = {
-    type: "array",
-    minItems: 1,
-    maxItems: 1,
-    items: {
-      type: "object",
-      properties: { data: { type: "object",
-      properties: {
-        "ghgFactor": {
-          "type": "number",
-          "readOnly": true
-        },
-        "amount": {
-          "type": "number"
-        },
-        "unit": {
-          "type": "string",
-          "enum": ["cm2", "g", "pieces"],
-          "readOnly": true
-        },
-        "type": {
-          "type": "string",
-          "const": "supply-chain",
-          "readOnly": true
-        },
-        "pds": {
-          "type": "number",
-          "readOnly": true
-        }
-      }
-    }}
-    }
-  };
 
 const scope3Config = {
-  schema: onSiteSchema,
-  marking: [ {data:{
-    ghgFactor: 1,
-    amount: 1,
-    unit: "pieces",
-    type: "primary",
-    pds: 1,
-  }}],
+  schema: JSON.parse(JSON.stringify(scope3Schema)),
+  marking: JSON.parse(JSON.stringify(scope3Marking)),
+//  marking: [ {data:{
+//    ghgFactor: 1,
+//    amount: 1,
+//    unit: "Stueck (Stueckzahl)",
+//    type: "Primaerdaten",
+//    pds: 1,
+//  }}],
   keySnippet: "'data';",
-  valueSnippet: "{ ghgFactor: totalFootprint, amount: 1, unit: 'pieces', type: 'primary', pds: outputPDS};",
-  preface: `local sum(arr, n) = 
-  if (n <= 0) then 0 
-  else sum(arr, n-1) + arr[n-1];
-
-local calculateFootprint(component) = component.data.amount * component.data.ghgFactor;
-
-local individualFootprints = std.map(calculateFootprint,input_values);
-
-local totalFootprint = sum(individualFootprints, std.length(individualFootprints));
-
-local calculatePCFShare(partFootprint) = partFootprint/totalFootprint;
-
-local footprintShares = std.map(calculatePCFShare,individualFootprints);
-
-local calculatePrimaryDataShare(index) = if input_values[index].data.type == "primary" then footprintShares[index] * 1
-  else if input_values[index].data.type == "supply-chain" then footprintShares[index] * input_values[index].data.pds else 0;
-
-local primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));
-
-local outputPDS = sum(primaryDataShares,std.length(primaryDataShares));`,
+  valueSnippet: s3tvalueSnippet,
+  preface: s3tPreface,
+//  `local sum(arr, n) = 
+//  if (n <= 0) then 0 
+//  else sum(arr, n-1) + arr[n-1];
+//
+//local calculateFootprint(component) = component.data.amount * component.data.ghgFactor;
+//
+//local individualFootprints = std.map(calculateFootprint,input_values);
+//
+//local totalFootprint = sum(individualFootprints, std.length(individualFootprints));
+//
+//local calculatePCFShare(partFootprint) = partFootprint/totalFootprint;
+//
+//local footprintShares = std.map(calculatePCFShare,individualFootprints);
+//
+//local calculatePrimaryDataShare(index) = if input_values[index].data.type == "Primärdaten" then footprintShares[index] * 1
+//  else if input_values[index].data.type == "supply-chain" then footprintShares[index] * input_values[index].data.pds else 0;
+//
+//local primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));
+//
+//local outputPDS = sum(primaryDataShares,std.length(primaryDataShares));
+//
+//local generateFootprintContribution(index,element) = { name: input_names[index], value: individualFootprints[index] };
+//
+//local generatePdsContribution(index,element) = { name: input_names[index], value: primaryDataShares[index] };`,
   // preface: `local calculateTotalFootprint(arr, n) = 
   // if (n <= 0) then 0 
   // else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 

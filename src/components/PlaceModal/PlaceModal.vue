@@ -71,9 +71,7 @@
 
             </section>
 
-            <footer v-if="uiStateStore.isScope3" class="modal-card-foot">
-                <button class="button is-pulled-right is-primary is-small" 
-                        style="margin-left: auto" @click="publish()">Publish</button>
+            <footer v-if="isScope3" class="modal-card-foot">
             </footer>
         </div>
     </div>
@@ -163,6 +161,11 @@ export default defineComponent({
     methods: {
         close() {
             this.uiStateStore.showModal = 'none';
+
+            //TODO hacky
+            if (this.uiStateStore.isScope3) {
+                this.uiStateStore.showSupplyChainData = false;
+            }
         },
         onCancelNameEdit() {
             this.placesStore.resetName();
@@ -177,29 +180,6 @@ export default defineComponent({
         showTab(tab: 'data' | 'schema') {
             this.shownTab = tab;
         },
-        async publish() {
-            if (this.uiStateStore.databaseID === '') {
-                await fetch('http://localhost:3030/footprints', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
-                }).then(response => response.json()).then(data => { console.log(data); this.uiStateStore.databaseID = data._id; })
-            } else {
-                console.log('patching')
-                console.log(this.uiStateStore.databaseID)
-                await fetch('http://localhost:3030/footprints/' + this.uiStateStore.databaseID, {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
-                }).then(response => response.json()).then(data => { console.log(data); console.log('patched'); })
-            }
-
-
-        }
     }
 })
 </script>

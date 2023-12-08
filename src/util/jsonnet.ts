@@ -17,10 +17,23 @@ export function jsonnetify(documents: Object) {
 // export function variablifyDocuments(documents) {
   let jsonnetString = ''
   for (const [key, value] of Object.entries(documents)) {
-    jsonnetString += `local ${key} = ${JSON.stringify(value)}; \n`
+    jsonnetString += `local ${key} = ${replaceUmlauts(JSON.stringify(value))}; \n`
   }
 
   return jsonnetString
+}
+
+// TODO: this is a hacky solution to fix Umlaut support
+function replaceUmlauts(string) {
+  let value = string;
+  value = value.replace(/\u00c4/g, 'Ae');
+  value = value.replace(/\u00e4/g, 'ae');
+  value = value.replace(/\u00dc/g, 'Ue');
+  value = value.replace(/\u00fc/g, 'ue');
+  value = value.replace(/\u00d6/g, 'Oe');
+  value = value.replace(/\u00f6/g, 'oe');
+  value = value.replace(/\u00df/g, 'ss');
+  return value;
 }
 
 export type EvaluationResult = {
@@ -29,7 +42,7 @@ export type EvaluationResult = {
 }
 export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = ''): EvaluationResult {
   const variableString = jsonnetify(variables)
-  jsonnetExpression = variableString + jsonnetExpression;
+  jsonnetExpression = variableString + replaceUmlauts(jsonnetExpression);
   // console.log(jsonnetExpression)
 
   try {

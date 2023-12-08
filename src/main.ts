@@ -31,6 +31,8 @@ import {
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
+import VueEcharts from 'vue-echarts';
+
 import App from './App.vue'
 
 /* add icons to the library */
@@ -66,6 +68,7 @@ app.use(VueCodemirror, {
   // to allow removal of gutters
   extensions: []
 })
+app.component('v-chart',VueEcharts);
 
 app.mount('#app')
 

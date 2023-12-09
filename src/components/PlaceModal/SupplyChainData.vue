@@ -15,10 +15,12 @@
                         <tbody>
                             <tr v-for="element in data.data">
                                 <td>
-                                    {{ element.name }}
+                                    {{  //@ts-ignore
+                                        element.name }}
                                 </td>
                                 <td>
-                                    <a @click="setPlaceData(element)">Laden</a>
+                                    <a @click="//@ts-ignore
+                                        setPlaceData(element)">Laden</a>
                                 </td>
                             </tr>
                         </tbody>
@@ -33,6 +35,7 @@ import { usePlacesStore } from '@/stores/place';
 import { mapStores } from 'pinia';
 import { defineComponent, toRaw } from 'vue';
 import { supplyChainSchema } from '@/examples/scope3transparent';
+import type { JSONMarking } from '@/util/jsonOperations';
 
 export default defineComponent({
     setup(props) {
@@ -61,7 +64,7 @@ export default defineComponent({
             // .then(response => response.json())
             // .then(data => { console.log(data); this.uiStateStore.databaseID = data._id; })
         },
-        setPlaceData(data) {
+        setPlaceData(data: { name: string, marking: JSONMarking }) {
             this.placesStore.place.name = data.name;
             this.placesStore.saveName();
             this.placesStore.schemaString = JSON.stringify(supplyChainSchema);
@@ -70,7 +73,9 @@ export default defineComponent({
             // this.placesStore.place.schema = JSON.parse(JSON.stringify(primarySchema));
             
             const marking = data.marking;
+            //@ts-ignore
             marking[0].data.scope = 3;
+            //@ts-ignore
             marking[0].data.fromSupplyChain = true;
             console.log(marking);
             this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));

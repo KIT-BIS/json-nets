@@ -1,5 +1,22 @@
 import { getNetInstance } from "@/json-nets/Net";
 import { defineStore } from "pinia"
+import { use } from 'echarts/core'
+import { PieChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent
+} from 'echarts/components'
+import { SVGRenderer } from 'echarts/renderers'
+import type { ComposeOption } from 'echarts/core'
+import type { PieSeriesOption } from 'echarts/charts'
+import type {
+  TitleComponentOption,
+  TooltipComponentOption,
+  LegendComponentOption
+} from 'echarts/components'
+
+use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
 
 export const useIndicatorStore = defineStore('indicator', {
     state: () => {
@@ -40,7 +57,7 @@ export const useIndicatorStore = defineStore('indicator', {
                         },
                     },
                 ],
-            }// 
+            } as any
         }
     },
     actions: {
@@ -52,8 +69,8 @@ export const useIndicatorStore = defineStore('indicator', {
 
             this.updateIndicator();
         },
-        roundToTwo(num) {
-            return +(Math.round(num + 'e+2') + 'e-2');
+        roundToTwo(num: number) {
+            return +(Math.round(Number(String(num) + 'e+2')) + 'e-2');
         },
         updateIndicator() {
             const placeData = getNetInstance().findPlace(this.selectedPlaceID)
@@ -63,7 +80,9 @@ export const useIndicatorStore = defineStore('indicator', {
 
                 if (this.indicatorType === 'pcf') {
                     this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                    //@ts-ignore
                     this.option.series[0].data = content.footprintContributions;
+                    //@ts-ignore
                     this.option.legend.data = content.names;
                 } else if (this.indicatorType === 'pds') {
                     // if (content.typej === "Sekundaerdaten") {

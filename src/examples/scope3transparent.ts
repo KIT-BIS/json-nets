@@ -1,5 +1,44 @@
+export const startSchema = {
+  "type": "array",
+  "title": "start",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+  }
+}
+
+export const startMarking = [{}];
+
+export const endSchema = {
+  "type": "array",
+  "title": "end",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+  }
+}
+
+export const endMarking = [];
+
+export const controlSchema = {
+  "type": "array",
+  "title": "control",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+  }
+}
+
+export const controlMarking = [];
+
+
+
 export const scope1Schema = {
   "type": "array",
+  "title": "scope1",
   "minItems": 1,
   "maxItems": 1,
   "items": {
@@ -55,6 +94,7 @@ export const scope1Marking = [ { data:
 
 export const scope2Schema = {
   "type": "array",
+  "title": "scope2",
   "minItems": 1,
   "maxItems": 1,
   "items": {
@@ -102,6 +142,7 @@ export const scope2Marking = [{ data: {
 
 export const scope3Schema = {
   "type": "array",
+  "title": "scope3",
   "minItems": 1,
   "maxItems": 1,
   "items": {
@@ -209,6 +250,7 @@ export const productMarking = [{
 
 export const supplyChainSchema = {
     type: "array",
+    title: "supply-chain",
     minItems: 1,
     maxItems: 1,
     items: {

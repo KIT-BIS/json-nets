@@ -2,6 +2,23 @@
     <v-chart class="chart" :option="indicatorStore.option" autoresize />
 </template>
 <script lang="ts">
+import type { ComposeOption } from 'echarts/core'
+import type { PieSeriesOption } from 'echarts/charts'
+import type {
+  TitleComponentOption,
+  TooltipComponentOption,
+  LegendComponentOption
+} from 'echarts/components'
+
+type EChartsOptionZ = ComposeOption<
+  | TitleComponentOption
+  | TooltipComponentOption
+  | LegendComponentOption
+  | PieSeriesOption
+>
+
+use([TitleComponent, TooltipComponent, LegendComponent, PieChart ])
+
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { PieChart } from 'echarts/charts';
@@ -25,18 +42,18 @@ use([
   LegendComponent,
 ]);
 
+const key = <string><unknown>THEME_KEY;
+
 export default defineComponent({
   name: 'Contributions',
   components: {
     VChart,
   },
   provide: {
-    [THEME_KEY]: 'light',
+    [key]: 'light',
   },
   computed: {
-    ...mapStores(useIndicatorStore)
-  },
-  data() {
+    ...mapStores(useIndicatorStore),
   },
   setup() {
     // const option = ref();

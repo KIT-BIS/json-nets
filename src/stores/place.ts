@@ -59,10 +59,10 @@ export const usePlacesStore = defineStore('places', {
             }
 
         },
-        savePlaceMarkingFromForm(newValue) {
+        savePlaceMarkingFromForm(newValue: any) {
             try {
                 // console.log('new data from form')
-                // console.log(newValue);
+                // console.log(newVaalue);
                 // console.log(toRaw(newValue.data));
                 this.formsData = newValue;
                 this.markingString = JSON.stringify(this.formsData, null, 2)

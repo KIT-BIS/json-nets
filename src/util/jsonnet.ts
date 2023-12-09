@@ -24,7 +24,7 @@ export function jsonnetify(documents: Object) {
 }
 
 // TODO: this is a hacky solution to fix Umlaut support
-function replaceUmlauts(string) {
+function replaceUmlauts(string: string) {
   let value = string;
   value = value.replace(/\u00c4/g, 'Ae');
   value = value.replace(/\u00e4/g, 'ae');

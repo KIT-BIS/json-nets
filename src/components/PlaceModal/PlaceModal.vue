@@ -71,7 +71,7 @@
 
             </section>
 
-            <footer v-if="isScope3" class="modal-card-foot">
+            <footer class="modal-card-foot">
             </footer>
         </div>
     </div>

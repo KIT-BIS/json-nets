@@ -97,8 +97,6 @@ export default defineComponent({
 
     },
     'netStore.lastUpdatedTransition.name'(name: string) {
-        console.log('name changed')
-        console.log(name)
         const transition = _graph.getCell(this.netStore.lastUpdatedTransition.id)
         if (transition) {
           transition.attr('.label/text', name)
@@ -170,7 +168,16 @@ export default defineComponent({
         const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id, placeData.marking.length)
         place.addTo(_graph)
       }
-
+    },
+    'netStore.lastUpdatedPlaces'(places: Array<PlaceData>) {
+      for (let i = 0; i < places.length; i++) {
+        const placeData = places[i];
+        const place = _graph.getCell(placeData.id)
+        place.set('tokens', placeData.marking.length)
+        place.attr('.label/text', placeData.name)
+        // const place = new Place(this.clickX, this.clickY, placeData.name, placeData.id, placeData.marking.length)
+        // place.addTo(_graph)
+      }
     },
     'netStore.lastCreatedArcs'(arcs: Array<ArcData>) {
       for (let i = 0; i < arcs.length; i++) {

@@ -7,7 +7,7 @@ import { unCacheSchema } from "@/util/jsonSchema";
 import { evaluateExpression, type EvaluationResult } from "@/util/jsonnet";
 import { v4 as uuid } from 'uuid'
 
-import { s3tPreface, s3tvalueSnippet, scope3Marking, scope3Schema } from '@/examples/scope3transparent';
+import { controlMarking, controlSchema, s3tPreface, s3tvalueSnippet, scope3Marking, scope3Schema } from '@/examples/scope3transparent';
 
 export type TransitionData = {
   name: string,
@@ -114,8 +114,8 @@ const defaultConfig = {
 
 
 const scope3Config = {
-  schema: JSON.parse(JSON.stringify(scope3Schema)),
-  marking: JSON.parse(JSON.stringify(scope3Marking)),
+  schema: JSON.parse(JSON.stringify(controlSchema)),
+  marking: JSON.parse(JSON.stringify(controlMarking)),
 //  marking: [ {data:{
 //    ghgFactor: 1,
 //    amount: 1,
@@ -123,7 +123,7 @@ const scope3Config = {
 //    type: "Primaerdaten",
 //    pds: 1,
 //  }}],
-  keySnippet: "'data';",
+  keySnippet: "'-';",
   valueSnippet: s3tvalueSnippet,
   preface: s3tPreface,
 //  `local sum(arr, n) = 
@@ -155,8 +155,9 @@ const scope3Config = {
   // else calculateTotalFootprint(arr, n-1) + arr[n-1].ghgFactor * arr[n-1].amount; 
 // 
 // local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`,
-  postsetFilter: '$.*',
-  readonly: true
+  // postsetFilter: '$.*',
+  postsetFilter: '$',
+  readonly: false 
 }
 
 // export const config = defaultConfig;
@@ -250,6 +251,32 @@ export class Net {
     return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
   }
 
+  setDefaultMarking(placeID: string) {
+    const place = this.findPlace(placeID);
+    if (!place) {
+      return false;
+    }
+    place.defaultMarking = JSON.parse(JSON.stringify(place.marking));
+    console.log('new default marking')
+    console.log(place.defaultMarking);
+    // const checkResult = place.validateMarking(marking);
+    // return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
+  }
+
+  getDefaultMarking(placeID: string) {
+    const place = this.findPlace(placeID);
+    if (!place) {
+      return false;
+    }
+    return JSON.parse(JSON.stringify(place.defaultMarking));
+
+  }
+
+  allPlaces() {
+    return JSON.parse(JSON.stringify(this._places));
+  }
+
+
   updatePlaceSchema(placeID: string, schema: JSONObject): PlaceData | false {
     const place = this.findPlace(placeID);
     if (!place) {
@@ -263,6 +290,7 @@ export class Net {
     return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
 
   }
+
 
   updatePlaceMode(placeID: string, mode: "assisted" | "expert"): PlaceData | false {
     const place = this.findPlace(placeID);
@@ -316,6 +344,7 @@ export class Net {
     const newPlace = new Place(placeID, name)
     newPlace.schema = JSON.parse(JSON.stringify(config.schema));
     newPlace.marking = JSON.parse(JSON.stringify(config.marking));
+    newPlace.defaultMarking = JSON.parse(JSON.stringify(config.marking));
     this._places.push(newPlace)
     return { id: newPlace.id, name: newPlace.name, mode: newPlace.mode, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
@@ -621,6 +650,7 @@ export class Net {
       let place = json.places[i]
       this.addPlace(place.id)
       const placeData = this.updatePlace(place.id, place.name, place.schema, place.marking)
+      this.setDefaultMarking(place.id);
       if (placeData) {
         importData.places.push(placeData);
       }

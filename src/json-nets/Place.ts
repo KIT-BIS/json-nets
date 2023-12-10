@@ -23,6 +23,7 @@ export class Place {
   private _schema: Schema 
   private _mode: "assisted" | "expert"
   public marking: JSONMarking
+  public defaultMarking: JSONMarking
 
   /**
    * Create a new place.
@@ -34,7 +35,8 @@ export class Place {
     this._name = name // name of the place
     this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object"} })
     this._mode = "assisted";
-    this.marking = []
+    this.marking = [];
+    this.defaultMarking = [];
   }
 
   set name(name: string) {

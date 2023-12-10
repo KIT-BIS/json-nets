@@ -15,6 +15,7 @@ export const useNetStore = defineStore('net', {
             lastCreatedTransitions: [] as Array<TransitionData>,
             lastCreatedArcs: [] as Array<ArcData>,
             lastUpdatedPlace: {} as PlaceData,
+            lastUpdatedPlaces: [] as Array<PlaceData>,
             lastUpdatedTransition: {} as TransitionData,
             lastFiredArcs: [] as Array<FireEvent>,
 
@@ -46,6 +47,28 @@ export const useNetStore = defineStore('net', {
             if (arcData) {
                 this.lastCreatedArcs = [arcData]
             }
+        },
+
+        resetModel() {
+            const allPlaces = getNetInstance().allPlaces();
+            console.log('resetting places:')
+            console.log(allPlaces)
+            const updates = [];
+            for (let i = 0; i < allPlaces.length; i++) {
+                const place = allPlaces[i];
+                console.log('resetting place'  + place.id)
+                const marking = getNetInstance().getDefaultMarking(place.id);
+                console.log(marking);
+                if (marking) {
+                    const placeData = getNetInstance().updatePlaceMarking(place.id, marking)
+                    if (placeData) {
+                        updates.push(placeData);
+                        // this.lastUpdatedPlace = placeData;
+                    }
+                }
+            }
+
+            this.lastUpdatedPlaces = updates;
         },
 
         addPlace() {

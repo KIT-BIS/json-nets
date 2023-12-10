@@ -152,8 +152,6 @@ export default defineComponent({
     },
     watch: {
         'placesStore.schemaString'(newValue: string) {
-            console.log('on my watch')
-            console.log(newValue)
             this.placesStore.savePlaceSchema(newValue);
             // this.$forceUpdate();
         }

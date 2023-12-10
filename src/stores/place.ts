@@ -47,6 +47,9 @@ export const usePlacesStore = defineStore('places', {
                 this.markingString = markingString;
                 const placeData = getNetInstance().updatePlaceMarking(this.place.id, marking)
                 if (placeData) {
+                    getNetInstance().setDefaultMarking(this.place.id);
+                    console.log('new default marking')
+                    console.log(getNetInstance().getDefaultMarking(this.place.id))
                     this.place.marking = placeData.marking;
                     this.place.errorMessage = placeData.errorMessage;
                     this.place.hasError = placeData.hasError;
@@ -59,14 +62,21 @@ export const usePlacesStore = defineStore('places', {
             }
 
         },
+        resetMarking() {
+            console.log('reset marking')
+            let marking = getNetInstance().getDefaultMarking(this.place.id);
+            console.log(marking);
+            this.savePlaceMarkingFromForm(marking);
+        },
         savePlaceMarkingFromForm(newValue: any) {
             try {
                 // console.log('new data from form')
                 // console.log(newVaalue);
                 // console.log(toRaw(newValue.data));
                 this.formsData = newValue;
-                this.markingString = JSON.stringify(this.formsData, null, 2)
-                const placeData = getNetInstance().updatePlaceMarking(this.place.id, newValue)
+                this.markingString = JSON.stringify(this.formsData, null, 2);
+
+                const placeData = getNetInstance().updatePlaceMarking(this.place.id, newValue);
                 if (placeData) {
                     this.place.marking = placeData.marking;
                     this.place.errorMessage = placeData.errorMessage;

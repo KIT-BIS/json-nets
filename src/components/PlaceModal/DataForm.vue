@@ -2,7 +2,7 @@
 <template>
     <div v-if="uiStateStore.isScope3" class="block">
         <div class="field">
-            <label class="label is-small">Formulartyp:</label>
+            <label class="label is-small">Knotentyp:</label>
             <div class="select is-small">
             <select @change="setSchema">
                 <option value="scope1" :selected="schemaSelected === 'scope1'">Scope 1 - Emissionen</option>
@@ -31,9 +31,20 @@
         <!-- <p class="is-size-7 pl-4 mb-3"></p> -->
         <json-forms v-if="!uiStateStore.isScope3" :data="placesStore.formsData" :schema="placesStore.place.schema" :renderers="renderers" @change="onFormChange"/>
         <!-- @ts-ignore -->
-        <json-forms v-else-if="!uiStateStore.showSupplyChainData" :data="//@ts-ignore
-        placesStore.formsData[0].data" :schema="placesStore.place.schema" :renderers="renderers" @change="onScope3FormChange"/>
+        <div v-else>
+            <div v-if="!uiStateStore.showSupplyChainData">
+                <json-forms v-if="(schemaSelected !== 'control') 
+                && (schemaSelected !== 'end') 
+                && (schemaSelected !== 'start') && placesStore.place.marking.length > 0" 
+                :data="//@ts-ignore
+                placesStore.formsData[0]" :schema="placesStore.place.schema.items" :renderers="renderers" @change="onScope3FormChange"/>
+                <div v-if="(schemaSelected !== 'control') && (schemaSelected !== 'end') && placesStore.place.marking.length === 0">
+                    Daten wurden verarbeitet. <a @click="placesStore.resetMarking">Formular zurücksetzen.</a>
+
+                </div>
+            </div>
         <SupplyChainData v-else />
+        </div>
 
         <!-- :uischema="uischema" -->
         <!-- @change="onChange" -->
@@ -105,30 +116,6 @@ export default defineComponent({
             //@ts-ignore
             return this.placesStore.place.schema.title;
         },
-        // isSupplyChain() {
-            //@ts-ignore
-            // return this.placesStore.place.marking[0].data.fromSupplyChain === true;
-            // return this.placesStore.place.schema.title === "supply-chain";
-        // },
-        // isScope1Data() {
-            //@ts-ignore
-            // return this.placesStore.place.marking[0].data.scope === 1;
-            // return this.placesStore.place.schema.title === "scope1";
-        // },
-        // isScope2Data() {
-            //@ts-ignore
-            // return this.placesStore.place.marking[0].data.scope === 2;
-            // return this.placesStore.place.schema.title === "scope2";
-        // },
-        // isScope3Data() {
-            //@ts-ignore
-            // return this.placesStore.place.marking[0].data.scope === 3;
-            // return this.placesStore.place.schema.title === "scope3";
-        // },
-        // isProductData() {
-            // @ts-ignore
-            // return this.placesStore.place.marking[0].data.scope === "product";
-        // }
     },
     methods: {
         setSchema(event: Event)  {
@@ -170,7 +157,7 @@ export default defineComponent({
             this.placesStore.savePlaceMarkingFromForm(newValue.data);
         },
         onScope3FormChange(newValue: { data: {}}) {
-            this.placesStore.savePlaceMarkingFromForm([ { data: newValue.data } ]);
+            this.placesStore.savePlaceMarkingFromForm([newValue.data]);
         },
         clearSupplyChainData() {
             this.placesStore.schemaString = JSON.stringify(scope3Schema);
@@ -180,7 +167,7 @@ export default defineComponent({
         },
         async deleteData() {
             //@ts-ignore
-            const databaseID = this.placesStore.place.marking[0].data.databaseID;
+            const databaseID = this.placesStore.place.marking[0].databaseID;
             if (!databaseID) {
                 alert("Daten wurden bisher noch nicht veröffentlicht.")
             } else {
@@ -192,7 +179,7 @@ export default defineComponent({
         },
         async publish() {
             //@ts-ignore
-            const databaseID = this.placesStore.place.marking[0].data.databaseID;
+            const databaseID = this.placesStore.place.marking[0].databaseID;
             if (!databaseID) {
                 await fetch('http://localhost:3030/footprints', {
                     method: "POST",
@@ -206,7 +193,7 @@ export default defineComponent({
                     alert("Daten wurden veröffentlicht (ID: " + newID + ")."); 
                     const marking = this.placesStore.place.marking;
                     //@ts-ignore
-                    marking[0].data.databaseID = newID;
+                    marking[0].databaseID = newID;
                     // marking[0].data.scope = 3;
                     // marking[0].data.fromSupplyChain = true;
                     // console.log(marking);

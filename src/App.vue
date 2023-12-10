@@ -17,6 +17,7 @@ import SankeyDiagram from './components/SankeyDiagram.vue';
 
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useIndicatorStore } from './stores/indicator'
+import { getNetInstance } from './json-nets/Net'
 
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
@@ -147,4 +148,7 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
   <HelpModal v-if="uiState.showModal === 'help'" />
   <!-- <Scope3Modal v-if="uiState.showScope3Data" /> -->
   <!-- <RouterView /> -->
+  <div style="position: absolute; bottom: 5px; right: 5px">
+    <a @click="useNetStore().resetModel()">Modell zurücksetzen</a>
+  </div>
 </template>

@@ -74,9 +74,9 @@ export default defineComponent({
             
             const marking = data.marking;
             //@ts-ignore
-            marking[0].data.scope = 3;
+            marking[0].scope = 3;
             //@ts-ignore
-            marking[0].data.fromSupplyChain = true;
+            marking[0].fromSupplyChain = true;
             console.log(marking);
             this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
 

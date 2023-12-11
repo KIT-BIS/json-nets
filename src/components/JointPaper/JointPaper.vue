@@ -337,6 +337,10 @@ export default defineComponent({
             clearInterval(play)
           } else {
             this.netStore.fireAny();
+            if (this.netStore.lastFiredArcs.length === 0) {
+              clearInterval(play);
+              alert('Berechnung abgeschlossen.')
+            }
           }
         }, 1500)
       } else if (newMode === MODE_INDICATOR) {

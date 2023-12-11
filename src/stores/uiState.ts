@@ -14,6 +14,7 @@ export const useUiStateStore = defineStore('uiState', {
       showEditor: 'none' as string,
       showSupplyChainData: false as boolean,
       isScope3: true as boolean,
+      databaseID: '' as string,
 
       lastSelectedID: '' as string,
     }

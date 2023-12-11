@@ -49,9 +49,9 @@
         <!-- :uischema="uischema" -->
         <!-- @change="onChange" -->
     </div>
-    <div v-if="uiStateStore.isScope3 && (schemaSelected === 'end')" class="block">
+    <div v-if="uiStateStore.isScope3 && (schemaSelected === 'end') && (placesStore.place.marking.length > 0)" class="block">
         <button class="button is-pulled-right is-primary is-small" style="margin-left: auto" @click="publish()">Veröffentlichen</button>
-        <button class="button is-pulled-right is-danger is-small mr-2" style="margin-left: auto" @click="deleteData()">Löschen</button>
+        <button class="button is-pulled-right is-danger is-small mr-2" style="margin-left: auto" @click="deleteData()" :disabled="!isDeletable">Löschen</button>
 
     </div>
 
@@ -116,6 +116,15 @@ export default defineComponent({
             //@ts-ignore
             return this.placesStore.place.schema.title;
         },
+        isDeletable() {
+            // const databaseID = this.placesStore.place.marking[0].databaseID;
+            const databaseID = this.uiStateStore.databaseID;
+            if (databaseID !== '') {
+                return true;
+            } else {
+                return false;
+            }
+        }
     },
     methods: {
         setSchema(event: Event)  {
@@ -167,21 +176,28 @@ export default defineComponent({
         },
         async deleteData() {
             //@ts-ignore
-            const databaseID = this.placesStore.place.marking[0].databaseID;
-            if (!databaseID) {
+            // const databaseID = this.placesStore.place.marking[0].databaseID;
+            const databaseID = this.uiStateStore.databaseID;
+            if (databaseID === '') {
                 alert("Daten wurden bisher noch nicht veröffentlicht.")
             } else {
-                await fetch('http://localhost:3030/footprints/' + databaseID, {
+                // await fetch('http://localhost:3030/footprints/' + databaseID, {
+                await fetch('https://s3t.uber.space/footprints' + databaseID, {
                     method: "DELETE",
-                }).then(response => response.json()).then(data => { alert("Daten wurden aus Lieferketten-Verzeichnis gelöscht.");})
+                }).then(response => response.json()).then(data => { 
+                    // delete this.placesStore.place.marking[0].databaseID;
+                    this.uiStateStore.databaseID = '';
+                    alert("Daten wurden aus Lieferketten-Verzeichnis gelöscht.");})
             }
 
         },
         async publish() {
             //@ts-ignore
-            const databaseID = this.placesStore.place.marking[0].databaseID;
-            if (!databaseID) {
-                await fetch('http://localhost:3030/footprints', {
+            // const databaseID = this.placesStore.place.marking[0].databaseID;
+            const databaseID = this.uiStateStore.databaseID;
+            if (databaseID === '') {
+                await fetch('https://s3t.uber.space/footprints', {
+                // await fetch('http://localhost:3030/footprints', {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -191,19 +207,20 @@ export default defineComponent({
                     console.log(data); 
                     const newID = data._id; 
                     alert("Daten wurden veröffentlicht (ID: " + newID + ")."); 
-                    const marking = this.placesStore.place.marking;
-                    //@ts-ignore
-                    marking[0].databaseID = newID;
+                    // const marking = this.placesStore.place.marking;
+                    // marking[0].databaseID = newID;
+                    this.uiStateStore.databaseID = newID;
                     // marking[0].data.scope = 3;
                     // marking[0].data.fromSupplyChain = true;
                     // console.log(marking);
-                    this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
+                    // this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
 
                 })
             } else {
                 // console.log('patching')
                 // console.log(this.uiStateStore.databaseID)
-                await fetch('http://localhost:3030/footprints/' + databaseID, {
+                // await fetch('http://localhost:3030/footprints/' + databaseID, {
+                await fetch('https://s3t.uber.space/footprints' + databaseID, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",

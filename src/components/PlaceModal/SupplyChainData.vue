@@ -59,7 +59,8 @@ export default defineComponent({
             // this.uiStateStore. = false;
         },
         async load() {
-            const response = await fetch('http://localhost:3030/footprints')
+            // const response = await fetch('http://localhost:3030/footprints')
+            const response = await fetch('https://s3t.uber.space/footprints')
             this.data = await response.json();
             // .then(response => response.json())
             // .then(data => { console.log(data); this.uiStateStore.databaseID = data._id; })
@@ -75,6 +76,7 @@ export default defineComponent({
             const marking = data.marking;
             //@ts-ignore
             marking[0].scope = 3;
+            marking[0].title = 'scope3';
             //@ts-ignore
             marking[0].fromSupplyChain = true;
             console.log(marking);

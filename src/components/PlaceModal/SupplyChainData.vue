@@ -2,7 +2,7 @@
 
                 <!-- <pre v-if="data">{{ data }}</pre> -->
                 <div class="notification is-info is-light is-size-7">
-                    Komponente zum Laden aus dem Lieferketten-Verzeichnsi auswählen oder 
+                    Komponente zum Laden aus dem Lieferketten-Verzeichnis auswählen oder 
                     <a @click="() => uiStateStore.showSupplyChainData = false">Abbrechen</a>.
                 </div>
 

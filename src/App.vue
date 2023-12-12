@@ -13,7 +13,8 @@ import HelpModal from './components/HelpModal.vue'
 import PlaceModal from './components/PlaceModal/PlaceModal.vue'
 import TransitionModal from './components/TransitionModal/TransitionModal.vue'
 import ExpressionEditor from './components/TransitionModal/ExpressionEditor.vue'
-import SankeyDiagram from './components/SankeyDiagram.vue';
+import PieChart from './components/PieChart.vue';
+import SankeyChart from './components/SankeyChart.vue';
 
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useIndicatorStore } from './stores/indicator'
@@ -128,14 +129,16 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     style="border: dashed grey;">
     <div class="select mb-5 is-small">
       <select v-model="indicatorState.indicatorType" @change="indicatorState.updateIndicator()">
-        <option value="pcf">THG-Fußabdruck</option>
+        <option value="pcf-pie">THG-Fußabdruck (Beiträge)</option>
+        <option value="pcf-sankey">THG-Fußabdruck (Sankey)</option>
         <option value="pds">Primärdatenanteil</option>
       </select>
     </div>
     <div v-if="indicatorState.selectedPlaceID !== 'none'">
       <p class="title is-3">{{ indicatorState.indicatorValue }}</p>
       <p class="subtitle is-5">{{ indicatorState.placeName }}</p>
-      <SankeyDiagram v-if="indicatorState.indicatorType == 'pcf'"/>
+      <PieChart v-if="indicatorState.indicatorType == 'pcf-pie'"/>
+      <SankeyChart v-if="indicatorState.indicatorType == 'pcf-sankey'"/>
     </div>
     <div v-else>
       <span>Wähle eine Stelle aus, um die Indikatorwerte anzuzeigen.</span>

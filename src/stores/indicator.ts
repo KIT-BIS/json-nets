@@ -3,17 +3,17 @@ import { defineStore } from "pinia"
 import { use } from 'echarts/core'
 import { PieChart } from 'echarts/charts'
 import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent
+    TitleComponent,
+    TooltipComponent,
+    LegendComponent
 } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
 import type { ComposeOption } from 'echarts/core'
 import type { PieSeriesOption } from 'echarts/charts'
 import type {
-  TitleComponentOption,
-  TooltipComponentOption,
-  LegendComponentOption
+    TitleComponentOption,
+    TooltipComponentOption,
+    LegendComponentOption
 } from 'echarts/components'
 
 use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
@@ -23,11 +23,11 @@ export const useIndicatorStore = defineStore('indicator', {
         return {
             selectedPlaceID: 'none' as string,
             placeName: '' as string,
-            indicatorValue: "... loading" as string,
-            indicatorType: 'pcf' as string,
+            indicatorValue: "<keine Daten>" as string,
+            indicatorType: 'pcf-pie' as string,
             // contributions: [] as Array<{ name: string, value: number }>,
             // legend: [] as Array<string>,
-            option: {
+            pieOption: {
                 title: {
                     text: 'Beiträge',
                     left: 'center',
@@ -57,6 +57,36 @@ export const useIndicatorStore = defineStore('indicator', {
                         },
                     },
                 ],
+            } as any,
+            sankeyOption: {
+                series: {
+                    type: 'sankey',
+                    layout: 'none',
+                    nodeAlign: 'right',
+                    label: {
+                        normal: {
+                            formatter: '{b}'  // {b} is the node name
+                        }
+                    },
+                    emphasis: {
+                        focus: 'adjacency'
+                    },
+                    data: [
+                        {
+                            name: 'a',
+                        },
+                        {
+                            name: 'b',
+                        }
+                    ],
+                    links: [
+                        {
+                            source: 'a',
+                            target: 'b',
+                            value: 1
+                        }
+                    ]
+                }
             } as any
         }
     },
@@ -72,7 +102,7 @@ export const useIndicatorStore = defineStore('indicator', {
         roundToTwo(num: number) {
             return +(Math.round(Number(String(num) + 'e+2')) + 'e-2');
         },
-        processContributions(arrayOfContribs: Array<{ name: string, value: number }>): Array<{ name: string, value: number}> {
+        processContributions(arrayOfContribs: Array<{ name: string, value: number }>): Array<{ name: string, value: number }> {
             const returnArray = [] as Array<{ name: string, value: number }>;
             // const existingNames = [] as Array<string>;
 
@@ -84,46 +114,72 @@ export const useIndicatorStore = defineStore('indicator', {
                     returnArray.push(contrib);
                 } else {
                     //else add up values
-                    const entry = returnArray.find((el) => el.name == contrib.name)!; 
+                    const entry = returnArray.find((el) => el.name == contrib.name)!;
                     entry.value += contrib.value
                 }
             }
             return returnArray;
+        },
+        removeDuplicates(data: Array<any>) {
+            const returnArray = data.filter((value, index, self) => 
+                index === self.findIndex((t) => ( t.name === value.name ))
+            );
+            return returnArray;
+            
         },
         updateIndicator() {
             const placeData = getNetInstance().findPlace(this.selectedPlaceID)
             if (placeData) {
                 this.placeName = placeData.name;
                 console.log(placeData);
-                const content = <{ ghgFactor: number, amount: number, pds: number, type: string, footprintContributions: Array<{ name: string, value: number }>, names: Array<string> }>placeData.marking[0];
+                const content = <{
+                    ghgFactor: number, amount: number, pds: number,
+                    type: string, footprintContributions: Array<{ name: string, value: number }>, names: Array<string>,
+                    sankeyNodes: Array<any>, sankeyLinks: Array<any>
+                }>placeData.marking[0];
 
-                if (this.indicatorType === 'pcf') {
+                if (this.indicatorType === 'pcf-pie') {
                     //@ts-ignore
                     if (content && content.footprintContributions) {
                         this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
-                        this.option.series[0].data = this.processContributions(content.footprintContributions);
+                        this.pieOption.series[0].data = this.processContributions(content.footprintContributions);
                     } else {
                         // this.option.series[0].data = [{ name: this.placeName, value: content.ghgFactor * content.amount }];
-                        this.option.series[0].data = [];
-                        this.indicatorValue = "... loading";
-                        
-                    } 
+                        this.pieOption.series[0].data = [];
+                        this.indicatorValue = "<keine Daten>";
+
+                    }
                     //@ts-ignore
                     //TODO: generate names from footprintContributions (if necessary)
                     // this.option.legend.data = content.names;
+                } else if (this.indicatorType === 'pcf-sankey') {
+                    //@ts-ignore
+                    if (content && content.footprintContributions) {
+                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                        this.sankeyOption.series.data = this.removeDuplicates(content.sankeyNodes);
+                        this.sankeyOption.series.links = content.sankeyLinks;
+                        // this.option.series[0].data = this.processContributions(content.footprintContributions);
+                    } else {
+                        // this.option.series[0].data = [{ name: this.placeName, value: content.ghgFactor * content.amount }];
+                        // this.option.series[0].data = [];
+                        this.sankeyOption.series.data = [];
+                        this.sankeyOption.series.links = [];
+                        this.indicatorValue = "<keine Daten>";
+
+                    }
                 } else if (this.indicatorType === 'pds') {
                     // if (content.typej === "Sekundaerdaten") {
-                        // this.indicatorValue = "0% Primärdaten"
+                    // this.indicatorValue = "0% Primärdaten"
                     // } else {
-                        if (content) {
+                    if (content) {
 
-                            this.indicatorValue = Math.round(content.pds * 100) + "% Primärdaten";
-                        } else {
-                            this.indicatorValue = "...loading";
-                        }
-                        // this.option.series[0].data = content.pdsContributions;
-                        // this.option.series[0].data.push({ name: "Secondary Data", value: 1-content.pds })
-                        // this.option.legend.data = content.names;
+                        this.indicatorValue = Math.round(content.pds * 100) + "% Primärdaten";
+                    } else {
+                        this.indicatorValue = "<keine Daten>";
+                    }
+                    // this.option.series[0].data = content.pdsContributions;
+                    // this.option.series[0].data.push({ name: "Secondary Data", value: 1-content.pds })
+                    // this.option.legend.data = content.names;
                     // }
                 }
             }

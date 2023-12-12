@@ -182,7 +182,7 @@ export default defineComponent({
                 alert("Daten wurden bisher noch nicht veröffentlicht.")
             } else {
                 // await fetch('http://localhost:3030/footprints/' + databaseID, {
-                await fetch('https://s3t.uber.space/footprints' + databaseID, {
+                await fetch('https://s3t.uber.space/footprints/' + databaseID, {
                     method: "DELETE",
                 }).then(response => response.json()).then(data => { 
                     // delete this.placesStore.place.marking[0].databaseID;
@@ -207,20 +207,12 @@ export default defineComponent({
                     console.log(data); 
                     const newID = data._id; 
                     alert("Daten wurden veröffentlicht (ID: " + newID + ")."); 
-                    // const marking = this.placesStore.place.marking;
-                    // marking[0].databaseID = newID;
                     this.uiStateStore.databaseID = newID;
-                    // marking[0].data.scope = 3;
-                    // marking[0].data.fromSupplyChain = true;
-                    // console.log(marking);
-                    // this.placesStore.savePlaceMarkingFromEditor(JSON.stringify(marking));
 
                 })
             } else {
-                // console.log('patching')
-                // console.log(this.uiStateStore.databaseID)
                 // await fetch('http://localhost:3030/footprints/' + databaseID, {
-                await fetch('https://s3t.uber.space/footprints' + databaseID, {
+                await fetch('https://s3t.uber.space/footprints/' + databaseID, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",

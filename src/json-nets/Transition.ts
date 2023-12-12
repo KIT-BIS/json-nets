@@ -384,6 +384,7 @@ export class Transition {
   assembleVariablesFromPathAssignments() {
     const inputValues = [];
     const inputNames = [];
+    const outputNames = [];
     const variables: Record<string,JSONValue> = {}
     for (let i = 0; i < this.preset.length; i++) {
       const arc = this.preset[i]
@@ -401,9 +402,12 @@ export class Transition {
       // if path expression is not assigned, don't pass variable assignments
       if (arc.assignedPathExpression === null) continue;
       variables[arc.tokenVarName] = arc.tokenVarValue;
+      outputNames.push(arc.place.name);
     }
+    variables['transition_name'] = this.name;
     variables['input_values'] = inputValues;
     variables['input_names'] = inputNames;
+    variables['output_names'] = outputNames;
     return variables;
   }
 
@@ -450,6 +454,7 @@ export class Transition {
       // todo: there is some duplicate code with other function that assembles variables
       const inputValues = [];
       const inputNames = [];
+      const outputNames = [];
       let combinationHasAnyVariableError = false;
       for (let j = 0; j < combination.length; j++) {
         const assignmentRef = combination[j];
@@ -472,12 +477,18 @@ export class Transition {
             // break;
           }
           tokenVariables[arc.tokenVarName] = arcVariables.token;
+          outputNames.push(arc.place.name);
         }
       }
       if (combinationHasAnyVariableError) continue;
 
       // for the postset arcs, evaluate key, value snippets
-      const variables = this.assignOutputKeyValueVariables({ 'input_values': inputValues, 'input_names': inputNames, ...keyVariables, ...valueVariables, ...tokenVariables })
+      const variables = this.assignOutputKeyValueVariables({ 
+        'transition_name': this.name,
+        'input_values': inputValues, 
+        'input_names': inputNames,
+        'output_names': outputNames,
+        ...keyVariables, ...valueVariables, ...tokenVariables })
       if (!variables) continue;
 
       // check whether guard evaluates to true (and not only truthy), otherwise check next combination

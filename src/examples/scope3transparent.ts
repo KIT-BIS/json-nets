@@ -260,7 +260,14 @@ export const supplyChainSchema = {
 
 
 
-export const s3tvalueSnippet = "{ scope: 'control', ghgFactor: totalFootprint, amount: 1, unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', pds: outputPDS, footprintContributions: footprintContributions  };";
+export const s3tvalueSnippet = `{ scope: 'control', ghgFactor: totalFootprint, amount: 1, 
+    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', 
+    pds: outputPDS, 
+    footprintContributions: footprintContributions,
+    sankeyNodes: sankeyNodes,
+    sankeyLinks: sankeyLinks,
+    nodeName: transition_name
+};`;
 export const s3tPreface = `
 local thgFactors = {
   "NF3": 13.4,
@@ -310,4 +317,23 @@ local getContribution(element) = element.footprintContributions;
 local incomingContributions = std.flattenArrays(std.map(getContribution,incomingControlPlaces));
 
 local footprintContributions = incomingContributions + footprintContributionsFromThisTransition;
+
+
+// for each incoming place
+local generateSankeyNode(index,element) = if (input_values[index].scope != "control") && (input_values[index].scope != "start") then { name: element };
+
+local getNodes(element) = element.sankeyNodes;
+local incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));
+
+local sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];
+
+//currently assuming we have exactly one output place
+local generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };
+
+local getLinks(element) = element.sankeyLinks;
+local incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));
+
+local controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];
+local sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;
+
 `;

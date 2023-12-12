@@ -1,5 +1,5 @@
 <template>
-    <v-chart class="chart" :option="indicatorStore.option" autoresize />
+    <v-chart class="chart" :option="indicatorStore.pieOption" autoresize />
 </template>
 <script lang="ts">
 import type { ComposeOption } from 'echarts/core'
@@ -46,9 +46,9 @@ const key = <string><unknown>THEME_KEY;
 
 export default defineComponent({
   name: 'Contributions',
-  components: {
-    VChart,
-  },
+  // components: {
+    // VChart,
+  // },
   provide: {
     [key]: 'light',
   },

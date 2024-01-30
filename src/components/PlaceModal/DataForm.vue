@@ -196,9 +196,10 @@ export default defineComponent({
             //@ts-ignore
             // const databaseID = this.placesStore.place.marking[0].databaseID;
             const databaseID = this.uiStateStore.databaseID;
+            const marking = JSON.parse(JSON.stringify(this.placesStore.place.marking))
             useNetStore().resetModel();
             const model = useNetStore().export();
-            const data = {name: this.placesStore.place.name, marking: this.placesStore.place.marking, model: JSON.parse(model)};
+            const data = {name: this.placesStore.place.name, marking: marking, model: JSON.parse(model)};
             // const data = {name: this.placesStore.place.name, marking: this.placesStore.place.marking};
             console.log(data)
             if (databaseID === '') {

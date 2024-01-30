@@ -152,6 +152,7 @@
                             <input class="input is-small" :value="value" @input="event => { 
                                 if (event.target) {
                                     const input = event.target as HTMLInputElement;
+                                    //@ts-ignore
                                     onVariableInput(key,input.value);
                                 } 
                             }">

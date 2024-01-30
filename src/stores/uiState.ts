@@ -4,13 +4,13 @@ import {
 } from '@/App.vue'
 import { useIndicatorStore } from './indicator'
 
-export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' | 'test' | 'help'
+export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' | 'examples' | 'help'
 
 export const useUiStateStore = defineStore('uiState', {
   state: () => {
     return {
       mode: MODE_NONE as string,
-      showModal: 'test' as ShowModal,
+      showModal: 'none' as ShowModal,
       showEditor: 'none' as string,
       showSupplyChainData: false as boolean,
       isScope3: true as boolean,

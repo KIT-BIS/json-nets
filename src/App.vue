@@ -3,18 +3,17 @@ import { useUiStateStore } from '@/stores/uiState'
 import { useNetStore } from './stores/net'
 
 //import { data as example } from '@/examples/production'
-import { data as example1 } from '@/examples/project1'
-import { data as example2 } from '@/examples/project2'
-import { data as example3 } from '@/examples/project3'
 import { download, readFile } from '@/util/files'
 
 import JointPaper from './components/JointPaper/JointPaper.vue'
 import HelpModal from './components/HelpModal.vue'
 import PlaceModal from './components/PlaceModal/PlaceModal.vue'
 import TransitionModal from './components/TransitionModal/TransitionModal.vue'
+import ExamplesModal from './components/ExamplesModal.vue'
 import ExpressionEditor from './components/TransitionModal/ExpressionEditor.vue'
 import PieChart from './components/PieChart.vue';
 import SankeyChart from './components/SankeyChart.vue';
+import SunburstChart from './components/SunburstChart.vue'
 
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useIndicatorStore } from './stores/indicator'
@@ -31,12 +30,8 @@ function exportNet() {
 
 function importNet(jsonString: string) {
   let json;
-  if (jsonString === 'example1') {
-    json = JSON.parse(JSON.stringify(example1))
-  } else if (jsonString === 'example2') {
-    json = JSON.parse(JSON.stringify(example2))
-  } else if (jsonString === 'example3') {
-    json = JSON.parse(JSON.stringify(example3))
+  //todo: this was used to importexamples, no longer needed
+  if (jsonString === '1') {
   } else {
     json = JSON.parse(jsonString);
   }
@@ -70,7 +65,7 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
     <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
     <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
-    <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
+    <!-- <ModeButton icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" /> -->
     <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
     <ModeButton v-if="uiState.isScope3" icon="fas fa-chart-simple" :mode="MODE_INDICATOR" />
     <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
@@ -82,19 +77,20 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
         readFile(event, importNet)
       }
       " />
-    <!-- <button
+    <button
       style="margin-left: 15px"
       @click.stop="
         () => {
-          uiState.setMode(MODE_EXAMPLE)
-          importNet('example1')
+          // uiState.setMode(MODE_EXAMPLE)
+          uiState.setModal('examples');
+          // importNet('example1')
         }
       "
       class="button is-primary is-outlined"
     >
-      Ex1
+      Beispiele
     </button>
-    <button
+    <!--<button
       style="margin-left: 15px"
       @click.stop="
         () => {
@@ -125,12 +121,13 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
       }
       " />
   </div>
-  <div v-if="uiState.mode === MODE_INDICATOR" id="indicator-panel" class="has-text-centered p-5"
+  <div v-if="uiState.mode === MODE_INDICATOR" id="indicator-panel" class="mt-5 has-text-centered p-5"
     style="border: dashed grey;">
     <div class="select mb-5 is-small">
       <select v-model="indicatorState.indicatorType" @change="indicatorState.updateIndicator()">
-        <option value="pcf-pie">THG-Fußabdruck (Beiträge)</option>
+        <!-- <option value="pcf-pie">THG-Fußabdruck (Beiträge)</option> -->
         <option value="pcf-sankey">THG-Fußabdruck (Sankey)</option>
+        <option value="pcf-sunburst">THG-Fußabdruck (Sunburst)</option>
         <option value="pds">Primärdatenanteil</option>
       </select>
     </div>
@@ -139,6 +136,7 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
       <p class="subtitle is-5">{{ indicatorState.placeName }}</p>
       <PieChart v-if="indicatorState.indicatorType == 'pcf-pie'"/>
       <SankeyChart v-if="indicatorState.indicatorType == 'pcf-sankey'"/>
+      <SunburstChart v-if="indicatorState.indicatorType == 'pcf-sunburst'"/>
     </div>
     <div v-else>
       <span>Wähle eine Stelle aus, um die Indikatorwerte anzuzeigen.</span>
@@ -149,6 +147,7 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
   <PlaceModal v-if="uiState.showModal === 'place'" />
   <ExpressionEditor v-if="uiState.showEditor !== 'none'" />
   <HelpModal v-if="uiState.showModal === 'help'" />
+  <ExamplesModal v-if="uiState.showModal === 'examples'" />
   <!-- <Scope3Modal v-if="uiState.showScope3Data" /> -->
   <!-- <RouterView /> -->
   <div style="position: absolute; bottom: 5px; right: 5px">

@@ -14,7 +14,8 @@ export type TransitionData = {
   id: string,
   preface: string,
   guard: string,
-  readonly: boolean
+  readonly: boolean,
+  customVariables: Record<string, string>
 }
 
 export type PlaceData = {
@@ -334,7 +335,8 @@ export class Net {
       name: newTransition.name,
       preface: newTransition.preface,
       guard: newTransition.guard,
-      readonly: newTransition.readonly
+      readonly: newTransition.readonly,
+      customVariables: newTransition.customVariables
     }
   }
 
@@ -356,7 +358,7 @@ export class Net {
    * @param {Object} content
    * @param {String} name
    */
-  updateTransition(transitionID: string, name: string, preface?: string, guard?: string, fragmentVarSnippets?: Record<string, string>, keyVarSnippets?: Record<string, string>): TransitionData | false {
+  updateTransition(transitionID: string, name: string, preface?: string, guard?: string, fragmentVarSnippets?: Record<string, string>, keyVarSnippets?: Record<string, string>, customVariables?: Record<string,string>): TransitionData | false {
     const transition = this.findTransition(transitionID)
     if (transition) {
       transition.name = name
@@ -364,21 +366,29 @@ export class Net {
       if (preface !== undefined) transition.preface = preface
       if (keyVarSnippets !== undefined) transition.keyVarSnippets = keyVarSnippets
       if (fragmentVarSnippets !== undefined) transition.valueVarSnippets = fragmentVarSnippets
-      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly };
+      if (customVariables !== undefined) transition.customVariables =customVariables 
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly, customVariables: transition.customVariables };
     }
     return false;
   }
 
-  updateTransitionMode(transitionID: string, readonly: boolean) {
+  updateTransitionMode(transitionID: string, readonly: boolean): TransitionData | false {
     const transition = this.findTransition(transitionID)
     if (transition) {
-      console.log('readonly')
-      console.log(readonly)
       transition.readonly = readonly
-      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly };
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly, customVariables: transition.customVariables };
     }
     return false;
 
+  }
+
+  updateTransitionVariable(transitionID: string, key: string, value: string): TransitionData | false {
+    const transition = this.findTransition(transitionID)
+    if (transition) {
+      transition.customVariables[key] = value;
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly, customVariables: transition.customVariables };
+    }
+    return false;
   }
 
   updateTransitionSnippets(transitionID: string, arcID: string, keySnippet: string, fragmentSnippet: string) {
@@ -578,6 +588,7 @@ export class Net {
         name: transition.name,
         preface: transition.preface,
         guard: transition.guard,
+        customVariables: transition.customVariables,
         keyVarSnippets: transition.keyVarSnippets,
         fragmentVarSnippets: transition.valueVarSnippets
       })
@@ -659,7 +670,7 @@ export class Net {
     for (let i = 0; i < json.transitions.length; i++) {
       let transition = json.transitions[i]
       this.addTransition(transition.id)
-      const transitionData = this.updateTransition(transition.id, transition.name, transition.preface, transition.guard, transition.fragmentVarSnippets, transition.keyVarSnippets)
+      const transitionData = this.updateTransition(transition.id, transition.name, transition.preface, transition.guard, transition.fragmentVarSnippets, transition.keyVarSnippets, transition.customVariables)
       if (transitionData) {
         importData.transitions.push(transitionData);
 

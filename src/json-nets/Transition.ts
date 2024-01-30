@@ -32,6 +32,7 @@ export class Transition {
   // private _state: Record<string, JSONValue> 
   public guard: string
   public preface: string
+  public customVariables: Record<string, string>
   public valueVarSnippets: Record<string, string>
   public keyVarSnippets: Record<string, string>
 
@@ -45,6 +46,8 @@ export class Transition {
     this.valueVarSnippets = {}
     this.keyVarSnippets = {}
     this.readonly = config.readonly;
+  // todo: this is scope3 specific, rework!
+    this.customVariables = { 'Allokation': '100' };
   }
 
   connectArc(arc: Arc) {
@@ -236,7 +239,8 @@ export class Transition {
   assignOutputKeyValueVariables(variables: Record<string, JSONValue>): Record<string, JSONValue> | false {
     for (let i = 0; i < this.postset.length; i++) {
       const arc = this.postset[i];
-      let valueVarSnippet = this.preface;
+      let valueVarSnippet = this.assembleCustomVariables();
+      valueVarSnippet += this.preface;
       valueVarSnippet += this.valueVarSnippets[arc.valueVarName] + arc.valueVarName;
       const valueResult = evaluateExpression(valueVarSnippet, variables, this.name);
       if (valueResult.hasError) return false;
@@ -244,7 +248,8 @@ export class Transition {
       const valueVarValue = JSON.parse(valueResult.evaluation);
       variables[arc.valueVarName] = valueVarValue;
 
-      let keyVarSnippet = this.preface;
+      let keyVarSnippet = this.assembleCustomVariables();
+      keyVarSnippet += this.preface;
       keyVarSnippet += this.keyVarSnippets[arc.keyVarName] + arc.keyVarName;
       const keyResult = evaluateExpression(keyVarSnippet, variables, this.name);
       if (keyResult.hasError) return false;
@@ -264,15 +269,26 @@ export class Transition {
   //  return variables;
   //}
 
+  assembleCustomVariables() {
+    let inscription = '';
+    for (const [key, value] of Object.entries(this.customVariables)) {
+      inscription += 'local ' + key + ' = ' + value + ';'
+    }
+    return inscription;
+  }
+
 
   evaluateGuard(variables: Record<string, JSONValue>): EvaluationResult {
     // const variables = this.assembleVariables();
     // if (!variables) return { hasError: true, evaluation: 'Can\'t evaluate due to errors in variable expressions.'};
 
-    let inscription = this.preface;
+    let inscription = this.assembleCustomVariables();
+    inscription += this.preface;
     // todo: currently, users MAY have (though unlikely) defined
     // additional stuff/variables in jsonnet var snippets
     inscription += this.guard;
+    console.log('inscription')
+    console.log(inscription)
     const result = evaluateExpression(inscription, variables, this.name);
     return result;
 

@@ -68,9 +68,10 @@ import {
 import { mapStores } from 'pinia';
 import { usePlacesStore } from '@/stores/place';
 import { useUiStateStore } from '@/stores/uiState';
-// import { onSiteSchema } from '@/json-nets/Net';
+import { getNetInstance } from '@/json-nets/Net';
 
 import { scope1Schema, scope1Marking, scope2Schema, scope2Marking, scope3Marking, scope3Schema, productSchema, productMarking, startMarking, startSchema, endMarking, endSchema, controlMarking, controlSchema } from '@/examples/scope3transparent'
+import { useNetStore } from '@/stores/net';
 
 const singleTokenStyle = mergeStyles(defaultStyles, {
   arrayList: { 
@@ -195,6 +196,11 @@ export default defineComponent({
             //@ts-ignore
             // const databaseID = this.placesStore.place.marking[0].databaseID;
             const databaseID = this.uiStateStore.databaseID;
+            useNetStore().resetModel();
+            const model = useNetStore().export();
+            const data = {name: this.placesStore.place.name, marking: this.placesStore.place.marking, model: JSON.parse(model)};
+            // const data = {name: this.placesStore.place.name, marking: this.placesStore.place.marking};
+            console.log(data)
             if (databaseID === '') {
                 await fetch('https://s3t.uber.space/footprints', {
                 // await fetch('http://localhost:3030/footprints', {
@@ -202,11 +208,11 @@ export default defineComponent({
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
+                    body: JSON.stringify(data)
                 }).then(response => response.json()).then(data => { 
                     console.log(data); 
                     const newID = data._id; 
-                    alert("Daten wurden veröffentlicht (ID: " + newID + ")."); 
+                    alert("Daten wurden veröffentlicht (ID: " + newID + "). Das Modell wurde zurückgesetzt."); 
                     this.uiStateStore.databaseID = newID;
 
                 })
@@ -217,7 +223,7 @@ export default defineComponent({
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({name: this.placesStore.place.name, marking: this.placesStore.place.marking})
+                    body: JSON.stringify(data)
                 }).then(response => response.json()).then(data => { alert("Daten wurden aktualisiert (ID: " + databaseID + ").");})
             }
 

@@ -2,7 +2,7 @@
     <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="scoped-modal-container">
-            <PresetFilter />
+            <PresetFilter v-if="!uiStateStore.isScope3" />
             <div class="modal-card scoped-modal-center">
                 <header class="modal-card-head">
                     <span class="has-text-weight-bold">Transition:</span>
@@ -28,7 +28,7 @@
                     <p class="modal-card-title"></p>
                     <button class="delete" aria-label="close" @click="close"></button>
                 </header>
-                <section class="modal-card-body">
+                <section class="modal-card-body" v-if="!uiStateStore.isScope3">
                     <div class="block">
                         <div class="field">
                             <label class="label is-small">Preface
@@ -99,8 +99,8 @@
                                 <p v-if="!transitionsStore.guardHasError" class="help">Result:
                                     <code class="has-text-grey has-tooltip-bottom"
                                         :data-tooltip="getFormattedString(transitionsStore.guardEvaluation)">
-                                                        {{ getShortString(transitionsStore.guardEvaluation) }}
-                                                    </code>
+                                                            {{ getShortString(transitionsStore.guardEvaluation) }}
+                                                        </code>
                                 </p>
                             </div>
 
@@ -112,9 +112,9 @@
                             <label class="label is-small">Settings</label>
                             <div class="control">
                                 <div class="field">
-                                    <input @click="transitionsStore.switchMode()"
-                                        id="readonly-switch" type="checkbox" name="readonly-switch"
-                                        class="switch is-rtl is-small" :checked="transitionsStore.transition.readonly">
+                                    <input @click="transitionsStore.switchMode()" id="readonly-switch" type="checkbox"
+                                        name="readonly-switch" class="switch is-rtl is-small"
+                                        :checked="transitionsStore.transition.readonly">
                                     <label for="readonly-switch">Only read input values</label>
                                 </div>
                                 <!-- <input id="filter-read-setting" type="checkbox" name="filter-read-setting" -->
@@ -144,13 +144,35 @@
                     </div>
 
                 </section>
-                <footer class="modal-card-foot">
+                <section class="modal-card-body" v-else>
+                    <div class="field" v-for="[key, value] in Object.entries(transitionsStore.transition.customVariables)">
+                        <label class="label is-small">{{ key }}
+                        </label>
+                        <div class="control has-icons-right">
+                            <input class="input is-small" :value="value" @input="event => { 
+                                if (event.target) {
+                                    const input = event.target as HTMLInputElement;
+                                    onVariableInput(key,input.value);
+                                } 
+                            }">
+                            <span class="icon is-small is-right">
+
+                            <font-awesome-icon icon="fas fa-percent" />
+                                <!-- <i class="fas fa-percent"></i> -->
+                            </span>
+                        </div>
+
+                        <!-- <input style="width: 100px" class="input is-small level-item" :value="value" /> % -->
+                    </div>
+
+                </section>
+                <footer class="modal-card-foot" v-if="!uiStateStore.isScope3">
                     <button class="button is-pulled-right is-danger is-small" :disabled="!transitionsStore.isEnabled"
                         style="margin-left: auto" @click="onFireClick">Fire!</button>
                 </footer>
 
             </div>
-            <PostsetFilter />
+            <PostsetFilter v-if="!uiStateStore.isScope3" />
         </div>
     </div>
 </template>
@@ -238,6 +260,10 @@ export default defineComponent({
         },
         getFormattedString(str: string) {
             return JSON.stringify(JSON.parse(str), null, 2);
+        },
+        onVariableInput(key: string, value: string){
+            if (!value) value = '0';
+            this.transitionsStore.updateVariable(key,value);
         }
     }
 

@@ -280,8 +280,8 @@ local sum(arr, n) =
   else sum(arr, n-1) + arr[n-1];
 
 local calculateFootprint(component) = 
-  if component.scope == 1 then component.amount * thgFactors[component.thg]
-  else component.amount * component.ghgFactor;
+  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100
+  else component.amount * component.ghgFactor * Allokation / 100;
 
 
 local individualFootprints = std.map(calculateFootprint,input_values);
@@ -303,9 +303,23 @@ local outputPDS = sum(primaryDataShares,std.length(primaryDataShares));
 local generateFootprintContribution(index,element) = if ((element.scope != "start") && (element.scope != "control")) 
   then { name: input_names[index], value: individualFootprints[index] };
 
+local generateScope1Contribution(index,element) = if (element.scope == 1)
+  then { name: input_names[index], value: individualFootprints[index] };
+
+local generateScope2Contribution(index,element) = if (element.scope == 2)
+  then { name: input_names[index], value: individualFootprints[index] };
+
+local generateScope3Contribution(index,element) = if (element.scope == 3) 
+  then { name: input_names[index], value: individualFootprints[index] };
+
+
+
 local filterNull(element) = element != null;
 
 local footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));
+local scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));
+local scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));
+local scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));
 
 // fetch contributions from incoming places
 local filterControl(element) = element.scope == "control";
@@ -313,10 +327,19 @@ local filterControl(element) = element.scope == "control";
 local incomingControlPlaces = std.filter(filterControl, input_values);
 
 local getContribution(element) = element.footprintContributions;
+local getScope1Contribution(element) = element.footprintContributions["1"];
+local getScope2Contribution(element) = element.footprintContributions["2"];
+local getScope3Contribution(element) = element.footprintContributions["3"];
 
-local incomingContributions = std.flattenArrays(std.map(getContribution,incomingControlPlaces));
+local incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));
+local incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));
+local incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));
 
-local footprintContributions = incomingContributions + footprintContributionsFromThisTransition;
+local footprintContributions = {
+    "1": incomingScope1Contributions + scope1FromThisTransition,
+    "2": incomingScope2Contributions + scope2FromThisTransition,
+    "3": incomingScope3Contributions + scope3FromThisTransition,
+};
 
 
 // for each incoming place
@@ -337,3 +360,72 @@ local controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: inc
 local sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;
 
 `;
+//export const s3tPreface = `
+//local thgFactors = {
+//  "NF3": 13.4,
+//  "SF6": 18.3,
+//  "CF4": 5.3
+//};
+//
+//local sum(arr, n) = 
+//  if (n <= 0) then 0 
+//  else sum(arr, n-1) + arr[n-1];
+//
+//local calculateFootprint(component) = 
+//  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100
+//  else component.amount * component.ghgFactor * Allokation / 100;
+//
+//
+//local individualFootprints = std.map(calculateFootprint,input_values);
+//
+//local totalFootprint = sum(individualFootprints, std.length(individualFootprints));
+//
+//local calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;
+//
+//local footprintShares = std.map(calculatePCFShare,individualFootprints);
+//
+//local calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;
+//
+//local primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));
+//
+//local outputPDS = sum(primaryDataShares,std.length(primaryDataShares));
+//
+//
+//// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created
+//local generateFootprintContribution(index,element) = if ((element.scope != "start") && (element.scope != "control")) 
+//  then { name: input_names[index], value: individualFootprints[index] };
+//
+//local filterNull(element) = element != null;
+//
+//local footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));
+//
+//// fetch contributions from incoming places
+//local filterControl(element) = element.scope == "control";
+//
+//local incomingControlPlaces = std.filter(filterControl, input_values);
+//
+//local getContribution(element) = element.footprintContributions;
+//
+//local incomingContributions = std.flattenArrays(std.map(getContribution,incomingControlPlaces));
+//
+//local footprintContributions = incomingContributions + footprintContributionsFromThisTransition;
+//
+//
+//// for each incoming place
+//local generateSankeyNode(index,element) = if (input_values[index].scope != "control") && (input_values[index].scope != "start") then { name: element };
+//
+//local getNodes(element) = element.sankeyNodes;
+//local incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));
+//
+//local sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];
+//
+////currently assuming we have exactly one output place
+//local generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };
+//
+//local getLinks(element) = element.sankeyLinks;
+//local incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));
+//
+//local controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];
+//local sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;
+//
+//`;

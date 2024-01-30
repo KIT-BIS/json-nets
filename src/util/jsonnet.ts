@@ -43,6 +43,7 @@ export type EvaluationResult = {
 export function evaluateExpression(jsonnetExpression: string, variables: Record<string, JSONValue> = {}, reference = ''): EvaluationResult {
   const variableString = jsonnetify(variables)
   jsonnetExpression = variableString + replaceUmlauts(jsonnetExpression);
+  // console.log('evaluating')
   // console.log(jsonnetExpression)
 
   try {

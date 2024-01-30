@@ -18,15 +18,81 @@ import type {
 
 use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
 
+// todo this is doubled here => move to util library
+function roundToSix(num: number) {
+
+    return +(Math.round(Number(String(num) + 'e+6')) + 'e-6');
+}
+
 export const useIndicatorStore = defineStore('indicator', {
     state: () => {
         return {
             selectedPlaceID: 'none' as string,
             placeName: '' as string,
             indicatorValue: "<keine Daten>" as string,
-            indicatorType: 'pcf-pie' as string,
+            indicatorType: 'pcf-sunburst' as string,
+
             // contributions: [] as Array<{ name: string, value: number }>,
             // legend: [] as Array<string>,
+            sunburstOption: {
+                title: {
+                    text: 'Beiträge',
+                    left: 'center',
+                },
+                tooltip: {
+                    trigger: 'item',
+                    // formatter: '{a} <br/>{b} : {c} ({d}%)',
+                    formatter: (params: any) => { 
+                        const value = roundToSix(params.data.value)
+                        if (params.name === "Beiträge") {
+                            return "zurück";
+                        } 
+                            return `${params.data.name} : ${value} kgCO2eq`;
+                        },
+                },
+                legend: {
+                    orient: 'vertical',
+                    left: 'left',
+                    data: [] as Array<string>,
+                },
+                series: [{
+                    name: 'Beiträge',
+                    // radius: '55%',
+                    center: ['50%', '50%'],
+                    type: 'sunburst',
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)',
+                        },
+                    },
+                    data: [
+                        {
+                            name: 'Scope 1',
+                            children: [
+                            ]
+                        },
+                        {
+                            name: 'Scope 2',
+                            children: [
+                            ]
+                        },
+                        {
+                            name: 'Scope 3',
+                            children: []
+                        }
+                    ],
+                    radius: [60, '80%'],
+//                    itemStyle: {
+//                        borderRadius: 7,
+//                        borderWidth: 2
+//                    },
+//                    label: {
+//                        show: true
+//                    }
+                }]
+            } as any,
             pieOption: {
                 title: {
                     text: 'Beiträge',
@@ -111,21 +177,23 @@ export const useIndicatorStore = defineStore('indicator', {
                 if (!returnArray.find((el) => el.name == contrib.name)) {
                     // if name doesn't exist, create new entry in return Array
                     // existingNames.push(contrib.name);
+                    // contrib.value = this.roundToTwo(contrib.value);
                     returnArray.push(contrib);
                 } else {
                     //else add up values
                     const entry = returnArray.find((el) => el.name == contrib.name)!;
                     entry.value += contrib.value
+                    // entry.value = this.roundToTwo(entry.value);
                 }
             }
             return returnArray;
         },
         removeDuplicates(data: Array<any>) {
-            const returnArray = data.filter((value, index, self) => 
-                index === self.findIndex((t) => ( t.name === value.name ))
+            const returnArray = data.filter((value, index, self) =>
+                index === self.findIndex((t) => (t.name === value.name))
             );
             return returnArray;
-            
+
         },
         updateIndicator() {
             const placeData = getNetInstance().findPlace(this.selectedPlaceID)
@@ -152,6 +220,24 @@ export const useIndicatorStore = defineStore('indicator', {
                     //@ts-ignore
                     //TODO: generate names from footprintContributions (if necessary)
                     // this.option.legend.data = content.names;
+                } else if (this.indicatorType === 'pcf-sunburst') {
+                    //@ts-ignore
+                    if (content && content.footprintContributions) {
+                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                        //@ts-ignore
+                        this.sunburstOption.series[0].data[0].children = this.processContributions(content.footprintContributions[1]);
+                        //@ts-ignore
+                        this.sunburstOption.series[0].data[1].children = this.processContributions(content.footprintContributions[2]);
+                        //@ts-ignore
+                        this.sunburstOption.series[0].data[2].children = this.processContributions(content.footprintContributions[3]);
+                    } else {
+                        // this.option.series[0].data = [{ name: this.placeName, value: content.ghgFactor * content.amount }];
+                        this.pieOption.series[0].data = [];
+                        this.indicatorValue = "<keine Daten>";
+
+                    }
+ 
+
                 } else if (this.indicatorType === 'pcf-sankey') {
                     //@ts-ignore
                     if (content && content.footprintContributions) {

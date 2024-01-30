@@ -74,6 +74,13 @@ export const useTransitionsStore = defineStore('transitions', {
                 useNetStore().lastUpdatedTransition = transitionData;
             }
         },
+        updateVariable(key: string, value:string){
+            const transitionData = getNetInstance().updateTransitionVariable(this.transition.id, key, value);
+            if (transitionData) {
+                this.transition.customVariables = transitionData.customVariables;
+                useNetStore().lastUpdatedTransition = transitionData;
+            }
+        },
         saveInputFilter() {
             const arcData = this.inputArcs[this.selectedInputPlaceIndex];
             getNetInstance().updateArc(arcData.id, arcData.filter)

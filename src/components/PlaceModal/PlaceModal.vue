@@ -1,7 +1,7 @@
 <template>
     <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-card">
+        <div class="modal-card jsn-modal-medium">
             <header class="modal-card-head scoped-modal-header">
                 <span class="has-text-weight-bold">Place:</span>
                 <span class="ml-1">
@@ -198,4 +198,4 @@ export default defineComponent({
 .scoped-edit-button:hover {
     display: inline-block;
 }
-</style>@/stores/place
+</style>

@@ -77,6 +77,7 @@ export default defineComponent({
             //@ts-ignore
             marking[0].scope = 3;
             marking[0].title = 'scope3';
+            marking[0].scalingFactor = 1;
             //@ts-ignore
             marking[0].fromSupplyChain = true;
             console.log(marking);

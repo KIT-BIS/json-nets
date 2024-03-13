@@ -165,9 +165,9 @@ export const data = {
     ],
     "transitions": [
       {
-        "id": "ebf2fff0-519c-468e-86d3-ef7959ab78ef",
+        "id": "24b114f0-0cf6-4cac-9aad-e034420f35e3",
         "name": "Lagenaufbau",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -176,13 +176,13 @@ export const data = {
           "output_p1_key": "local output_p1_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p1_value": "local output_p1_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p1_value": "local output_p1_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "472fc7ef-856e-4c3f-811f-21e83e610f6e",
+        "id": "ad131bbd-9f06-450f-92a9-02a23ff57dc9",
         "name": "Laminieren",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -191,13 +191,13 @@ export const data = {
           "output_p2_key": "local output_p2_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p2_value": "local output_p2_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p2_value": "local output_p2_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "6d92700a-bc7d-433b-b31b-2f4aeba310ae",
+        "id": "282fe852-ee69-4f85-93c7-b8b2a3aabe06",
         "name": "Bohren",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -206,13 +206,13 @@ export const data = {
           "output_p3_key": "local output_p3_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p3_value": "local output_p3_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p3_value": "local output_p3_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "070c31ef-4141-4dd2-8e16-3e353cf2b119",
+        "id": "c7c6e86a-5446-4ef5-ba45-d4547bff759d",
         "name": "Plating",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -221,13 +221,13 @@ export const data = {
           "output_p4_key": "local output_p4_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p4_value": "local output_p4_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p4_value": "local output_p4_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "80911f5a-d432-46cb-9268-0ea56a284add",
+        "id": "cdfc3613-646a-45d2-80ff-d1a05eef5867",
         "name": "Lötstoppmaske",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -236,13 +236,13 @@ export const data = {
           "output_p5_key": "local output_p5_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p5_value": "local output_p5_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p5_value": "local output_p5_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "986bafab-e88d-449f-9591-106351309bd6",
+        "id": "5b35b671-368c-42fc-8f5e-55acbe10d9de",
         "name": "Lithografie",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -251,13 +251,13 @@ export const data = {
           "output_p6_key": "local output_p6_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p6_value": "local output_p6_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p6_value": "local output_p6_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "4265e96e-df3e-46fd-b0b7-4637272f776b",
-        "name": "Nachbearbeitung",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "id": "5ae74711-b66a-4d67-831d-c69f190f6117",
+        "name": "Nachbearbeiten",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -266,13 +266,13 @@ export const data = {
           "output_p7_key": "local output_p7_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p7_value": "local output_p7_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p7_value": "local output_p7_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0",
-        "name": "Test",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "id": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0",
+        "name": "Testen",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -281,13 +281,13 @@ export const data = {
           "output_p8_key": "local output_p8_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p8_value": "local output_p8_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p8_value": "local output_p8_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "a46e1683-8427-4ec3-b4cd-04251579c484",
+        "id": "cb95ac77-e8db-4099-8e29-4ac3121c2878",
         "name": "Oberflächenfinish",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -296,13 +296,13 @@ export const data = {
           "output_p9_key": "local output_p9_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_p9_value": "local output_p9_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_p9_value": "local output_p9_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       },
       {
-        "id": "e370bc9a-0646-4ba5-9a70-01bb6b687e48",
+        "id": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1",
         "name": "Legendendruck",
-        "preface": "\nlocal thgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\nlocal calculateFootprint(component) = \n  if component.scope == 1 then component.amount * thgFactors[component.thg] * Allokation / 100\n  else component.amount * component.ghgFactor * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
+        "preface": "\n// calculations\n\n// ghg factors in kg CO2e per g\nlocal ghgFactors = {\n  \"NF3\": 13.4,\n  \"SF6\": 18.3,\n  \"CF4\": 5.3\n};\n\nlocal calculateFootprint(component) = \n  component.amount  *\n  (if component.scope == 1 then \n    (if component.unit == \"mg\" then 0.001 \n    else if component.unit == \"kg\" then 1000 \n    else 1)\n    * ghgFactors[component.ghg]\n    * component.scalingFactor\n  else if component.scope == 2 then\n    (if component.unit == \"Wh\" then 0.001\n    else 1)\n    * component.ghgFactor *\n    (if component.ghgFactorUnit == \"g CO2e / kWh\" then 0.001\n    else if component.ghgFactorUnit == \"mg CO2e / kWh\" then 0.000001\n    else 1)\n    * component.scalingFactor\n  else if component.scope == 3 then\n    (if component.unit == \"mg (Gewicht)\" then 0.000001\n    else if component.unit == \"g (Gewicht)\" then 0.001\n    else 1)\n    * component.ghgFactor * \n    (if component.ghgFactorUnit == \"mg CO2e / Stueck oder kg\" then 0.000001\n    else if component.ghgFactorUnit == \"g CO2e / Stueck oder kg\" then 0.001\n    else 1)\n    * component.scalingFactor\n  else component.ghgFactor)\n  * Allokation / 100;\n\n\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n\n\n// calculate Scope 1-Emissions\n\n\n\nlocal generateScope1Contribution(index,element) = if (element.scope == 1)\n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal sum(arr, n) = \n  if (n <= 0) then 0 \n  else sum(arr, n-1) + arr[n-1];\n\n\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\n\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\n\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\n\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\n\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\n\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n\n\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != \"start\") && (element.scope != \"control\")) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\nlocal generateScope2Contribution(index,element) = if (element.scope == 2)\n  then { name: input_names[index], value: individualFootprints[index] };\n\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) \n  then { name: input_names[index], value: individualFootprints[index] };\n\n\n\nlocal filterNull(element) = element != null;\n\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == \"control\";\n\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\n\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions[\"1\"];\nlocal getScope2Contribution(element) = element.footprintContributions[\"2\"];\nlocal getScope3Contribution(element) = element.footprintContributions[\"3\"];\n\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\n\nlocal footprintContributions = {\n    \"1\": incomingScope1Contributions + scope1FromThisTransition,\n    \"2\": incomingScope2Contributions + scope2FromThisTransition,\n    \"3\": incomingScope3Contributions + scope3FromThisTransition,\n};\n\n\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != \"control\") && (input_values[index].scope != \"start\") then { name: element };\n\nlocal getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\n\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\n\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\n\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n\n",
         "guard": "true",
         "customVariables": {
           "Allokation": "100"
@@ -311,445 +311,135 @@ export const data = {
           "output_leiterplatte_key": "local output_leiterplatte_key = '-';"
         },
         "fragmentVarSnippets": {
-          "output_leiterplatte_value": "local output_leiterplatte_value = { scope: 'control', ghgFactor: totalFootprint, amount: 1, \n    unit: 'Stueck (Stueckzahl)', type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
+          "output_leiterplatte_value": "local output_leiterplatte_value = { \n    scope: 'control', \n    ghgFactorUnit: 'kg CO2e / Stueck',\n    ghgFactor: totalFootprint, \n    amount: 1, \n    unit: 'Stueck (Stueckzahl)', \n    type: 'Primaerdaten', \n    pds: outputPDS, \n    footprintContributions: footprintContributions,\n    sankeyNodes: sankeyNodes,\n    sankeyLinks: sankeyLinks,\n    nodeName: transition_name\n};"
         }
       }
     ],
     "arcs": [
       {
-        "id": "4b767e26-36d3-4880-b836-872f12620473",
+        "id": "ebc2cbb5-32c4-4d19-ae03-a525b2cafe46",
         "filter": "$.*",
         "fromId": "5309778c-2f6a-44c0-aa17-bb3f15b7a606",
-        "toId": "ebf2fff0-519c-468e-86d3-ef7959ab78ef"
+        "toId": "24b114f0-0cf6-4cac-9aad-e034420f35e3"
       },
       {
-        "id": "06ba3fef-52d0-4a6c-a080-a9f0bd1b18d2",
+        "id": "189b44da-07d6-4bf6-9512-b47cc9a673f7",
         "filter": "$",
-        "fromId": "ebf2fff0-519c-468e-86d3-ef7959ab78ef",
+        "fromId": "24b114f0-0cf6-4cac-9aad-e034420f35e3",
         "toId": "b1987eda-8e08-4ced-b830-b6567f952ded"
       },
       {
-        "id": "a0fbd897-67fd-4c2c-a47b-00a780d4c66f",
+        "id": "394700a9-4fa6-4f52-b5c5-a1ec92fbf559",
         "filter": "$.*",
         "fromId": "b1987eda-8e08-4ced-b830-b6567f952ded",
-        "toId": "472fc7ef-856e-4c3f-811f-21e83e610f6e"
+        "toId": "ad131bbd-9f06-450f-92a9-02a23ff57dc9"
       },
       {
-        "id": "6185c8a4-7a43-4748-9676-649f1a5a3623",
+        "id": "663eb46f-5c4e-4050-a69d-ebc8c7d17f6f",
         "filter": "$",
-        "fromId": "472fc7ef-856e-4c3f-811f-21e83e610f6e",
+        "fromId": "ad131bbd-9f06-450f-92a9-02a23ff57dc9",
         "toId": "f08869f7-1c58-44f1-a0ee-51f8d948856c"
       },
       {
-        "id": "cd8e42a1-e0e2-4eb3-aa85-005cb649541e",
+        "id": "8eb7b925-fd54-489c-9a8b-8c5034a857bf",
+        "filter": "$.*",
+        "fromId": "f08869f7-1c58-44f1-a0ee-51f8d948856c",
+        "toId": "282fe852-ee69-4f85-93c7-b8b2a3aabe06"
+      },
+      {
+        "id": "33c16aeb-6a8c-407c-b847-00e69c01c724",
         "filter": "$",
-        "fromId": "6d92700a-bc7d-433b-b31b-2f4aeba310ae",
+        "fromId": "282fe852-ee69-4f85-93c7-b8b2a3aabe06",
         "toId": "4d6e9dac-bf68-4b7b-86e2-fdbbb1261448"
       },
       {
-        "id": "1cdbcae0-b5aa-4368-a24e-18c2918abf79",
-        "filter": "$.*",
-        "fromId": "f08869f7-1c58-44f1-a0ee-51f8d948856c",
-        "toId": "6d92700a-bc7d-433b-b31b-2f4aeba310ae"
-      },
-      {
-        "id": "4307dfbb-9b4b-49db-91d1-775c123fdc95",
+        "id": "ea62e657-95a9-4e5f-97d7-ab9d18e9966d",
         "filter": "$.*",
         "fromId": "4d6e9dac-bf68-4b7b-86e2-fdbbb1261448",
-        "toId": "070c31ef-4141-4dd2-8e16-3e353cf2b119"
+        "toId": "c7c6e86a-5446-4ef5-ba45-d4547bff759d"
       },
       {
-        "id": "8dcb59ae-b8fd-4267-8096-ce33205af894",
+        "id": "0d1cd340-ac29-415b-bf07-c97c8dd2144c",
         "filter": "$",
-        "fromId": "070c31ef-4141-4dd2-8e16-3e353cf2b119",
+        "fromId": "c7c6e86a-5446-4ef5-ba45-d4547bff759d",
         "toId": "487ea0ae-a4de-43e7-bb49-5953c547398b"
       },
       {
-        "id": "caea21c5-8a61-4bbc-9cf3-cbf1e5019dfb",
+        "id": "ecd4967b-149e-4db8-adbb-ecbe792c50b8",
         "filter": "$.*",
         "fromId": "487ea0ae-a4de-43e7-bb49-5953c547398b",
-        "toId": "80911f5a-d432-46cb-9268-0ea56a284add"
+        "toId": "cdfc3613-646a-45d2-80ff-d1a05eef5867"
       },
       {
-        "id": "23cc9f8e-acf1-4382-85cd-7190d45b2057",
+        "id": "8d9fb05d-0763-4c85-b354-d5cd9f5e2c71",
         "filter": "$",
-        "fromId": "80911f5a-d432-46cb-9268-0ea56a284add",
+        "fromId": "cdfc3613-646a-45d2-80ff-d1a05eef5867",
         "toId": "d312e07b-ebb7-4901-baa3-4685f2ebff45"
       },
       {
-        "id": "70d8db2d-a0a4-4f6c-a0e4-34e931a11125",
+        "id": "1cbde8e6-32f6-45e5-a766-b144951b18fc",
         "filter": "$.*",
         "fromId": "d312e07b-ebb7-4901-baa3-4685f2ebff45",
-        "toId": "986bafab-e88d-449f-9591-106351309bd6"
+        "toId": "5b35b671-368c-42fc-8f5e-55acbe10d9de"
       },
       {
-        "id": "cfbbbe59-1fa6-40db-80b8-1f9f534dcf02",
+        "id": "33ad877d-e190-4b1c-8c08-994cfb8057fb",
         "filter": "$",
-        "fromId": "986bafab-e88d-449f-9591-106351309bd6",
+        "fromId": "5b35b671-368c-42fc-8f5e-55acbe10d9de",
         "toId": "d779b8e0-9388-4502-971c-bf3b4addc44e"
       },
       {
-        "id": "e35a99fa-da1d-4e63-a0fc-076fc7a28751",
+        "id": "b7df865d-b5f2-4daf-9939-eb6605863784",
         "filter": "$.*",
         "fromId": "d779b8e0-9388-4502-971c-bf3b4addc44e",
-        "toId": "4265e96e-df3e-46fd-b0b7-4637272f776b"
+        "toId": "5ae74711-b66a-4d67-831d-c69f190f6117"
       },
       {
-        "id": "63d06b4b-c0aa-46e5-bb52-7764b0ceb8f9",
+        "id": "6a9ed89c-33f7-4132-89db-a3f4aa9706a7",
         "filter": "$",
-        "fromId": "4265e96e-df3e-46fd-b0b7-4637272f776b",
+        "fromId": "5ae74711-b66a-4d67-831d-c69f190f6117",
         "toId": "257dbecb-8cf9-4411-8f95-1c787c8333c4"
       },
       {
-        "id": "ab78a55b-be38-42e4-8332-b4d139cd3a24",
+        "id": "6eab3779-35ef-4ca2-a4ff-ec648fde309a",
         "filter": "$.*",
         "fromId": "257dbecb-8cf9-4411-8f95-1c787c8333c4",
-        "toId": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0"
+        "toId": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0"
       },
       {
-        "id": "f1a66b36-f549-412c-949e-1ce50f65dbe6",
+        "id": "2899503b-e44b-4994-8705-34d457f601fc",
         "filter": "$",
-        "fromId": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0",
+        "fromId": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0",
         "toId": "f5cf8f49-6389-4307-8c11-579e41685514"
       },
       {
-        "id": "244ecbc2-ffd4-482b-862b-e7805a78f6b1",
+        "id": "a019943d-d5e9-4a95-9172-5f7fb1564528",
         "filter": "$.*",
         "fromId": "f5cf8f49-6389-4307-8c11-579e41685514",
-        "toId": "a46e1683-8427-4ec3-b4cd-04251579c484"
+        "toId": "cb95ac77-e8db-4099-8e29-4ac3121c2878"
       },
       {
-        "id": "5f331a3d-17aa-4d3d-a889-403939a9ba17",
+        "id": "12d77567-c04b-4668-a54c-cd27c8700f54",
         "filter": "$",
-        "fromId": "a46e1683-8427-4ec3-b4cd-04251579c484",
+        "fromId": "cb95ac77-e8db-4099-8e29-4ac3121c2878",
         "toId": "6032860d-f236-4f7e-8be7-197934f4114b"
       },
       {
-        "id": "bbdd5ea3-14b5-40ac-968e-d66d9fd19ebb",
+        "id": "71278fb4-3e78-421a-98d2-8e0fe0c1046f",
         "filter": "$.*",
         "fromId": "6032860d-f236-4f7e-8be7-197934f4114b",
-        "toId": "e370bc9a-0646-4ba5-9a70-01bb6b687e48"
+        "toId": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1"
       },
       {
-        "id": "3b01d7f5-af16-4d4f-8a8b-ec03580e47a3",
+        "id": "fb9cf236-7666-4473-9c86-9a8679a003b3",
         "filter": "$",
-        "fromId": "e370bc9a-0646-4ba5-9a70-01bb6b687e48",
+        "fromId": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1",
         "toId": "2575f3d8-5e2b-41d6-ad8f-0d085c266c07"
       }
     ]
   },
   "layoutData": {
     "cells": [
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 264,
-          "y": 276
-        },
-        "angle": 0,
-        "id": "ebf2fff0-519c-468e-86d3-ef7959ab78ef",
-        "jsonnetsType": "transition",
-        "z": 1,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Lagenaufbau"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 648,
-          "y": 276
-        },
-        "angle": 0,
-        "id": "472fc7ef-856e-4c3f-811f-21e83e610f6e",
-        "jsonnetsType": "transition",
-        "z": 2,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Laminieren"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 1092,
-          "y": 276
-        },
-        "angle": 0,
-        "id": "6d92700a-bc7d-433b-b31b-2f4aeba310ae",
-        "jsonnetsType": "transition",
-        "z": 3,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Bohren"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 1320,
-          "y": 408
-        },
-        "angle": 0,
-        "id": "070c31ef-4141-4dd2-8e16-3e353cf2b119",
-        "jsonnetsType": "transition",
-        "z": 4,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Plating"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 1056,
-          "y": 564
-        },
-        "angle": 0,
-        "id": "80911f5a-d432-46cb-9268-0ea56a284add",
-        "jsonnetsType": "transition",
-        "z": 5,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Lötstoppmaske"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 660,
-          "y": 564
-        },
-        "angle": 0,
-        "id": "986bafab-e88d-449f-9591-106351309bd6",
-        "jsonnetsType": "transition",
-        "z": 6,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Lithografie"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 264,
-          "y": 564
-        },
-        "angle": 0,
-        "id": "4265e96e-df3e-46fd-b0b7-4637272f776b",
-        "jsonnetsType": "transition",
-        "z": 7,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Nachbearbeitung"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 72,
-          "y": 732
-        },
-        "angle": 0,
-        "id": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0",
-        "jsonnetsType": "transition",
-        "z": 8,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Test"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 251,
-          "y": 911
-        },
-        "angle": 0,
-        "id": "a46e1683-8427-4ec3-b4cd-04251579c484",
-        "jsonnetsType": "transition",
-        "z": 9,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Oberflächenfinish"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
-      {
-        "type": "pn.Transition",
-        "size": {
-          "width": 100,
-          "height": 50
-        },
-        "position": {
-          "x": 648,
-          "y": 912
-        },
-        "angle": 0,
-        "id": "e370bc9a-0646-4ba5-9a70-01bb6b687e48",
-        "jsonnetsType": "transition",
-        "z": 10,
-        "attrs": {
-          ".label": {
-            "fill": "#7a7e9b",
-            "text": "Legendendruck"
-          },
-          ".root": {
-            "fill": "hsl(204, 71%, 39%)",
-            "stroke": "hsl(0, 0%, 21%)"
-          },
-          "body": {
-            "cursor": "auto"
-          },
-          "label": {
-            "cursor": "auto"
-          }
-        }
-      },
       {
         "type": "pn.Place",
         "size": {
@@ -1204,7 +894,7 @@ export const data = {
         "tokens": 0,
         "id": "f5cf8f49-6389-4307-8c11-579e41685514",
         "jsonnetsType": "place",
-        "z": 22,
+        "z": 21,
         "attrs": {
           ".root": {
             "stroke": "hsl(204, 71%, 39%)",
@@ -1235,16 +925,326 @@ export const data = {
         }
       },
       {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 275,
+          "y": 275
+        },
+        "angle": 0,
+        "id": "24b114f0-0cf6-4cac-9aad-e034420f35e3",
+        "jsonnetsType": "transition",
+        "z": 22,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Lagenaufbau"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 648,
+          "y": 276
+        },
+        "angle": 0,
+        "id": "ad131bbd-9f06-450f-92a9-02a23ff57dc9",
+        "jsonnetsType": "transition",
+        "z": 23,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Laminieren"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 1068,
+          "y": 276
+        },
+        "angle": 0,
+        "id": "282fe852-ee69-4f85-93c7-b8b2a3aabe06",
+        "jsonnetsType": "transition",
+        "z": 24,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Bohren"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 1320,
+          "y": 420
+        },
+        "angle": 0,
+        "id": "c7c6e86a-5446-4ef5-ba45-d4547bff759d",
+        "jsonnetsType": "transition",
+        "z": 25,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Plating"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 1068,
+          "y": 564
+        },
+        "angle": 0,
+        "id": "cdfc3613-646a-45d2-80ff-d1a05eef5867",
+        "jsonnetsType": "transition",
+        "z": 26,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Lötstoppmaske"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 648,
+          "y": 564
+        },
+        "angle": 0,
+        "id": "5b35b671-368c-42fc-8f5e-55acbe10d9de",
+        "jsonnetsType": "transition",
+        "z": 27,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Lithografie"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 264,
+          "y": 564
+        },
+        "angle": 0,
+        "id": "5ae74711-b66a-4d67-831d-c69f190f6117",
+        "jsonnetsType": "transition",
+        "z": 28,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Nachbearbeiten"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 72,
+          "y": 744
+        },
+        "angle": 0,
+        "id": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0",
+        "jsonnetsType": "transition",
+        "z": 29,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Testen"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 252,
+          "y": 912
+        },
+        "angle": 0,
+        "id": "cb95ac77-e8db-4099-8e29-4ac3121c2878",
+        "jsonnetsType": "transition",
+        "z": 30,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Oberflächenfinish"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 648,
+          "y": 912
+        },
+        "angle": 0,
+        "id": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1",
+        "jsonnetsType": "transition",
+        "z": 31,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "Legendendruck"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
         "type": "standard.Link",
         "source": {
           "id": "5309778c-2f6a-44c0-aa17-bb3f15b7a606",
           "selector": ".root"
         },
         "target": {
-          "id": "ebf2fff0-519c-468e-86d3-ef7959ab78ef",
+          "id": "24b114f0-0cf6-4cac-9aad-e034420f35e3",
           "selector": ".root"
         },
-        "id": "4b767e26-36d3-4880-b836-872f12620473",
+        "id": "ebc2cbb5-32c4-4d19-ae03-a525b2cafe46",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1252,8 +1252,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 53,
-        "vertices": [],
+        "z": 32,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1266,14 +1265,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "ebf2fff0-519c-468e-86d3-ef7959ab78ef",
+          "id": "24b114f0-0cf6-4cac-9aad-e034420f35e3",
           "selector": ".root"
         },
         "target": {
           "id": "b1987eda-8e08-4ced-b830-b6567f952ded",
           "selector": ".root"
         },
-        "id": "06ba3fef-52d0-4a6c-a080-a9f0bd1b18d2",
+        "id": "189b44da-07d6-4bf6-9512-b47cc9a673f7",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1281,8 +1280,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 54,
-        "vertices": [],
+        "z": 33,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1299,10 +1297,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "472fc7ef-856e-4c3f-811f-21e83e610f6e",
+          "id": "ad131bbd-9f06-450f-92a9-02a23ff57dc9",
           "selector": ".root"
         },
-        "id": "a0fbd897-67fd-4c2c-a47b-00a780d4c66f",
+        "id": "394700a9-4fa6-4f52-b5c5-a1ec92fbf559",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1310,8 +1308,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 56,
-        "vertices": [],
+        "z": 34,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1324,14 +1321,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "472fc7ef-856e-4c3f-811f-21e83e610f6e",
+          "id": "ad131bbd-9f06-450f-92a9-02a23ff57dc9",
           "selector": ".root"
         },
         "target": {
           "id": "f08869f7-1c58-44f1-a0ee-51f8d948856c",
           "selector": ".root"
         },
-        "id": "6185c8a4-7a43-4748-9676-649f1a5a3623",
+        "id": "663eb46f-5c4e-4050-a69d-ebc8c7d17f6f",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1339,37 +1336,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 58,
-        "vertices": [],
-        "attrs": {
-          ".connection": {
-            "fill": "none",
-            "stroke-linejoin": "round",
-            "stroke-width": "2",
-            "stroke": "#4b4a67"
-          }
-        }
-      },
-      {
-        "type": "standard.Link",
-        "source": {
-          "id": "6d92700a-bc7d-433b-b31b-2f4aeba310ae",
-          "selector": ".root"
-        },
-        "target": {
-          "id": "4d6e9dac-bf68-4b7b-86e2-fdbbb1261448",
-          "selector": ".root"
-        },
-        "id": "cd8e42a1-e0e2-4eb3-aa85-005cb649541e",
-        "jsonnetsType": "postset",
-        "connector": {
-          "name": "straight",
-          "args": {
-            "cornerType": "cubic"
-          }
-        },
-        "z": 62,
-        "vertices": [],
+        "z": 35,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1386,10 +1353,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "6d92700a-bc7d-433b-b31b-2f4aeba310ae",
+          "id": "282fe852-ee69-4f85-93c7-b8b2a3aabe06",
           "selector": ".root"
         },
-        "id": "1cdbcae0-b5aa-4368-a24e-18c2918abf79",
+        "id": "8eb7b925-fd54-489c-9a8b-8c5034a857bf",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1397,8 +1364,35 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 63,
-        "vertices": [],
+        "z": 36,
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "282fe852-ee69-4f85-93c7-b8b2a3aabe06",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "4d6e9dac-bf68-4b7b-86e2-fdbbb1261448",
+          "selector": ".root"
+        },
+        "id": "33c16aeb-6a8c-407c-b847-00e69c01c724",
+        "jsonnetsType": "postset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 37,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1415,10 +1409,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "070c31ef-4141-4dd2-8e16-3e353cf2b119",
+          "id": "c7c6e86a-5446-4ef5-ba45-d4547bff759d",
           "selector": ".root"
         },
-        "id": "4307dfbb-9b4b-49db-91d1-775c123fdc95",
+        "id": "ea62e657-95a9-4e5f-97d7-ab9d18e9966d",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1426,8 +1420,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 64,
-        "vertices": [],
+        "z": 38,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1440,14 +1433,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "070c31ef-4141-4dd2-8e16-3e353cf2b119",
+          "id": "c7c6e86a-5446-4ef5-ba45-d4547bff759d",
           "selector": ".root"
         },
         "target": {
           "id": "487ea0ae-a4de-43e7-bb49-5953c547398b",
           "selector": ".root"
         },
-        "id": "8dcb59ae-b8fd-4267-8096-ce33205af894",
+        "id": "0d1cd340-ac29-415b-bf07-c97c8dd2144c",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1455,8 +1448,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 65,
-        "vertices": [],
+        "z": 39,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1473,10 +1465,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "80911f5a-d432-46cb-9268-0ea56a284add",
+          "id": "cdfc3613-646a-45d2-80ff-d1a05eef5867",
           "selector": ".root"
         },
-        "id": "caea21c5-8a61-4bbc-9cf3-cbf1e5019dfb",
+        "id": "ecd4967b-149e-4db8-adbb-ecbe792c50b8",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1484,8 +1476,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 68,
-        "vertices": [],
+        "z": 40,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1498,14 +1489,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "80911f5a-d432-46cb-9268-0ea56a284add",
+          "id": "cdfc3613-646a-45d2-80ff-d1a05eef5867",
           "selector": ".root"
         },
         "target": {
           "id": "d312e07b-ebb7-4901-baa3-4685f2ebff45",
           "selector": ".root"
         },
-        "id": "23cc9f8e-acf1-4382-85cd-7190d45b2057",
+        "id": "8d9fb05d-0763-4c85-b354-d5cd9f5e2c71",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1513,8 +1504,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 71,
-        "vertices": [],
+        "z": 41,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1531,10 +1521,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "986bafab-e88d-449f-9591-106351309bd6",
+          "id": "5b35b671-368c-42fc-8f5e-55acbe10d9de",
           "selector": ".root"
         },
-        "id": "70d8db2d-a0a4-4f6c-a0e4-34e931a11125",
+        "id": "1cbde8e6-32f6-45e5-a766-b144951b18fc",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1542,8 +1532,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 75,
-        "vertices": [],
+        "z": 42,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1556,14 +1545,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "986bafab-e88d-449f-9591-106351309bd6",
+          "id": "5b35b671-368c-42fc-8f5e-55acbe10d9de",
           "selector": ".root"
         },
         "target": {
           "id": "d779b8e0-9388-4502-971c-bf3b4addc44e",
           "selector": ".root"
         },
-        "id": "cfbbbe59-1fa6-40db-80b8-1f9f534dcf02",
+        "id": "33ad877d-e190-4b1c-8c08-994cfb8057fb",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1571,8 +1560,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 79,
-        "vertices": [],
+        "z": 43,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1589,10 +1577,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "4265e96e-df3e-46fd-b0b7-4637272f776b",
+          "id": "5ae74711-b66a-4d67-831d-c69f190f6117",
           "selector": ".root"
         },
-        "id": "e35a99fa-da1d-4e63-a0fc-076fc7a28751",
+        "id": "b7df865d-b5f2-4daf-9939-eb6605863784",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1600,8 +1588,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 84,
-        "vertices": [],
+        "z": 44,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1614,14 +1601,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "4265e96e-df3e-46fd-b0b7-4637272f776b",
+          "id": "5ae74711-b66a-4d67-831d-c69f190f6117",
           "selector": ".root"
         },
         "target": {
           "id": "257dbecb-8cf9-4411-8f95-1c787c8333c4",
           "selector": ".root"
         },
-        "id": "63d06b4b-c0aa-46e5-bb52-7764b0ceb8f9",
+        "id": "6a9ed89c-33f7-4132-89db-a3f4aa9706a7",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1629,8 +1616,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 89,
-        "vertices": [],
+        "z": 45,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1647,10 +1633,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0",
+          "id": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0",
           "selector": ".root"
         },
-        "id": "ab78a55b-be38-42e4-8332-b4d139cd3a24",
+        "id": "6eab3779-35ef-4ca2-a4ff-ec648fde309a",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1658,8 +1644,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 90,
-        "vertices": [],
+        "z": 46,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1672,14 +1657,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "958ce812-8c2e-44d7-b6fb-a52312bc8ce0",
+          "id": "f73a9c93-3918-4ec1-9418-4c7ee1e4e1f0",
           "selector": ".root"
         },
         "target": {
           "id": "f5cf8f49-6389-4307-8c11-579e41685514",
           "selector": ".root"
         },
-        "id": "f1a66b36-f549-412c-949e-1ce50f65dbe6",
+        "id": "2899503b-e44b-4994-8705-34d457f601fc",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1687,8 +1672,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 92,
-        "vertices": [],
+        "z": 47,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1705,10 +1689,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "a46e1683-8427-4ec3-b4cd-04251579c484",
+          "id": "cb95ac77-e8db-4099-8e29-4ac3121c2878",
           "selector": ".root"
         },
-        "id": "244ecbc2-ffd4-482b-862b-e7805a78f6b1",
+        "id": "a019943d-d5e9-4a95-9172-5f7fb1564528",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1716,8 +1700,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 94,
-        "vertices": [],
+        "z": 48,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1730,14 +1713,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "a46e1683-8427-4ec3-b4cd-04251579c484",
+          "id": "cb95ac77-e8db-4099-8e29-4ac3121c2878",
           "selector": ".root"
         },
         "target": {
           "id": "6032860d-f236-4f7e-8be7-197934f4114b",
           "selector": ".root"
         },
-        "id": "5f331a3d-17aa-4d3d-a889-403939a9ba17",
+        "id": "12d77567-c04b-4668-a54c-cd27c8700f54",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1745,8 +1728,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 95,
-        "vertices": [],
+        "z": 49,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1763,10 +1745,10 @@ export const data = {
           "selector": ".root"
         },
         "target": {
-          "id": "e370bc9a-0646-4ba5-9a70-01bb6b687e48",
+          "id": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1",
           "selector": ".root"
         },
-        "id": "bbdd5ea3-14b5-40ac-968e-d66d9fd19ebb",
+        "id": "71278fb4-3e78-421a-98d2-8e0fe0c1046f",
         "jsonnetsType": "preset",
         "connector": {
           "name": "straight",
@@ -1774,8 +1756,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 96,
-        "vertices": [],
+        "z": 50,
         "attrs": {
           ".connection": {
             "fill": "none",
@@ -1788,14 +1769,14 @@ export const data = {
       {
         "type": "standard.Link",
         "source": {
-          "id": "e370bc9a-0646-4ba5-9a70-01bb6b687e48",
+          "id": "6c5f99f4-2b10-4dd9-8427-bd2bd18696a1",
           "selector": ".root"
         },
         "target": {
           "id": "2575f3d8-5e2b-41d6-ad8f-0d085c266c07",
           "selector": ".root"
         },
-        "id": "3b01d7f5-af16-4d4f-8a8b-ec03580e47a3",
+        "id": "fb9cf236-7666-4473-9c86-9a8679a003b3",
         "jsonnetsType": "postset",
         "connector": {
           "name": "straight",
@@ -1803,8 +1784,7 @@ export const data = {
             "cornerType": "cubic"
           }
         },
-        "z": 97,
-        "vertices": [],
+        "z": 51,
         "attrs": {
           ".connection": {
             "fill": "none",

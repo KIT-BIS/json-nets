@@ -145,6 +145,14 @@
 
                 </section>
                 <section class="modal-card-body" v-else>
+                    <div class="notification is-info is-light is-size-7">
+                        Eine Transition stellt eine Aktivität (wie zum Beispiel 'Löten') in Ihrem Prozessmodell dar.
+                        Fügen Sie der Aktivität Input-Stellen (Kreise) vom Typ "Scope 1 - Emissionen", "Scope 2 - Emissionen"
+                        oder "Scope 3 - Emissionen" zu, um die der Aktivität zuzuordnenden Treibhausgasemissionen
+                        zu erfassen.
+                        Über das Feld 'Allokation' können Sie die berechneten Gesamt-Emissionen prozentual skalieren.
+                    </div>
+
                     <div class="field" v-for="[key, value] in Object.entries(transitionsStore.transition.customVariables)">
                         <label class="label is-small">{{ key }}
                         </label>

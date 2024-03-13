@@ -209,7 +209,7 @@ export const useIndicatorStore = defineStore('indicator', {
                 if (this.indicatorType === 'pcf-pie') {
                     //@ts-ignore
                     if (content && content.footprintContributions) {
-                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
                         this.pieOption.series[0].data = this.processContributions(content.footprintContributions);
                     } else {
                         // this.option.series[0].data = [{ name: this.placeName, value: content.ghgFactor * content.amount }];
@@ -223,7 +223,7 @@ export const useIndicatorStore = defineStore('indicator', {
                 } else if (this.indicatorType === 'pcf-sunburst') {
                     //@ts-ignore
                     if (content && content.footprintContributions) {
-                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
                         //@ts-ignore
                         this.sunburstOption.series[0].data[0].children = this.processContributions(content.footprintContributions[1]);
                         //@ts-ignore
@@ -241,7 +241,7 @@ export const useIndicatorStore = defineStore('indicator', {
                 } else if (this.indicatorType === 'pcf-sankey') {
                     //@ts-ignore
                     if (content && content.footprintContributions) {
-                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kgCO2eq";
+                        this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
                         this.sankeyOption.series.data = this.removeDuplicates(content.sankeyNodes);
                         this.sankeyOption.series.links = content.sankeyLinks;
                         // this.option.series[0].data = this.processContributions(content.footprintContributions);

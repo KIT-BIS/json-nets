@@ -35,6 +35,7 @@
             </div>
 
             <section class="modal-card-body">
+
                 <DataTab v-if="shownTab === 'data'"  />
                 <!-- :schema="placesStore.place.schema" /> -->
 
@@ -94,6 +95,7 @@ import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle, oneDark } from "@codemirror/theme-one-dark";
 import type { ViewUpdate } from "@codemirror/view";
 import DataEditor from './DataEditor.vue'
+import PlaceTypeSelector from './PlaceTypeSelector.vue';
 import JSONSchema from "@json-schema-tools/meta-schema"
 import HelpButton from '@/components/_shared/HelpButton.vue'
 import { getCurrentInstance } from 'vue';
@@ -110,6 +112,7 @@ const schema: JSONSchema7 = {
 
 export default defineComponent({
     components: {
+        PlaceTypeSelector,
     Codemirror,
     DataEditor,
     HelpButton,

@@ -2,7 +2,6 @@
 import { useUiStateStore } from '@/stores/uiState'
 import { useNetStore } from './stores/net'
 
-//import { data as example } from '@/examples/production'
 import { download, readFile } from '@/util/files'
 
 import JointPaper from './components/JointPaper/JointPaper.vue'
@@ -17,12 +16,16 @@ import SunburstChart from './components/SunburstChart.vue'
 
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useIndicatorStore } from './stores/indicator'
-import { getNetInstance } from './json-nets/Net'
+import { useConfigStore } from './stores/config'
 
+import config from './configs/s3t-config.json';
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore();
 const indicatorState = useIndicatorStore();
+const configState = useConfigStore();
+
+configState.loadConfig(config);
 
 function exportNet() {
   return useNetStore().export();
@@ -30,7 +33,7 @@ function exportNet() {
 
 function importNet(jsonString: string) {
   let json;
-  //todo: this was used to importexamples, no longer needed
+  //todo: this was used to import examples, no longer needed
   if (jsonString === '1') {
   } else {
     json = JSON.parse(jsonString);
@@ -38,8 +41,6 @@ function importNet(jsonString: string) {
   useNetStore().import(json)
 }
 
-//TODO: should be in some general config store
-// const isScope3 = true;
 </script>
 <script lang="ts">
 export const MODE_NONE = 'MODE_NONE'
@@ -90,31 +91,6 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     >
       Beispiele
     </button>
-    <!--<button
-      style="margin-left: 15px"
-      @click.stop="
-        () => {
-          uiState.setMode(MODE_EXAMPLE)
-          importNet('example2')
-        }
-      "
-      class="button is-primary is-outlined"
-    >
-      Ex2
-    </button>
-    <button
-      style="margin-left: 15px"
-      @click.stop="
-        () => {
-          uiState.setMode(MODE_EXAMPLE)
-          importNet('example3')
-        }
-      "
-      class="button is-primary is-outlined"
-    >
-      Ex3
-    </button> -->
-
 
     <ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => {
         uiState.showModal = 'help'
@@ -125,7 +101,6 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
     style="border: dashed grey;">
     <div class="select mb-5 is-small">
       <select v-model="indicatorState.indicatorType" @change="indicatorState.updateIndicator()">
-        <!-- <option value="pcf-pie">THG-Fußabdruck (Beiträge)</option> -->
         <option value="pcf-sankey">THG-Fußabdruck (Sankey)</option>
         <option value="pcf-sunburst">THG-Fußabdruck (Sunburst)</option>
         <option value="pds">Primärdatenanteil</option>
@@ -148,7 +123,6 @@ export const MODE_INDICATOR = 'MODE_INDICATOR'
   <ExpressionEditor v-if="uiState.showEditor !== 'none'" />
   <HelpModal v-if="uiState.showModal === 'help'" />
   <ExamplesModal v-if="uiState.showModal === 'examples'" />
-  <!-- <Scope3Modal v-if="uiState.showScope3Data" /> -->
   <!-- <RouterView /> -->
   <div style="position: absolute; bottom: 5px; right: 5px">
     <a @click="useNetStore().resetModel()">Modell zurücksetzen</a>

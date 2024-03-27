@@ -64,15 +64,15 @@ export default class Place extends joint.shapes.pn.Place {
     elementView.hideTools()
   }
 
-  addIndicatorTools(paper: joint.dia.Paper) {
-    var boundaryTool = new joint.elementTools.Boundary();
-    const toolsView = new joint.dia.ToolsView({
-      tools: [boundaryTool]
-    })
-
-    const elementView = this.findView(paper)
-    elementView.addTools(toolsView)
-    elementView.hideTools()
-  }
+//  addIndicatorTools(paper: joint.dia.Paper) {
+//    var boundaryTool = new joint.elementTools.Boundary();
+//    const toolsView = new joint.dia.ToolsView({
+//      tools: [boundaryTool]
+//    })
+//
+//    const elementView = this.findView(paper)
+//    elementView.addTools(toolsView)
+//    elementView.hideTools()
+//  }
 
 }

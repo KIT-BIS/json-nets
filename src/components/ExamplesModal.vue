@@ -19,47 +19,14 @@
                                 <th>Aktionen</th>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr v-for="example in configStore.examples">
                                     <td>
-                                        Kamerahersteller
+                                        {{ example.name }}
                                     </td>
                                     <td>
-                                        <a @click="() => { importNet('1') }">Laden</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        Chip
-                                    </td>
-                                    <td>
-                                        <a @click="() => { importNet('2')}">Laden</a>
+                                        <a @click="() => { importNet(example.net) }">Laden</a>
                                     </td>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        Anschluss
-                                    </td>
-                                    <td>
-                                        <a @click="() => { importNet('3')}">Laden</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        Leiterplatte
-                                    </td>
-                                    <td>
-                                        <a @click="() => {importNet('4') }">Laden</a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        Wafer
-                                    </td>
-                                    <td>
-                                        <a @click="() => {importNet('5') }">Laden</a>
-                                    </td>
-                                </tr>
-
                             </tbody>
                         </table>
                     </div>
@@ -74,35 +41,48 @@
 import { useUiStateStore } from '@/stores/uiState'
 import { defineComponent } from 'vue'
 import { mapStores } from 'pinia'
-import { data as kamera_1 } from '@/examples/1_kamera_blank'
-import { data as chip_2 } from '@/examples/2_chip_blank'
-import { data as anschluss_3 } from '@/examples/3_anschluss_blank'
-import { data as leiterplatte_4 } from '@/examples/4_leiterplatte_blank'
-import { data as wafer_5 } from '@/examples/5_wafer_blank'
+// import { data as kamera_1 } from '@/examples/1_kamera_blank'
+// import { data as chip_2 } from '@/examples/2_chip_blank'
+// import { data as anschluss_3 } from '@/examples/3_anschluss_blank'
+// import { data as leiterplatte_4 } from '@/examples/4_leiterplatte_blank'
+// import { data as wafer_5 } from '@/examples/5_wafer_blank'
 import { useNetStore } from '@/stores/net'
+import { useConfigStore } from '@/stores/config'
 
 export default defineComponent({
     computed: {
-        ...mapStores(useUiStateStore)
+        ...mapStores(useUiStateStore),
+        ...mapStores(useNetStore),
+        ...mapStores(useConfigStore)
     },
     methods: {
         // todo needs refactoring, doubled in App.vue
-        importNet(jsonString: string) {
-            let json;
-            if (jsonString === '1') {
-                json = JSON.parse(JSON.stringify(kamera_1))
-            } else if (jsonString === '2') {
-                json = JSON.parse(JSON.stringify(chip_2))
-            } else if (jsonString === '3') {
-                json = JSON.parse(JSON.stringify(anschluss_3))
-            } else if (jsonString === '4') {
-                json = JSON.parse(JSON.stringify(leiterplatte_4))
-            } else if (jsonString === '5') {
-                json = JSON.parse(JSON.stringify(wafer_5))
-            } else {
-                json = JSON.parse(jsonString);
-            }
-            useNetStore().import(json)
+        importNet(json: any) {
+            // let json;
+            // if (jsonString === '1') {
+                // json = JSON.parse(JSON.stringify(kamera_1))
+            // } else if (jsonString === '2') {
+                // json = JSON.parse(JSON.stringify(chip_2))
+            // } else if (jsonString === '3') {
+                // json = JSON.parse(JSON.stringify(anschluss_3))
+            // } else if (jsonString === '4') {
+                // json = JSON.parse(JSON.stringify(leiterplatte_4))
+            // } else if (jsonString === '5') {
+                // json = JSON.parse(JSON.stringify(wafer_5))
+            // } else {
+                // json = JSON.parse(jsonString);
+            // }
+            this.netStore.import(json)
+
+            // Todo: currently assuming that every imported transition and place is of default type
+            // this may not always be the case - a solution would require to export the types
+            //for (let i = 0; i < this.netStore.transitions.length; i++) {
+            //    this.netStore.transitionTypes[this.netStore.transitions[i].id] = this.configStore.defaultTransitionType;
+            //}
+
+            //for (let i = 0; i < this.netStore.places.length; i++) {
+            //    this.netStore.placeTypes[this.netStore.places[i].id] = this.configStore.defaultPlaceType;
+            //}
 
             this.close();
         },

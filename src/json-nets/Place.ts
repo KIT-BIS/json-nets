@@ -5,6 +5,7 @@ import { deepInsert, deepRemove } from "@/util/jsonOperations"
 
 import { Schema } from "./Schema"
 import { checkSchema } from "@/util/jsonSchema"
+import type { JSONSchema7 } from "json-schema";
 
 export type FragmentOperation = {
   type: "remove"
@@ -21,7 +22,7 @@ export class Place {
   readonly id: string
   private _name: string
   private _schema: Schema 
-  private _mode: "assisted" | "expert"
+  // private _mode: "assisted" | "expert"
   public marking: JSONMarking
   public defaultMarking: JSONMarking
 
@@ -34,7 +35,7 @@ export class Place {
     this.id = id // id of the place
     this._name = name // name of the place
     this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object"} })
-    this._mode = "assisted";
+    // this._mode = "assisted";
     this.marking = [];
     this.defaultMarking = [];
   }
@@ -49,7 +50,7 @@ export class Place {
   }
 
   // expects 
-  set schema(schema: JSONObject) {
+  set schema(schema: JSONSchema7) {
     // to ensure $id doesn't get changed by user
     schema['$id'] = this.id;
     // const arraySchema = { $id: this.id, type: "array", items: schema }
@@ -59,17 +60,17 @@ export class Place {
     this._schema.update(schema);
   }
 
-  get schema(): JSONObject {
+  get schema(): JSONSchema7 {
     return this._schema.schema;
   }
 
-  set mode(mode: "assisted" | "expert") {
-    this._mode = mode;
-  }
+  // set mode(mode: "assisted" | "expert") {
+    // this._mode = mode;
+  // }
 
-  get mode() {
-    return this._mode;
-  }
+  // get mode() {
+    // return this._mode;
+  // }
 
   // todo: probably move this to schema class?
   validateSchema(schema: JSONObject) {

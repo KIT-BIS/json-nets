@@ -1,0 +1,46 @@
+{
+    "name": "test",
+    "defaultUIAssistMode": "expert",
+    "defaultTransitionType": "default",
+    "defaultPlaceType": "default",
+    "allowAutoLayout": true,
+    "examples": [],
+    "visualisationConfig": false,
+    "transitionTypes": [
+        {
+            "id": "default",
+            "title": "default",
+            "description": "just testing",
+            "keySnippet": "'--';",
+            "valueSnippet": "{ 'bli': 'bla' };",
+            "preface": "local bla = 5;",
+            "guard": "true || true",
+            "presetFilter": "$.*.*",
+            "postsetFilter": "$.*",
+            "customVariables": {}
+        }
+    ],
+    "placeTypes": [
+        {
+            "id": "default",
+            "externalInteraction": { "type": "none" },
+            "schema": {
+                "title": "default",
+                "description": "just testing",
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "instance_id": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "instance_id"
+                    ]
+                }
+            },
+            "marking": []
+        }
+    ]
+}

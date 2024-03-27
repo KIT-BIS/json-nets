@@ -13,7 +13,11 @@
         <div class="control is-small jsn-code">
             <Codemirror placeholder="Define key in Jsonnet" style="height: 50px" :indent-with-tab="true" :tab-size="2"
                 :extensions="extensions"
-                v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].keySnippet" />
+                v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].keySnippet" 
+
+                :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                />
+
         </div>
         <!-- todo: maybe add link to editor for more info -->
         <div v-if="transitionsStore.assignmentComplete && !transitionsStore.prefaceHasError">
@@ -39,7 +43,10 @@
         <div class="control is-small jsn-code">
             <Codemirror placeholder="Define value in Jsonnet" style="height: 50px" :indent-with-tab="true" :tab-size="2"
                 :extensions="extensions"
-                v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].valueSnippet" />
+                v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].valueSnippet" 
+
+                :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                />
         </div>
         <div v-if="transitionsStore.assignmentComplete && !transitionsStore.prefaceHasError">
             <p v-if="valueHasError" class="help is-danger">Value expression has errors.</p>
@@ -58,12 +65,12 @@ import { defineComponent } from 'vue';
 import { mapStores } from 'pinia';
 import { useUiStateStore } from '@/stores/uiState';
 import { useTransitionsStore } from '@/stores/transition';
-
 import { Codemirror } from 'vue-codemirror';
 import { basicSetup } from 'codemirror';
 import { EditorView } from "@codemirror/view";
 
 import HelpButton from '../_shared/HelpButton.vue';
+import { useNetStore } from '@/stores/net';
 
 export default defineComponent({
     components: {
@@ -82,6 +89,7 @@ export default defineComponent({
 
         ...mapStores(useTransitionsStore),
         ...mapStores(useUiStateStore),
+        ...mapStores(useNetStore),
         keyHasError() {
             const keyVar = this.transitionsStore.outputArcs[this.transitionsStore.selectedOutputSnippetIndex].keyVar
             return this.transitionsStore.keyEvaluationResults[keyVar].hasError

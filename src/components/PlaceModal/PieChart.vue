@@ -1,5 +1,5 @@
 <template>
-    <v-chart class="chart" :option="indicatorStore.pieOption" autoresize />
+    <!-- <v-chart class="chart" :option="indicatorStore.pieOption" autoresize /> -->
 </template>
 <script lang="ts">
 import type { ComposeOption } from 'echarts/core'
@@ -30,7 +30,7 @@ import {
 import VChart, { THEME_KEY } from 'vue-echarts';
 import { ref, defineComponent } from 'vue';
 
-import { useIndicatorStore } from '@/stores/indicator';
+// import { useIndicatorStore } from '@/stores/indicator';
 
 import { mapStores } from 'pinia';
 
@@ -53,7 +53,7 @@ export default defineComponent({
     [key]: 'light',
   },
   computed: {
-    ...mapStores(useIndicatorStore),
+    // ...mapStores(useIndicatorStore),
   },
   setup() {
     // const option = ref();

@@ -11,11 +11,18 @@ export const usePlacesStore = defineStore('places', {
     state: () => {
         return {
             place: {} as PlaceData,
+            // placeType: 'custom' as String,
             markingString: '' as string,
             schemaString: '' as string,
+            databaseMap: {} as Record<string, string>,
             formsData: {}
         }
     },
+    // getters: {
+        // placeTypeDescription: (state) => {
+            // useConfigStore().placeTypeDescription(state.placeType);
+        // }
+    // },
     actions: {
         // storing basic data to the json net
         saveName() {
@@ -26,13 +33,13 @@ export const usePlacesStore = defineStore('places', {
                 useNetStore().lastUpdatedPlace = placeData;
             }
         },
-        setUserMode(mode: "assisted" | "expert") {
-            const placeData = getNetInstance().updatePlaceMode(this.place.id, mode);
-            if (placeData) {
-                this.place.mode = placeData.mode;
-                useNetStore().lastUpdatedPlace = placeData;
-            }
-        },
+        // setUserMode(mode: "assisted" | "expert") {
+        //     const placeData = getNetInstance().updatePlaceMode(this.place.id, mode);
+        //     if (placeData) {
+        //         this.place.mode = placeData.mode;
+        //         useNetStore().lastUpdatedPlace = placeData;
+        //     }
+        // },
         addToken() {
             let token = mock(this.place.schema.items)
             this.place.marking.push(token)
@@ -100,6 +107,7 @@ export const usePlacesStore = defineStore('places', {
                     this.place.hasError = placeData.hasError;
                     this.place.errorType = placeData.errorType;
                 }
+
             } catch (e: any){
                 // parsing failed
             }

@@ -1,7 +1,7 @@
 <template>
     <div class="modal is-active">
         <div class="modal-background"></div>
-        <div class="modal-card jsn-modal-medium">
+        <div class="modal-card" :class="{ 'jsn-modal-wide': shownTab === 'visualisation', 'jsn-modal-medium':  shownTab !== 'visualisation'}">
             <header class="modal-card-head scoped-modal-header">
                 <span class="has-text-weight-bold">Place:</span>
                 <span class="ml-1">
@@ -29,15 +29,18 @@
             <div class="tabs is-left is-small has-background-light mb-0">
                 <ul>
                     <li :class="{ 'is-active': shownTab === 'data' }"><a @click="() => { showTab('data') }">Data</a></li>
-                    <li :class="{ 'is-active': shownTab === 'schema' }"><a @click="() => { showTab('schema') }">Schema</a>
+                    <li v-if="uiStateStore.uiAssistMode === 'expert'" :class="{ 'is-active': shownTab === 'schema' }"><a @click="() => { showTab('schema') }">Schema</a>
                     </li>
+
+                    <li v-if="configStore.visualisationConfig" :class="{ 'is-active': shownTab === 'visualisation' }"><a @click="() => { showTab('visualisation') }">Visualisation</a>
+                        </li>
                 </ul>
             </div>
 
             <section class="modal-card-body">
-
+                <PlaceTypeSelector v-if="!(shownTab === 'visualisation')"/>
                 <DataTab v-if="shownTab === 'data'"  />
-                <!-- :schema="placesStore.place.schema" /> -->
+                <VisualisationTab v-if="shownTab === 'visualisation'"  />
 
                 <div v-if="shownTab === 'schema'" class="block">
                     <div class="field">
@@ -51,7 +54,7 @@
                         <div class="control is-small jsn-code">
                             <Codemirror v-model="placesStore.schemaString" placeholder="Edit place schema."
                                 :autofocus="true" :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }"
-                                :extensions="extensions" />
+                                :extensions="extensions" :disabled="netStore.placeTypes[placesStore.place.id] !== 'custom'"/>
                             <!-- @change="onSchemaCodeChange" -->
                         </div>
                         <p class="help" v-if="!placesStore.place.hasError">
@@ -73,6 +76,7 @@
             </section>
 
             <footer class="modal-card-foot">
+ 
             </footer>
         </div>
     </div>
@@ -93,13 +97,14 @@ import { autocompletion, closeBrackets } from "@codemirror/autocomplete";
 import { lintGutter } from "@codemirror/lint";
 import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle, oneDark } from "@codemirror/theme-one-dark";
-import type { ViewUpdate } from "@codemirror/view";
 import DataEditor from './DataEditor.vue'
 import PlaceTypeSelector from './PlaceTypeSelector.vue';
 import JSONSchema from "@json-schema-tools/meta-schema"
 import HelpButton from '@/components/_shared/HelpButton.vue'
-import { getCurrentInstance } from 'vue';
 import DataTab from './DataTab.vue';
+import VisualisationTab from './VisualisationTab.vue';
+import { useNetStore } from '@/stores/net';
+import { useConfigStore } from '@/stores/config';
 
 const schema: JSONSchema7 = {
     type: "object",
@@ -113,11 +118,12 @@ const schema: JSONSchema7 = {
 export default defineComponent({
     components: {
         PlaceTypeSelector,
-    Codemirror,
-    DataEditor,
-    HelpButton,
-    DataTab
-},
+        Codemirror,
+        DataEditor,
+        HelpButton,
+        DataTab,
+        VisualisationTab
+    },
     setup(props) {
         const extensions = [
             gutter({ class: "CodeMirror-lint-markers" }),
@@ -140,15 +146,15 @@ export default defineComponent({
     },
     data() {
         return {
-            shownTab: 'data' as 'data' | 'schema',
+            shownTab: 'data' as 'data' | 'schema' | 'visualisation',
             showNameInput: false,
-            // TODO: should be in general configuration store
-            // isScope3: true
         }
     },
     computed: {
         ...mapStores(useUiStateStore),
-        ...mapStores(usePlacesStore)
+        ...mapStores(usePlacesStore),
+        ...mapStores(useConfigStore),
+        ...mapStores(useNetStore)
     },
     created() {
         this.placesStore.loadPlace(this.uiStateStore.lastSelectedID);
@@ -162,11 +168,6 @@ export default defineComponent({
     methods: {
         close() {
             this.uiStateStore.showModal = 'none';
-
-            //TODO hacky
-            if (this.uiStateStore.isScope3) {
-                this.uiStateStore.showSupplyChainData = false;
-            }
         },
         onCancelNameEdit() {
             this.placesStore.resetName();
@@ -178,7 +179,7 @@ export default defineComponent({
             this.showNameInput = false;
         },
 
-        showTab(tab: 'data' | 'schema') {
+        showTab(tab: 'data' | 'schema' | 'visualisation') {
             this.shownTab = tab;
         },
     }

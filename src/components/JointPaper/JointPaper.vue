@@ -4,7 +4,7 @@
     'scoped-canvas-panning': isPanningMode,
     'scoped-canvas-pannable': isPannableMode,
     'elements-unmovable': !isInteractive,
-    'places-clickable': isPlacesClickable,
+    // 'places-clickable': isPlacesClickable,
   }">
     <div id="jointCanvas"></div>
   </div>
@@ -37,7 +37,7 @@ import {
   MODE_CONNECT_START,
   MODE_MOVE,
   MODE_NONE,
-  MODE_INDICATOR
+  // MODE_INDICATOR
 } from '@/App.vue'
 
 //Todo: not sure if having a variable declared outside of component
@@ -58,9 +58,9 @@ export default defineComponent({
     }
   },
   computed: {
-    isPlacesClickable() {
-      return this.uiStateStore.mode === MODE_INDICATOR
-    },
+    // isPlacesClickable() {
+      // return this.uiStateStore.mode === MODE_INDICATOR
+    // },
     isInteractive() {
       return this.uiStateStore.mode === MODE_MOVE 
         || this.uiStateStore.mode == MODE_ADD_PLACE
@@ -118,6 +118,8 @@ export default defineComponent({
     },
     'netStore.importedData'(data: { layoutData: any, netData: ImportData }) {
       _graph.clear();
+      if (!data.layoutData) return;
+
       const netData = data.netData;
       const transitions = netData.transitions;
       for (let i = 0; i < transitions.length; i++) {
@@ -243,19 +245,19 @@ export default defineComponent({
     })
 
     _paper.on('element:mouseleave', (elementView) => {
-      if (this.uiStateStore.mode !== MODE_INDICATOR) {
+      // if (this.uiStateStore.mode !== MODE_INDICATOR) {
         elementView.hideTools()
-      }
+      // }
     })
 
-    _paper.on('element:pointerclick', (elementView) => {
-      if (this.uiStateStore.mode === MODE_INDICATOR) {
-        _paper.hideTools();
-        elementView.showTools()
-        let currentElement = elementView.model;
-        useIndicatorStore().selectPlace(currentElement.get('id'))
-      }
-    })
+    //_paper.on('element:pointerclick', (elementView) => {
+    //  if (this.uiStateStore.mode === MODE_INDICATOR) {
+    //    _paper.hideTools();
+    //    elementView.showTools()
+    //    let currentElement = elementView.model;
+    //    useIndicatorStore().selectPlace(currentElement.get('id'))
+    //  }
+    //})
 
 
     _paper.on('link:mouseenter', (linkView) => {
@@ -343,17 +345,18 @@ export default defineComponent({
             }
           }
         }, 1500)
-      } else if (newMode === MODE_INDICATOR) {
-        const elements = _graph.getElements()
-        for (let i = 0; i < elements.length; i++) {
-          const element = elements[i];
-          if (element.get('jsonnetsType') === "place") {
-            const place = <Place>element;
-            place.addIndicatorTools(_paper)
-          }
-        }
+      } 
+      //else if (newMode === MODE_INDICATOR) {
+      //  const elements = _graph.getElements()
+      //  for (let i = 0; i < elements.length; i++) {
+      //    const element = elements[i];
+      //    if (element.get('jsonnetsType') === "place") {
+      //      const place = <Place>element;
+      //      place.addIndicatorTools(_paper)
+      //    }
+      //  }
 
-      }
+      //}
     },
     onPaperClick(clickX: number, clickY: number) {
       this.clickX = clickX

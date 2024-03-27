@@ -6,6 +6,7 @@ import { defineStore } from "pinia"
 
 import { getNetInstance } from "@/json-nets/Net";
 import { useNetStore } from "./net";
+import { useConfigStore } from "./config";
 
 export const useTransitionsStore = defineStore('transitions', {
     state: () => {
@@ -77,23 +78,36 @@ export const useTransitionsStore = defineStore('transitions', {
         updateVariable(key: string, value:string){
             const transitionData = getNetInstance().updateTransitionVariable(this.transition.id, key, value);
             if (transitionData) {
-                this.transition.customVariables = transitionData.customVariables;
+                // this.transition.customVariables = transitionData.customVariables;
+                this.transition = transitionData;
+                useNetStore().lastUpdatedTransition = transitionData;
+            }
+        },
+        removeVariable(key: string) {
+            const transitionData = getNetInstance().removeTransitionVariable(this.transition.id, key);
+            if (transitionData) {
+                // this.transition.customVariables = transitionData.customVariables;
+                this.transition = transitionData;
                 useNetStore().lastUpdatedTransition = transitionData;
             }
         },
         saveInputFilter() {
             const arcData = this.inputArcs[this.selectedInputPlaceIndex];
             getNetInstance().updateArc(arcData.id, arcData.filter)
+
         },
         saveOutputFilter() {
             const arcData = this.outputArcs[this.selectedOutputPlaceIndex];
             getNetInstance().updateArc(arcData.id, arcData.filter)
+
         },
         saveBasicInscription() {
             getNetInstance().updateTransition(this.transition.id, this.transition.name, this.transition.preface, this.transition.guard);
+            
         },
         saveOutputSnippets(){
             const arcData = this.outputArcs[this.selectedOutputSnippetIndex];
+            if(!arcData) return;
             getNetInstance().updateTransitionSnippets(this.transition.id, 
                 arcData.id,
                 arcData.keySnippet,
@@ -292,14 +306,17 @@ export const useTransitionsStore = defineStore('transitions', {
         },
 
         loadTransition(transitionID: string) {
-            const transitionData = useNetStore().transitions.find((t) => {
+            // Todo rethink role of transitions in net store
+            let transitionData = useNetStore().transitions.find((t) => {
                 return t.id === transitionID
             })
             if(transitionData) {
-                this.transition = transitionData;
-                const transition = getNetInstance().findTransition(this.transition.id); 
+                // this.transition = transitionData;
+                const transition = getNetInstance().findTransition(transitionID); 
                 // todo: return transitionData?
                 if(!transition) return transitionData
+                transitionData = transition;
+                this.transition = transition;
 
                 // outputarcs won't change once the transition modal is opened
                 const outputArcs = []

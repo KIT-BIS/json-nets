@@ -14,7 +14,8 @@
                                 <p class="control">
                                     <span class="select is-small">
                                         <select v-model="transitionsStore.selectedInputPlaceIndex"
-                                            @change="onInputPlaceSelect">
+                                            @change="onInputPlaceSelect"
+                                            >
                                             <option v-for="(arc, index) in transitionsStore.inputArcs" :value="index">{{
                                                 arc.name }}</option>
                                         </select>
@@ -61,7 +62,9 @@
                             </span>
 
                             <input @input="onFilterInput" style="width: 100px" class="input is-small mr-1"
-                                v-model="transitionsStore.inputArcs[transitionsStore.selectedInputPlaceIndex].filter" />
+                                v-model="transitionsStore.inputArcs[transitionsStore.selectedInputPlaceIndex].filter" 
+                                :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                                />
                             <button class="mr-1 button is-small " @click="cancelFilterEdit">
                                 <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
                             </button>
@@ -98,6 +101,7 @@ import HelpButton from '../_shared/HelpButton.vue';
 import { dotsAndBracketsToJSONPointer } from '@/util/jsonPointer'
 
 import { useTransitionsStore } from '@/stores/transition';
+import { useNetStore } from '@/stores/net';
 
 
 export default defineComponent({
@@ -113,6 +117,7 @@ export default defineComponent({
     },
     computed: {
         ...mapStores(useTransitionsStore),
+        ...mapStores(useNetStore),
         selectedInputValueDotsBracketsPath: {
             get(): string {
                 const path = this.transitionsStore.selectedInputValueJsonPath;

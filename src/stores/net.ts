@@ -3,12 +3,19 @@ import type { JSONObject } from "@/util/jsonOperations";
 
 import { defineStore } from "pinia";
 import { getNetInstance } from "@/json-nets/Net";
+import { useConfigStore } from "./config";
+import { useTransitionState } from "vue";
+import { useTransitionsStore } from "./transition";
+import { usePlacesStore } from "./place";
 
 export const useNetStore = defineStore('net', {
     state: () => {
         return {
             places: [] as Array<PlaceData>,
             transitions: [] as Array<TransitionData>,
+            // Todo: consider renaming to distinguis from configStore types (here only references are savec)
+            transitionTypes: {} as Record<string,string>,
+            placeTypes: {} as Record<string,string>,
 
             lastRemovedCells: [] as Array<string>,
             lastCreatedPlaces: [] as Array<PlaceData>,
@@ -20,7 +27,8 @@ export const useNetStore = defineStore('net', {
             lastFiredArcs: [] as Array<FireEvent>,
 
             layout: {} as joint.dia.Graph,
-            importedData: {} as JSONObject,
+            //TODO: fix Schema, JSONObject types
+            importedData: {} as any,
 
         }
     },
@@ -31,11 +39,16 @@ export const useNetStore = defineStore('net', {
         export() {
             const netData = getNetInstance().export();
             const layoutData = this.layout.toJSON();
-            return JSON.stringify({netData, layoutData}, null, 2);
+            const typeData = { placeTypes: this.placeTypes, transitionTypes: this.transitionTypes }
+            return JSON.stringify({typeData, netData, layoutData}, null, 2);
         },
-        import(json: JSONObject) {
-            const layoutData = <JSONObject>json.layoutData;
-            const netData = <ImportData> getNetInstance().import(json.netData)
+        import(json: { typeData?: { placeTypes: Record<string,string>, transitionTypes: Record<string,string>}, netData: ImportData, layoutData: any}) {
+            if (json.typeData) {
+                this.placeTypes = json.typeData.placeTypes;
+                this.transitionTypes = json.typeData.transitionTypes;
+            }
+            const layoutData = json.layoutData;
+            const netData = getNetInstance().import(json.netData)
             this.transitions = netData.transitions;
             // this.lastCreatedTransitions = importData.transitions;
             this.places = netData.places;
@@ -45,14 +58,36 @@ export const useNetStore = defineStore('net', {
         connect(fromID: string, toID: string) {
             const arcData = getNetInstance().connect(fromID, toID);
             if (arcData) {
-                this.lastCreatedArcs = [arcData]
+                this.lastCreatedArcs = [arcData];
+
+                let transitionID = '';
+                if (arcData.type == 'preset') {
+                    transitionID = arcData.to;
+                } else {
+                    transitionID = arcData.from;
+                }
+
+                const transitionTypeID = this.transitionTypes[transitionID];
+                if (transitionTypeID !== 'custom') {
+                    const transitionType = useConfigStore().getTransitionTypeById(transitionTypeID);
+                    if (!transitionType) return;
+                    if (arcData.type == 'preset') {
+                        getNetInstance().updateArc(arcData.id, transitionType.presetFilter)
+                    } else {
+                        getNetInstance().updateAllTransitionSnippets(transitionID, 
+                            transitionType.keySnippet,
+                            transitionType.valueSnippet
+                        );
+
+                        getNetInstance().updateArc(arcData.id, transitionType.postsetFilter)
+                    }
+                    
+                }
             }
         },
 
         resetModel() {
             const allPlaces = getNetInstance().allPlaces();
-            console.log('resetting places:')
-            console.log(allPlaces)
             const updates = [];
             for (let i = 0; i < allPlaces.length; i++) {
                 const place = allPlaces[i];
@@ -75,18 +110,48 @@ export const useNetStore = defineStore('net', {
             let placeData: PlaceData = getNetInstance().addPlace();
             this.places.push(placeData)
             this.lastCreatedPlaces = [placeData];
+
+            const config = useConfigStore();
+            this.placeTypes[placeData.id] = config.defaultPlaceType;
+
+            if (config.defaultPlaceType !== 'custom') {
+                const placeType = config.getPlaceTypeById(config.defaultPlaceType)
+                if (!placeType) return;
+                getNetInstance().updatePlace(placeData.id, placeData.name, placeType.schema, placeType.marking);
+            }
+
         },
 
         deletePlace(id: string) {
+            // Todo: clean up types as well
             this.lastRemovedCells = getNetInstance().removePlace(id);
         },
         addTransition() {
             let transition: TransitionData = getNetInstance().addTransition();
             this.transitions.push(transition);
+
+            const config = useConfigStore();
+            this.transitionTypes[transition.id] = config.defaultTransitionType;
+
+            if (config.defaultTransitionType !== 'custom') {
+                const transitionType = config.getTransitionTypeById(config.defaultTransitionType)
+                if (!transitionType) return;
+                let updateData = getNetInstance().updateTransition(transition.id, transition.name, transitionType.preface, transitionType.guard);
+                if (updateData) transition = updateData;
+
+                const customVarNames = Object.keys(transitionType.customVariables);
+                for (let i = 0; i < customVarNames.length; i++) {
+                    let updateData = getNetInstance().updateTransitionVariable(transition.id, customVarNames[i], transitionType.customVariables[customVarNames[i]]);
+                    if (updateData) transition = updateData;
+                }
+
+
+            }
             this.lastCreatedTransitions = [transition];
         },
 
         deleteTransition(id: string) {
+            // Todo: clean up types as well
             this.lastRemovedCells = getNetInstance().removeTransition(id);
         },
         disconnect(id: string) {

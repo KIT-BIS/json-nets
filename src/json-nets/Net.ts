@@ -6,8 +6,9 @@ import { Transition } from "./Transition";
 import { unCacheSchema } from "@/util/jsonSchema";
 import { evaluateExpression, type EvaluationResult } from "@/util/jsonnet";
 import { v4 as uuid } from 'uuid'
+import type { JSONSchema7 } from "json-schema";
 
-import { controlMarking, controlSchema, s3tPreface, s3tvalueSnippet, scope3Marking, scope3Schema } from '@/examples/scope3transparent';
+// import { controlMarking, controlSchema, s3tPreface, s3tvalueSnippet, scope3Marking, scope3Schema } from '@/examples/scope3transparent';
 
 export type TransitionData = {
   name: string,
@@ -21,9 +22,8 @@ export type TransitionData = {
 export type PlaceData = {
   name: string,
   id: string,
-  mode: "assisted" | "expert",
   marking: JSONMarking,
-  schema: JSONObject,
+  schema: JSONSchema7,
   hasError: boolean,
   errorType: 'name' | 'schema' | 'data' | 'none',
   errorMessage: string | null
@@ -31,7 +31,7 @@ export type PlaceData = {
 
 export type ArcData = {
   id: string,
-  type: string
+  type: 'preset' | 'postset',
   from: string,
   to: string
 }
@@ -64,59 +64,12 @@ export type EvaluationData = {
   guard?: EvaluationResult
 } | false
 
-//const defaultSchema = { type: "array", items: { "type": "object" }}
-//const defaultMarking = [];
-const defaultConfig = {
-  schema: { type: "array", items: { "type": "object", "properties": { "instance_id": { "type": "number" } }, "required": ["instance_id"] }},
-  marking: [],
-  keySnippet: "'-';",
-  valueSnippet: "{};",
-  preface: '',
-  postsetFilter: '$',
-  readonly: false
-}
-
-//export const onSiteSchema = {
-//    type: "array",
-//    minItems: 1,
-//    maxItems: 1,
-//    items: {
-//      type: "object",
-//      properties: { data: { type: "object",
-//      properties: {
-//        "ghgFactor": {
-//          "type": "number",
-//          "title": "Emissionsfaktor",
-//          "description": "Angabe des Emissionsfaktors je Mengeneinheit in kgCO2eq."
-//        },
-//        "amount": {
-//          "type": "number",
-//          "title": "Menge",
-//        },
-//        "unit": {
-//          "type": "string",
-//          "title": "Mengeneinheit",
-//          "enum": ["cm2 (Flaeche)", "g (Gewicht)", "Stueck (Stueckzahl)", "kWh (Energie)"]
-//        },
-//        "type": {
-//          "type": "string",
-//          "enum": ["Primaerdaten", "Sekundaerdaten"],
-//          "title": "Datentyp",
-//          // "readOnly": true
-//        },
-//        // "pds": {
-//          // "type": "number",
-//          // "readOnly": true
-//        // }
-//      }
-//    }}
-//    }
-//  };
 
 
-const scope3Config = {
-  schema: JSON.parse(JSON.stringify(controlSchema)),
-  marking: JSON.parse(JSON.stringify(controlMarking)),
+
+// const scope3Config = {
+  // schema: JSON.parse(JSON.stringify(controlSchema)),
+  // marking: JSON.parse(JSON.stringify(controlMarking)),
 //  marking: [ {data:{
 //    ghgFactor: 1,
 //    amount: 1,
@@ -124,9 +77,9 @@ const scope3Config = {
 //    type: "Primaerdaten",
 //    pds: 1,
 //  }}],
-  keySnippet: "'-';",
-  valueSnippet: s3tvalueSnippet,
-  preface: s3tPreface,
+  // keySnippet: "'-';",
+  // valueSnippet: s3tvalueSnippet,
+  // preface: s3tPreface,
 //  `local sum(arr, n) = 
 //  if (n <= 0) then 0 
 //  else sum(arr, n-1) + arr[n-1];
@@ -157,13 +110,9 @@ const scope3Config = {
 // 
 // local totalFootprint = calculateTotalFootprint(input_values, std.length(input_values));`,
   // postsetFilter: '$.*',
-  postsetFilter: '$',
-  readonly: false 
-}
-
-// export const config = defaultConfig;
-export const config = scope3Config;
-
+  // postsetFilter: '$',
+  // readonly: false 
+// }
 
 // not sure if this actually ensures an app-wide singleton ... let's hope so
 let net: Net | null = null
@@ -222,7 +171,7 @@ export class Net {
    * @param {String} placeID The place to set the content.
    * @param {String} placeName Name of the place.
    */
-  updatePlace(placeID: string, placeName: string, schema?: JSONObject, marking?: JSONMarking): PlaceData | false {
+  updatePlace(placeID: string, placeName: string, schema?: JSONSchema7, marking?: JSONMarking): PlaceData | false {
     const place = this.findPlace(placeID);
     if (!place) {
       return false;
@@ -239,7 +188,7 @@ export class Net {
     if (schema) place.schema = schema;
     if (marking) place.marking = marking;
 
-    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
   updatePlaceMarking(placeID: string, marking: JSONMarking): PlaceData | false {
@@ -249,7 +198,7 @@ export class Net {
     }
     place.marking = marking;
     const checkResult = place.validateMarking(marking);
-    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
   }
 
   setDefaultMarking(placeID: string) {
@@ -258,8 +207,8 @@ export class Net {
       return false;
     }
     place.defaultMarking = JSON.parse(JSON.stringify(place.marking));
-    console.log('new default marking')
-    console.log(place.defaultMarking);
+    // console.log('new default marking')
+    // console.log(place.defaultMarking);
     // const checkResult = place.validateMarking(marking);
     // return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.isValid, errorType: 'data', errorMessage: checkResult.error }
   }
@@ -288,21 +237,8 @@ export class Net {
     if (checkResult.schemaValid) {
       place.schema = schema;
     }
-    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
+    return { id: place.id, name: place.name, marking: place.marking, schema: place.schema, hasError: !checkResult.schemaValid, errorType: 'schema', errorMessage: checkResult.error }
 
-  }
-
-
-  updatePlaceMode(placeID: string, mode: "assisted" | "expert"): PlaceData | false {
-    const place = this.findPlace(placeID);
-    if (!place) {
-      return false;
-    }
-
-    place.mode = mode;
-
-
-    return { id: place.id, name: place.name, mode: place.mode, marking: place.marking, schema: place.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
   /**
@@ -344,11 +280,14 @@ export class Net {
     const shortID = placeID.substring(0, 4)
     const name = 'place' + shortID;
     const newPlace = new Place(placeID, name)
-    newPlace.schema = JSON.parse(JSON.stringify(config.schema));
-    newPlace.marking = JSON.parse(JSON.stringify(config.marking));
-    newPlace.defaultMarking = JSON.parse(JSON.stringify(config.marking));
+
+    // Todo: clarify hard-coded default setting, config default and custom
+    newPlace.schema = JSON.parse(JSON.stringify({ type: "array", items: { "type": "object" } }));
+    newPlace.marking = JSON.parse(JSON.stringify([]));
+    newPlace.defaultMarking = JSON.parse(JSON.stringify([]));
+
     this._places.push(newPlace)
-    return { id: newPlace.id, name: newPlace.name, mode: newPlace.mode, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
+    return { id: newPlace.id, name: newPlace.name, marking: newPlace.marking, schema: newPlace.schema, hasError: false, errorType: 'none', errorMessage: '' }
   }
 
 
@@ -391,6 +330,17 @@ export class Net {
     return false;
   }
 
+  removeTransitionVariable(transitionID: string, key: string): TransitionData | false {
+    const transition = this.findTransition(transitionID)
+    if (transition) {
+      delete transition.customVariables[key];
+      return { id: transition.id, name: transition.name, preface: transition.preface, guard: transition.guard, readonly: transition.readonly, customVariables: transition.customVariables };
+    }
+    return false;
+  }
+
+
+
   updateTransitionSnippets(transitionID: string, arcID: string, keySnippet: string, fragmentSnippet: string) {
     const transition = this.findTransition(transitionID)
     const arc = this.findArc(arcID)
@@ -421,8 +371,6 @@ export class Net {
     const postsetComplete = arc.transition.hasCompletePostsetAssignment()
     return { complete, presetComplete, postsetComplete }
   }
-
-
 
   /**
    * Removes a transition from the net. Will also remove
@@ -489,6 +437,15 @@ export class Net {
     } else {
       return false
     }
+  }
+
+  // Todo: when updating from transition types, snippets without variable names are given (as expected in this case)
+  // when updating from editor, the snippets include the names (as expected in updateTransitionSnippets)
+  updateAllTransitionSnippets(transitionID: string, keySnippet: string, valueSnippet: string) {
+
+    const transition = this._transitions.find((node) => node.id === transitionID);
+    if (!transition) return;
+    transition.updateAllSnippets(keySnippet, valueSnippet);
   }
 
   /**

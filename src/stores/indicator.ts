@@ -15,6 +15,7 @@ import type {
     TooltipComponentOption,
     LegendComponentOption
 } from 'echarts/components'
+import { usePlacesStore } from "./place";
 
 use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
 
@@ -27,8 +28,8 @@ function roundToSix(num: number) {
 export const useIndicatorStore = defineStore('indicator', {
     state: () => {
         return {
-            selectedPlaceID: 'none' as string,
-            placeName: '' as string,
+            // selectedPlaceID: 'none' as string,
+            // placeName: '' as string,
             indicatorValue: "<keine Daten>" as string,
             indicatorType: 'pcf-sunburst' as string,
 
@@ -157,14 +158,14 @@ export const useIndicatorStore = defineStore('indicator', {
         }
     },
     actions: {
-        reset() {
-            this.selectedPlaceID = 'none'
-        },
-        selectPlace(id: string) {
-            this.selectedPlaceID = id;
-
-            this.updateIndicator();
-        },
+        // reset() {
+            // this.selectedPlaceID = 'none'
+        // },
+        // selectPlace(id: string) {
+            // this.selectedPlaceID = id;
+// 
+            // this.updateIndicator();
+        // },
         roundToTwo(num: number) {
             return +(Math.round(Number(String(num) + 'e+2')) + 'e-2');
         },
@@ -196,10 +197,10 @@ export const useIndicatorStore = defineStore('indicator', {
 
         },
         updateIndicator() {
-            const placeData = getNetInstance().findPlace(this.selectedPlaceID)
+            const placeData = getNetInstance().findPlace(usePlacesStore().place.id)
             if (placeData) {
-                this.placeName = placeData.name;
-                console.log(placeData);
+                // this.placeName = placeData.name;
+                // console.log(placeData);
                 const content = <{
                     ghgFactor: number, amount: number, pds: number,
                     type: string, footprintContributions: Array<{ name: string, value: number }>, names: Array<string>,

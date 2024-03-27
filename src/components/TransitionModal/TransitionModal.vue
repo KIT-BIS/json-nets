@@ -2,7 +2,7 @@
     <div class="modal is-active">
         <div class="modal-background"></div>
         <div class="scoped-modal-container">
-            <PresetFilter v-if="!uiStateStore.isScope3" />
+            <PresetFilter v-if="(uiStateStore.uiAssistMode === 'expert')" />
             <div class="modal-card scoped-modal-center">
                 <header class="modal-card-head">
                     <span class="has-text-weight-bold">Transition:</span>
@@ -28,7 +28,8 @@
                     <p class="modal-card-title"></p>
                     <button class="delete" aria-label="close" @click="close"></button>
                 </header>
-                <section class="modal-card-body" v-if="!uiStateStore.isScope3">
+                <section class="modal-card-body" v-if="(uiStateStore.uiAssistMode === 'expert')">
+                    <TransitionTypeSelector />
                     <div class="block">
                         <div class="field">
                             <label class="label is-small">Preface
@@ -44,7 +45,9 @@
                             <div class="control is-small jsn-code">
                                 <Codemirror placeholder="Define preface in Jsonnet" style="height: 50px"
                                     :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                    v-model="transitionsStore.transition.preface" />
+                                    v-model="transitionsStore.transition.preface" 
+                                    :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                                    />
                             </div>
                             <p v-if="transitionsStore.prefaceHasError" class="help is-danger">
                                 Expression has errors. Use preface only for variable and function definitions.</p>
@@ -90,7 +93,9 @@
                             <div class="control is-small jsn-code">
                                 <Codemirror placeholder="Define guard in Jsonnet" style="height: 50px"
                                     :indent-with-tab="true" :tab-size="2" :extensions="extensions"
-                                    v-model="transitionsStore.transition.guard" />
+                                    v-model="transitionsStore.transition.guard" 
+                                    :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                                    />
                             </div>
                             <div
                                 v-if="transitionsStore.assignmentComplete && !transitionsStore.prefaceHasError && !transitionsStore.hasAnyError">
@@ -145,14 +150,9 @@
 
                 </section>
                 <section class="modal-card-body" v-else>
-                    <div class="notification is-info is-light is-size-7">
-                        Eine Transition stellt eine Aktivität (wie zum Beispiel 'Löten') in Ihrem Prozessmodell dar.
-                        Fügen Sie der Aktivität Input-Stellen (Kreise) vom Typ "Scope 1 - Emissionen", "Scope 2 - Emissionen"
-                        oder "Scope 3 - Emissionen" zu, um die der Aktivität zuzuordnenden Treibhausgasemissionen
-                        zu erfassen.
-                        Über das Feld 'Allokation' können Sie die berechneten Gesamt-Emissionen prozentual skalieren.
-                    </div>
+                    <!-- <div class="notification is-info is-light is-size-7"></div> -->
 
+                    <TransitionTypeSelector />
                     <div class="field" v-for="[key, value] in Object.entries(transitionsStore.transition.customVariables)">
                         <label class="label is-small">{{ key }}
                         </label>
@@ -167,7 +167,6 @@
                             <span class="icon is-small is-right">
 
                             <font-awesome-icon icon="fas fa-percent" />
-                                <!-- <i class="fas fa-percent"></i> -->
                             </span>
                         </div>
 
@@ -175,13 +174,13 @@
                     </div>
 
                 </section>
-                <footer class="modal-card-foot" v-if="!uiStateStore.isScope3">
+                <footer class="modal-card-foot" v-if="(uiStateStore.uiAssistMode === 'expert')">
                     <button class="button is-pulled-right is-danger is-small" :disabled="!transitionsStore.isEnabled"
                         style="margin-left: auto" @click="onFireClick">Fire!</button>
                 </footer>
 
             </div>
-            <PostsetFilter v-if="!uiStateStore.isScope3" />
+            <PostsetFilter v-if="(uiStateStore.uiAssistMode === 'expert')" />
         </div>
     </div>
 </template>
@@ -201,7 +200,9 @@ import { useTransitionsStore } from '@/stores/transition';
 import SnippetInput from './SnippetInput.vue';
 import PresetFilter from './PresetFilter.vue';
 import PostsetFilter from './PostsetFilter.vue';
+import TransitionTypeSelector from './TransitionTypeSelector.vue';
 import HelpButton from '../_shared/HelpButton.vue';
+import { useNetStore } from '@/stores/net';
 
 export default defineComponent({
     components: {
@@ -211,6 +212,7 @@ export default defineComponent({
         PostsetFilter,
         PresetFilter,
         HelpButton,
+        TransitionTypeSelector
     },
     setup() {
         const extensions = [basicSetup]
@@ -226,6 +228,7 @@ export default defineComponent({
     },
     computed: {
         ...mapStores(useUiStateStore),
+        ...mapStores(useNetStore),
         ...mapStores(useTransitionsStore)
     },
     created() {

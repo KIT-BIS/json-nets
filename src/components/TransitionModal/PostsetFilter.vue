@@ -60,7 +60,10 @@
  
                     <input 
                         @input="onFilterOutput"
-                        style="width: 100px" class="input is-small mr-1" v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputPlaceIndex].filter"/>
+                        style="width: 100px" class="input is-small mr-1" 
+                        v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputPlaceIndex].filter"
+                        :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
+                        />
                     <button class="mr-1 button is-small " @click="cancelFilterEdit">
                         <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
                     </button>
@@ -100,6 +103,7 @@ import { useTransitionsStore } from '@/stores/transition';
 import type { NodeDataType } from 'vue-json-pretty/types/components/TreeNode';
 import { dotsAndBracketsToJSONPointer } from '@/util/jsonPointer'
 import HelpButton from '../_shared/HelpButton.vue';
+import { useNetStore } from '@/stores/net';
 
 export default defineComponent({
     components: {
@@ -114,6 +118,7 @@ export default defineComponent({
     },
     computed: {
         ...mapStores(useTransitionsStore),
+        ...mapStores(useNetStore),
         selectedOutputValueDotsBracketsPath: {
             get(): string {
                 const path = this.transitionsStore.selectedOutputValueJsonPath

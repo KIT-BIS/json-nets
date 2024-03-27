@@ -2,7 +2,9 @@
 // but I try to encapsulate as much as possible to enable
 import type { JSONMarking, JSONObject } from "@/util/jsonOperations"
 import { compileValidator, unCacheSchema, validateJSON } from "@/util/jsonSchema"
+import type { JSONSchema } from "@json-schema-tools/meta-schema"
 import type { ValidateFunction } from "ajv"
+import type { JSONSchema7 } from "json-schema"
 
 export interface CheckResult {
     isValid: boolean
@@ -12,18 +14,18 @@ export interface CheckResult {
 // different Schema languages in the future
 export class Schema {
     private ref: string;
-    private _schema: JSONObject
+    private _schema: JSONSchema7
     private validator: ValidateFunction 
 
     // expects a checked Schema!
-    constructor(id: string, schema: JSONObject) {
+    constructor(id: string, schema: JSONSchema7) {
         this.ref = id;
         this._schema = schema;
         this.schema['$id'] = id; // just to ensure id is available
         this.validator = compileValidator(schema);
     }
 
-    update(schema: JSONObject) {
+    update(schema: JSONSchema7) {
         unCacheSchema(this.ref)
         this._schema = schema;
         this.schema['$id'] = this.ref; // just do ensure id is available

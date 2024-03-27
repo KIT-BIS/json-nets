@@ -134,21 +134,25 @@
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
                                         v-model="transitionsStore.transition.guard" 
                                         @ready="onEditorReady"
+                                        :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
                                         />
                                     <Codemirror v-if="uiStateStore.showEditor === 'preface'" placeholder="Enter preface ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
                                         v-model="transitionsStore.transition.preface" 
                                         @ready="onEditorReady"
+                                        :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
                                         />
                                     <Codemirror v-if="uiStateStore.showEditor === 'key'" placeholder="Enter output key expression ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
                                         v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].keySnippet" 
                                         @ready="onEditorReady"
+                                        :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
                                         />
                                     <Codemirror v-if="uiStateStore.showEditor === 'value'" placeholder="Enter output value expression ..."
                                         style="height: 200px" :indent-with-tab="true" :tab-size="2" :extensions="extensions"
                                         v-model="transitionsStore.outputArcs[transitionsStore.selectedOutputSnippetIndex].valueSnippet" 
                                         @ready="onEditorReady"
+                                        :disabled="netStore.transitionTypes[transitionsStore.transition.id] !== 'custom'"
                                         />
                                 </div>
 
@@ -268,6 +272,7 @@ import { examples as guardExamples } from '@/components/TransitionModal/GuardExa
 import { examples as valueExamples } from '@/components/TransitionModal/ValueExamples'
 import { examples as keyExamples } from '@/components/TransitionModal/KeyExamples'
 import { examples as prefaceExamples } from '@/components/TransitionModal/PrefaceExamples'
+import { useNetStore } from "@/stores/net";
 
 export default defineComponent({
     components: {
@@ -329,6 +334,7 @@ export default defineComponent({
         },
 
         ...mapStores(useUiStateStore),
+        ...mapStores(useNetStore),
         ...mapStores(useTransitionsStore)
     },
     data() {

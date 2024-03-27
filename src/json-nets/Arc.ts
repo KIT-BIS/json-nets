@@ -21,7 +21,7 @@ import { getEnvPathExpression, getFragment as getValue, getKey } from '@/util/js
 //  token: JSONObject
 //}
 
-import { config } from './Net'
+// import { config } from './Net'
 
 export class Arc {
   readonly id: string
@@ -51,11 +51,13 @@ export class Arc {
     this._valueVarName = '';
     this._keyVarName = '';
     this.updateVarNames(this.place.name, true);
+    // Todo: default filter could be configurable
+    // maybe distinguish hard-coded default settings and configurable default settings?
     this._filterExpression = '$.*'
     if (type === "postset") {
-      //this._filterExpression = '$'
+      this._filterExpression = '$'
       // this._filterExpression = '$.*'
-      this._filterExpression = config.postsetFilter;
+      // this._filterExpression = config.postsetFilter;
     }
 
     this.assignedPathExpression = null;

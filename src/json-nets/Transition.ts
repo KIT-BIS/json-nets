@@ -8,7 +8,7 @@ import { combineAssignments } from '@/util/util'
 import { evaluateExpression } from '@/util/jsonnet.js'
 import { sortByOrder } from '@/util/jsonPointer'
 
-import { config } from './Net'
+// import { config } from './Net'
 
 export type AssignmentRef = {
   arc: Arc
@@ -42,12 +42,23 @@ export class Transition {
     this.preset = []
     this.postset = []
     this.guard = 'true';
-    this.preface = config.preface;
+    this.preface = '';
     this.valueVarSnippets = {}
     this.keyVarSnippets = {}
-    this.readonly = config.readonly;
+    this.readonly = false;
+    this.customVariables = {};
   // todo: this is scope3 specific, rework!
-    this.customVariables = { 'Allokation': '100' };
+    // this.customVariables = { 'Allokation': '100' };
+  }
+
+  // Todo: naming issue: Snippets sometimes include variable part 'local <varname> =', sometimes don't
+  // this sets the snippets if given snippets from transition type
+  updateAllSnippets(keySnippet: string, valueSnippet: string) {
+
+    for (let i = 0; i < this.postset.length; i++) {
+      this.keyVarSnippets[this.postset[i].keyVarName] = 'local ' + this.postset[i].keyVarName + ' = ' + keySnippet;
+      this.valueVarSnippets[this.postset[i].valueVarName] = 'local ' + this.postset[i].valueVarName + ' = ' + valueSnippet;
+    }
   }
 
   connectArc(arc: Arc) {
@@ -56,10 +67,10 @@ export class Transition {
     } else if (arc.type === 'postset') {
       // existing snippets are not overwritten (important for imports)
       if (!this.valueVarSnippets[arc.valueVarName]) {
-        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = ' + config.valueSnippet;
+        this.valueVarSnippets[arc.valueVarName] = 'local ' + arc.valueVarName + ' = ' + "{};";
       }
       if (!this.keyVarSnippets[arc.keyVarName]) {
-        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = " + config.keySnippet;
+        this.keyVarSnippets[arc.keyVarName] = "local " + arc.keyVarName + " = " + "'-';";
       }
       this.postset.push(arc)
     }

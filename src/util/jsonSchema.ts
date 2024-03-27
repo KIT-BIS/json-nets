@@ -1,11 +1,12 @@
 import Ajv, { type ValidateFunction } from 'ajv'
 import type { JSONObject, JSONValue } from './jsonOperations'
+import type { JSONSchema7 } from 'json-schema';
 
 const ajv = new Ajv({ validateSchema: false })
 
 
 // expects a validated Schema!!
-export function compileValidator(schema: JSONObject) {
+export function compileValidator(schema: JSONSchema7) {
   const validator = ajv.compile(schema);
   return validator;
 }

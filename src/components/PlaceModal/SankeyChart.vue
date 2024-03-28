@@ -1,5 +1,4 @@
 <template>
-  <!-- <v-chart class="chart" :option="option" autoresize /> -->
     <v-chart class="chart" :option="indicatorStore.sankeyOption" autoresize />
 </template>
 <script lang="ts">
@@ -19,26 +18,14 @@ import { useIndicatorStore } from '@/stores/indicator';
 
 import { mapStores } from 'pinia';
 
-
-
-// const key = <string><unknown>THEME_KEY;
-
+/**
+ * A sankey chart to display marking data (data needs to be in a specific format, currently only works with scope3tool configuration).
+ */
 export default defineComponent({
   name: 'Contributions',
-  // components: {
-  // VChart,
-  // },
-  // provide: {
-  // [key]: 'light',
-  // },
   computed: {
     ...mapStores(useIndicatorStore),
   },
-  // setup() {
-    // const option = ref();
-
-    // return { option };
-  // },
   setup() {
     const option = ref()
     return { option

@@ -1,6 +1,4 @@
 <template>
-  <!-- <div id="indicator-panel" class="mt-5 has-text-centered p-5" -->
-  <!-- <div v-if="indicatorState.selectedPlaceID !== 'none'"> -->
   <div class="block">
     <div class="field">
       <label class="label is-small">Visualisierung:</label>
@@ -16,32 +14,29 @@
   </div>
   <div class="block">
     <p class="has-text-weight-bold">Gesamtwert: {{ indicatorStore.indicatorValue }}
-      <!-- <span class="is-italic has-text-weight-normal">(Primärdatenanteil: X)</span> -->
     </p>
-    <!-- <p class="is-italic">Primärdatenanteil: {{ indicatorStore.indicatorValue }}</p> -->
-    <!-- <p class="subtitle is-5">{{ indicatorStore.placeName }}</p> -->
-    <!-- <PieChart v-if="indicatorStore.indicatorType == 'pcf-pie'"/> -->
   </div>
 
 
   <div class="block">
     <SankeyChart v-if="indicatorStore.indicatorType == 'pcf-sankey'" />
     <SunburstChart v-if="indicatorStore.indicatorType == 'pcf-sunburst'" />
-    <!-- <div v-else> -->
-    <!-- <span>Wähle eine Stelle aus, um die Indikatorwerte anzuzeigen.</span> -->
-    <!-- </div> -->
   </div>
 
 </template>
 <script lang="ts">
 import { mapStores } from 'pinia';
 import { defineComponent } from 'vue';
+
 import { useIndicatorStore } from '../../stores/indicator'
 import SankeyChart from './SankeyChart.vue';
 import SunburstChart from './SunburstChart.vue';
 
+/**
+ * A tab that provides different options to visualise marking data. Currently only works with scope3tool configuration.
+ * Todo: Develop general visualisation concept.
+ */
 export default defineComponent({
-
   components: {
     SankeyChart,
     SunburstChart

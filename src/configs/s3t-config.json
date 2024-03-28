@@ -6570,7 +6570,7 @@
             "schema": {
                 "type": "array",
                 "title": "Scope 3 - Emissionen (Primärdaten)",
-                "description": "Laden Sie Primärdaten von Ihren Lieferanten aus dem Lieferkettenverzeichnis.",
+                "description": "Laden Sie Primärdaten von Ihren Lieferanten aus dem Lieferkettenverzeichnis. Nach dem Laden können Sie den von ihrem Lieferanten übermittelten <b>Emissionsfaktor</b> und <b>Primärdatenanteil</b> einsehen. Es wird angenommen, dass die Angaben zu Treibhausgasemission von Ihrem Lieferanten in <i>kg CO2e pro Stück</i> erfolgen. Sie können eine <b>Mengenangabe</b> als Stückzahl vornehmen und die angegebene Menge über einen <b>Skalierungsfaktor</b> skalieren. Wenn zum Beispiel die Hälfte der angegebenen Menge angerechnet werden soll, geben Sie den <b>Skalierungsfaktor</b> '0,5' an.",
                 "maxItems": 1,
                 "items": {
                     "type": "object",

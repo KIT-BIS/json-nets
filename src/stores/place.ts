@@ -7,39 +7,29 @@ import { getNetInstance } from "@/json-nets/Net";
 
 import { mock } from "mock-json-schema";
 
+/**
+ * Provides state for currently selected place to be shown in PlaceModal.
+ */
 export const usePlacesStore = defineStore('places', {
     state: () => {
         return {
             place: {} as PlaceData,
-            // placeType: 'custom' as String,
             markingString: '' as string,
             schemaString: '' as string,
             databaseMap: {} as Record<string, string>,
             formsData: {}
         }
     },
-    // getters: {
-        // placeTypeDescription: (state) => {
-            // useConfigStore().placeTypeDescription(state.placeType);
-        // }
-    // },
     actions: {
         // storing basic data to the json net
         saveName() {
-            // TODO: check uniqueness!
+            // Todo: check uniqueness!
             const placeData = getNetInstance().updatePlace(this.place.id, this.place.name);
             if (placeData) {
                 this.place.name = placeData.name;
                 useNetStore().lastUpdatedPlace = placeData;
             }
         },
-        // setUserMode(mode: "assisted" | "expert") {
-        //     const placeData = getNetInstance().updatePlaceMode(this.place.id, mode);
-        //     if (placeData) {
-        //         this.place.mode = placeData.mode;
-        //         useNetStore().lastUpdatedPlace = placeData;
-        //     }
-        // },
         addToken() {
             let token = mock(this.place.schema.items)
             this.place.marking.push(token)
@@ -49,14 +39,10 @@ export const usePlacesStore = defineStore('places', {
             try {
                 const marking = JSON.parse(markingString)
                 this.formsData = marking;
-                console.log('new formsdata from editor')
-                console.log(this.formsData)
                 this.markingString = markingString;
                 const placeData = getNetInstance().updatePlaceMarking(this.place.id, marking)
                 if (placeData) {
                     getNetInstance().setDefaultMarking(this.place.id);
-                    console.log('new default marking')
-                    console.log(getNetInstance().getDefaultMarking(this.place.id))
                     this.place.marking = placeData.marking;
                     this.place.errorMessage = placeData.errorMessage;
                     this.place.hasError = placeData.hasError;
@@ -70,16 +56,11 @@ export const usePlacesStore = defineStore('places', {
 
         },
         resetMarking() {
-            console.log('reset marking')
             let marking = getNetInstance().getDefaultMarking(this.place.id);
-            console.log(marking);
             this.savePlaceMarkingFromForm(marking);
         },
         savePlaceMarkingFromForm(newValue: any) {
             try {
-                // console.log('new data from form')
-                // console.log(newVaalue);
-                // console.log(toRaw(newValue.data));
                 this.formsData = newValue;
                 this.markingString = JSON.stringify(this.formsData, null, 2);
 

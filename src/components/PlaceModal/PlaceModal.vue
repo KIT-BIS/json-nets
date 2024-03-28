@@ -1,95 +1,97 @@
 <template>
-    <div class="modal is-active">
-        <div class="modal-background"></div>
-        <div class="modal-card" :class="{ 'jsn-modal-wide': shownTab === 'visualisation', 'jsn-modal-medium':  shownTab !== 'visualisation'}">
-            <header class="modal-card-head scoped-modal-header">
-                <span class="has-text-weight-bold">Place:</span>
-                <span class="ml-1">
-                    <span v-if="!showNameInput"
-                        class=" is-ghost icon-text has-text-weight-bold scoped-modal-title is-clickable"
-                        @click="showNameInput = true">
-                        <span>{{ placesStore.place.name }}</span>
-                        <span class="scoped-edit-button icon has-text-grey-light"><font-awesome-icon
-                                icon="fas fa-pen" /></span>
-                    </span>
-                    <span v-if="showNameInput" class="level">
-                        <input style="width: 100px" class="input is-small level-item" v-model="placesStore.place.name" />
-                        <button class="ml-1 button is-small level-item" @click="onCancelNameEdit">
-                            <span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
-                        </button>
-                        <button @click="onNameSave" class="ml-1 button is-small level-item is-primary">
-                            <span class="icon is-small"><font-awesome-icon icon="fas fa-check" /></span>
-                        </button>
-                    </span>
-                </span>
-                <p class="modal-card-title"></p>
-                <button class="delete" aria-label="close" @click="close"></button>
+	<div class="modal is-active">
+		<div class="modal-background"></div>
+		<div class="modal-card"
+			:class="{ 'jsn-modal-wide': shownTab === 'visualisation', 'jsn-modal-medium': shownTab !== 'visualisation' }">
+			<header class="modal-card-head scoped-modal-header">
+				<span class="has-text-weight-bold">Place:</span>
+				<span class="ml-1">
+					<span v-if="!showNameInput"
+						class=" is-ghost icon-text has-text-weight-bold scoped-modal-title is-clickable"
+						@click="showNameInput = true">
+						<span>{{ placesStore.place.name }}</span>
+						<span class="scoped-edit-button icon has-text-grey-light"><font-awesome-icon
+								icon="fas fa-pen" /></span>
+					</span>
+					<span v-if="showNameInput" class="level">
+						<input style="width: 100px" class="input is-small level-item"
+							v-model="placesStore.place.name" />
+						<button class="ml-1 button is-small level-item" @click="onCancelNameEdit">
+							<span class="icon is-small has-text-grey"><font-awesome-icon icon="fas fa-xmark" /></span>
+						</button>
+						<button @click="onNameSave" class="ml-1 button is-small level-item is-primary">
+							<span class="icon is-small"><font-awesome-icon icon="fas fa-check" /></span>
+						</button>
+					</span>
+				</span>
+				<p class="modal-card-title"></p>
+				<button class="delete" aria-label="close" @click="close"></button>
 
-            </header>
-            <div class="tabs is-left is-small has-background-light mb-0">
-                <ul>
-                    <li :class="{ 'is-active': shownTab === 'data' }"><a @click="() => { showTab('data') }">Data</a></li>
-                    <li v-if="uiStateStore.uiAssistMode === 'expert'" :class="{ 'is-active': shownTab === 'schema' }"><a @click="() => { showTab('schema') }">Schema</a>
-                    </li>
+			</header>
+			<div class="tabs is-left is-small has-background-light mb-0">
+				<ul>
+					<li :class="{ 'is-active': shownTab === 'data' }"><a @click="() => { showTab('data') }">Data</a>
+					</li>
+					<li v-if="uiStateStore.uiAssistMode === 'expert'" :class="{ 'is-active': shownTab === 'schema' }"><a
+							@click="() => { showTab('schema') }">Schema</a>
+					</li>
 
-                    <li v-if="configStore.visualisationConfig" :class="{ 'is-active': shownTab === 'visualisation' }"><a @click="() => { showTab('visualisation') }">Visualisation</a>
-                        </li>
-                </ul>
-            </div>
+					<li v-if="configStore.visualisationConfig" :class="{ 'is-active': shownTab === 'visualisation' }"><a
+							@click="() => { showTab('visualisation') }">Visualisation</a>
+					</li>
+				</ul>
+			</div>
 
-            <section class="modal-card-body">
-                <PlaceTypeSelector v-if="!(shownTab === 'visualisation')"/>
-                <DataTab v-if="shownTab === 'data'"  />
-                <VisualisationTab v-if="shownTab === 'visualisation'"  />
+			<section class="modal-card-body">
+				<PlaceTypeSelector v-if="!(shownTab === 'visualisation')" />
+				<DataTab v-if="shownTab === 'data'" />
+				<VisualisationTab v-if="shownTab === 'visualisation'" />
 
-                <div v-if="shownTab === 'schema'" class="block">
-                    <div class="field">
-                        <label class="label is-small icon-text">Token schema
-                            <HelpButton help-text="
+				<div v-if="shownTab === 'schema'" class="block">
+					<div class="field">
+						<label class="label is-small icon-text">Token schema
+							<HelpButton help-text="
                           Describe the structure of data tokens stored in the place with 
                           <a href='https://json-schema.org/' target='_blank'>JSON Schema</a>.
                         " />
 
-                        </label>
-                        <div class="control is-small jsn-code">
-                            <Codemirror v-model="placesStore.schemaString" placeholder="Edit place schema."
-                                :autofocus="true" :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }"
-                                :extensions="extensions" :disabled="netStore.placeTypes[placesStore.place.id] !== 'custom'"/>
-                            <!-- @change="onSchemaCodeChange" -->
-                        </div>
-                        <p class="help" v-if="!placesStore.place.hasError">
-                            {{ placesStore.place.errorMessage }}
-                        </p>
-                        <p class="help is-danger"
-                            v-if="placesStore.place.hasError && placesStore.place.errorType === 'schema'">
-                            {{ placesStore.place.errorMessage }}
-                        </p>
+						</label>
+						<div class="control is-small jsn-code">
+							<Codemirror v-model="placesStore.schemaString" placeholder="Edit place schema."
+								:autofocus="true" :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }"
+								:extensions="extensions"
+								:disabled="netStore.placeTypes[placesStore.place.id] !== 'custom'" />
+						</div>
+						<p class="help" v-if="!placesStore.place.hasError">
+							{{ placesStore.place.errorMessage }}
+						</p>
+						<p class="help is-danger"
+							v-if="placesStore.place.hasError && placesStore.place.errorType === 'schema'">
+							{{ placesStore.place.errorMessage }}
+						</p>
 
-                    </div>
-                </div>
+					</div>
+				</div>
 
+			</section>
 
+			<footer class="modal-card-foot">
 
-
-                <!-- @update="onMarkingCodeUpdate" -->
-
-            </section>
-
-            <footer class="modal-card-foot">
- 
-            </footer>
-        </div>
-    </div>
+			</footer>
+		</div>
+	</div>
 </template>
 <script lang="ts">
+import type { JSONSchema7 } from "json-schema";
+
+import { defineComponent } from 'vue';
+import { mapStores } from 'pinia';
+
 import { useUiStateStore } from '@/stores/uiState';
 import { usePlacesStore } from '@/stores/place';
-import { mapStores } from 'pinia';
-import { defineComponent } from 'vue';
 import { Codemirror } from 'vue-codemirror';
 import { jsonSchema } from "codemirror-json-schema";
 import { basicSetup } from 'codemirror';
-import type { JSONSchema7 } from "json-schema";
 import { EditorState } from "@codemirror/state";
 import { gutter, EditorView, lineNumbers } from "@codemirror/view";
 import { history } from "@codemirror/commands";
@@ -106,100 +108,101 @@ import VisualisationTab from './VisualisationTab.vue';
 import { useNetStore } from '@/stores/net';
 import { useConfigStore } from '@/stores/config';
 
-const schema: JSONSchema7 = {
-    type: "object",
-    properties: {
-        example: {
-            type: "string",
-        },
-    },
-};
+//const schema: JSONSchema7 = {
+//	type: "object",
+//	properties: {
+//		example: {
+//			type: "string",
+//		},
+//	},
+//};
 
+/**
+ * Shows a window with several tabs to interact with marking and schema of a place.
+ */
 export default defineComponent({
-    components: {
-        PlaceTypeSelector,
-        Codemirror,
-        DataEditor,
-        HelpButton,
-        DataTab,
-        VisualisationTab
-    },
-    setup(props) {
-        const extensions = [
-            gutter({ class: "CodeMirror-lint-markers" }),
-            bracketMatching(),
-            basicSetup,
-            closeBrackets(),
-            history(),
-            autocompletion(),
-            lineNumbers(),
-            lintGutter(),
-            EditorView.lineWrapping,
-            EditorState.tabSize.of(2),
-            syntaxHighlighting(oneDarkHighlightStyle),
-            jsonSchema(JSONSchema),
-        ]
+	components: {
+		PlaceTypeSelector,
+		Codemirror,
+		DataEditor,
+		HelpButton,
+		DataTab,
+		VisualisationTab
+	},
+	setup(props) {
+		const extensions = [
+			gutter({ class: "CodeMirror-lint-markers" }),
+			bracketMatching(),
+			basicSetup,
+			closeBrackets(),
+			history(),
+			autocompletion(),
+			lineNumbers(),
+			lintGutter(),
+			EditorView.lineWrapping,
+			EditorState.tabSize.of(2),
+			syntaxHighlighting(oneDarkHighlightStyle),
+			jsonSchema(JSONSchema),
+		]
 
-        return {
-            extensions,
-        }
-    },
-    data() {
-        return {
-            shownTab: 'data' as 'data' | 'schema' | 'visualisation',
-            showNameInput: false,
-        }
-    },
-    computed: {
-        ...mapStores(useUiStateStore),
-        ...mapStores(usePlacesStore),
-        ...mapStores(useConfigStore),
-        ...mapStores(useNetStore)
-    },
-    created() {
-        this.placesStore.loadPlace(this.uiStateStore.lastSelectedID);
-    },
-    watch: {
-        'placesStore.schemaString'(newValue: string) {
-            this.placesStore.savePlaceSchema(newValue);
-            // this.$forceUpdate();
-        }
-    },
-    methods: {
-        close() {
-            this.uiStateStore.showModal = 'none';
-        },
-        onCancelNameEdit() {
-            this.placesStore.resetName();
-            this.showNameInput = false;
+		return {
+			extensions,
+		}
+	},
+	data() {
+		return {
+			shownTab: 'data' as 'data' | 'schema' | 'visualisation',
+			showNameInput: false,
+		}
+	},
+	computed: {
+		...mapStores(useUiStateStore),
+		...mapStores(usePlacesStore),
+		...mapStores(useConfigStore),
+		...mapStores(useNetStore)
+	},
+	created() {
+		this.placesStore.loadPlace(this.uiStateStore.lastSelectedID);
+	},
+	watch: {
+		'placesStore.schemaString'(newValue: string) {
+			this.placesStore.savePlaceSchema(newValue);
+		}
+	},
+	methods: {
+		close() {
+			this.uiStateStore.showModal = 'none';
+		},
+		onCancelNameEdit() {
+			this.placesStore.resetName();
+			this.showNameInput = false;
+		},
+		onNameSave() {
+			this.placesStore.saveName();
+			this.showNameInput = false;
+		},
 
-        },
-        onNameSave() {
-            this.placesStore.saveName();
-            this.showNameInput = false;
-        },
-
-        showTab(tab: 'data' | 'schema' | 'visualisation') {
-            this.shownTab = tab;
-        },
-    }
+		showTab(tab: 'data' | 'schema' | 'visualisation') {
+			this.shownTab = tab;
+		},
+	}
 })
 </script>
 <style scoped>
 .scoped-modal-footer {
-    border-top: none;
+	border-top: none;
 }
 
 .scoped-modal-header {
-    border-bottom: none;
+	border-bottom: none;
 }
 
 .scoped-edit-button {
-    display: none;
+	display: none;
 }
 
 .scoped-modal-title:hover>.scoped-edit-button,
 .scoped-edit-button:hover {
-    display: inline-block;
+	display: inline-block;
 }
 </style>

@@ -1,31 +1,36 @@
 <template>
-    <!-- <v-chart class="chart" :option="indicatorStore.pieOption" autoresize /> -->
+	<!-- <v-chart class="chart" :option="indicatorStore.pieOption" autoresize /> -->
 </template>
 <script lang="ts">
+/**
+ * Deprecated implementation of a pie chart visualisation of a marking (scope3tool-specific).
+ * File is kept as it may be used for a major reimplementation and generalisation of visualisation concept.
+ * 
+ */
 import type { ComposeOption } from 'echarts/core'
 import type { PieSeriesOption } from 'echarts/charts'
 import type {
-  TitleComponentOption,
-  TooltipComponentOption,
-  LegendComponentOption
+	TitleComponentOption,
+	TooltipComponentOption,
+	LegendComponentOption
 } from 'echarts/components'
 
 type EChartsOptionZ = ComposeOption<
-  | TitleComponentOption
-  | TooltipComponentOption
-  | LegendComponentOption
-  | PieSeriesOption
+	| TitleComponentOption
+	| TooltipComponentOption
+	| LegendComponentOption
+	| PieSeriesOption
 >
 
-use([TitleComponent, TooltipComponent, LegendComponent, PieChart ])
+use([TitleComponent, TooltipComponent, LegendComponent, PieChart])
 
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { PieChart } from 'echarts/charts';
 import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
+	TitleComponent,
+	TooltipComponent,
+	LegendComponent,
 } from 'echarts/components';
 import VChart, { THEME_KEY } from 'vue-echarts';
 import { ref, defineComponent } from 'vue';
@@ -35,37 +40,37 @@ import { ref, defineComponent } from 'vue';
 import { mapStores } from 'pinia';
 
 use([
-  CanvasRenderer,
-  PieChart,
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
+	CanvasRenderer,
+	PieChart,
+	TitleComponent,
+	TooltipComponent,
+	LegendComponent,
 ]);
 
 const key = <string><unknown>THEME_KEY;
 
 export default defineComponent({
-  name: 'Contributions',
-  // components: {
-    // VChart,
-  // },
-  provide: {
-    [key]: 'light',
-  },
-  computed: {
-    // ...mapStores(useIndicatorStore),
-  },
-  setup() {
-    // const option = ref();
+	name: 'Contributions',
+	// components: {
+	// VChart,
+	// },
+	provide: {
+		[key]: 'light',
+	},
+	computed: {
+		// ...mapStores(useIndicatorStore),
+	},
+	setup() {
+		// const option = ref();
 
-    // return { option };
-  },
+		// return { option };
+	},
 });
 </script>
 
 <style scoped>
 .chart {
-  width: 50vh;
-  height: 50vh;
+	width: 50vh;
+	height: 50vh;
 }
 </style>

@@ -11,35 +11,31 @@ import TransitionModal from './components/TransitionModal/TransitionModal.vue'
 import ExamplesModal from './components/ExamplesModal.vue'
 import ExpressionEditor from './components/TransitionModal/ExpressionEditor.vue'
 import SettingsModal from './components/SettingsModal.vue'
-// import PieChart from './components/PieChart.vue';
-// import SankeyChart from './components/SankeyChart.vue';
-// import SunburstChart from './components/SunburstChart.vue'
 
 import ModeButton from './components/_shared/ModeButton.vue'
 import { useIndicatorStore } from './stores/indicator'
 import { useConfigStore, type ConfigData } from './stores/config'
 
-import config from './configs/test-config.json';
+// import config from './configs/test-config.json';
 // I like the syntax with export and setup() better,
 // but for some reason the code only compiles with script setup here
 const uiState = useUiStateStore();
-// const indicatorState = useIndicatorStore();
 const configState = useConfigStore();
 
-configState.loadConfig(config as ConfigData);
+// configState.loadConfig(config as ConfigData);
 
 function exportNet() {
-  return useNetStore().export();
+	return useNetStore().export();
 }
 
 function importNet(jsonString: string) {
-  let json;
-  //todo: this was used to import examples, no longer needed
-  if (jsonString === '1') {
-  } else {
-    json = JSON.parse(jsonString);
-  }
-  useNetStore().import(json)
+	let json;
+	// Todo: this was used to import examples, no longer needed
+	if (jsonString === '1') {
+	} else {
+		json = JSON.parse(jsonString);
+	}
+	useNetStore().import(json)
 }
 
 </script>
@@ -54,62 +50,52 @@ export const MODE_CONNECT_FROM_TRANSITION = 'MODE_CONNECT_FROM_TRANSITION'
 export const MODE_LAYOUT = 'MODE_LAYOUT'
 export const MODE_UPLOAD = 'MODE_UPLOAD'
 export const MODE_EXPORT = 'MODE_EXPORT'
-// export const MODE_EXAMPLE = 'MODE_EXAMPLE'
 export const MODE_PLAY = 'MODE_PLAY'
 export const MODE_HELP = 'MODE_HELP'
-// export const MODE_INDICATOR = 'MODE_INDICATOR'
 
 </script>
 
 <template>
-  <JointPaper />
-  <div id="menu">
-    <ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
-    <ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
-    <ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
-    <ModeButton v-if="configState.allowAutoLayout" icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
-    <ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
-    <!-- <ModeButton v-if="uiState.isScope3" icon="fas fa-chart-simple" :mode="MODE_INDICATOR" /> -->
-    <ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
-    <ModeButton icon="fas fa-file-arrow-down" :mode="MODE_EXPORT" :callback="() => {
-        download(exportNet(), 'export.json', 'application/json')
-      }
-      " />
-    <input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="netfile" @change="(event) => {
-        readFile(event, importNet)
-      }
-      " />
-    <button v-if="configState.examples && configState.examples.length > 0"
-      style="margin-left: 15px"
-      @click.stop="
-        () => {
-          // uiState.setMode(MODE_EXAMPLE)
-          uiState.setModal('examples');
-          // importNet('example1')
-        }
-      "
-      class="button is-primary is-outlined"
-    >
-      Beispiele
-    </button>
+	<JointPaper />
+	<div id="menu">
+		<ModeButton icon="fas fa-circle" :mode="MODE_ADD_PLACE" />
+		<ModeButton icon="fas fa-square" :mode="MODE_ADD_TRANSITION" />
+		<ModeButton icon="fas fa-arrow-right" :mode="MODE_CONNECT_START" />
+		<ModeButton v-if="configState.allowAutoLayout" icon="fas fa-wand-magic-sparkles" :mode="MODE_LAYOUT" />
+		<ModeButton icon="fas fa-mouse-pointer" :mode="MODE_MOVE" />
+		<ModeButton icon="fas fa-play-circle" :mode="MODE_PLAY" />
+		<ModeButton icon="fas fa-file-arrow-down" :mode="MODE_EXPORT" :callback="() => {
+			download(exportNet(), 'export.json', 'application/json')
+		}
+			" />
+		<input class="button is-primary is-outlined" style="margin-left: 15px" type="file" name="netfile" @change="(event) => {
+			readFile(event, importNet)
+		}
+			" />
+		<button v-if="configState.examples && configState.examples.length > 0" style="margin-left: 15px" @click.stop="() => {
+				uiState.setModal('examples');
+			}
+			" class="button is-primary is-outlined">
+			Beispiele
+		</button>
 
-    <ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => {
-        uiState.showModal = 'help'
-      }
-      " />
-  </div>
-  <TransitionModal v-if="uiState.showModal === 'transition'" />
-  <PlaceModal v-if="uiState.showModal === 'place'" />
-  <ExpressionEditor v-if="uiState.showEditor !== 'none'" />
-  <HelpModal v-if="uiState.showModal === 'help'" />
-  <ExamplesModal v-if="uiState.showModal === 'examples'" />
-  <SettingsModal v-if="uiState.showModal === 'settings'" />
-  <RouterView />
-  <div style="position: absolute; bottom: 5px; right: 5px">
-    <a @click="useNetStore().resetModel()">Modell zurücksetzen</a>
-  </div>
-  <div style="position: absolute; bottom: 5px; left: 5px">
-    <a @click="() => { uiState.showModal = 'settings' }">Einstellungen</a>
-  </div>
+		<ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => {
+			uiState.showModal = 'help'
+		}
+			" />
+	</div>
+	<TransitionModal v-if="uiState.showModal === 'transition'" />
+	<PlaceModal v-if="uiState.showModal === 'place'" />
+	<ExpressionEditor v-if="uiState.showEditor !== 'none'" />
+	<HelpModal v-if="uiState.showModal === 'help'" />
+	<ExamplesModal v-if="uiState.showModal === 'examples'" />
+	<SettingsModal v-if="uiState.showModal === 'settings'" />
+	<RouterView />
+	<div style="position: absolute; bottom: 5px; right: 5px">
+		<a @click="useNetStore().resetModel()">Modell zurücksetzen</a>
+	</div>
+	<div style="position: absolute; bottom: 5px; left: 5px">
+		<a @click="() => { uiState.showModal = 'settings' }">Einstellungen</a>
+	</div>
 
 </template>

@@ -17,17 +17,10 @@
         <div v-else class="notification is-info is-light is-size-7" v-html="configStore.getPlaceTypeById(netStore.placeTypes[placesStore.place.id])?.schema.description">
         </div>
 
-        <!-- <div v-if="!uiStateStore.showSupplyChainData && (schemaSelected === 'scope3')" class="notification is-info is-light is-size-7">
-            <a @click="() => { uiStateStore.showSupplyChainData = true; }">Laden Sie Daten</a> aus dem Lieferketten-Verzeichnis oder geben Sie Sekundärdaten ein.
-        </div>
-        <div v-if="!uiStateStore.showSupplyChainData && (schemaSelected === 'supply-chain')" class="notification is-info is-light is-size-7">
+        <!-- Todo: Check whether data removal functionality is needed for pull type places. -->
+        <!--
             Sie haben Daten aus dem Lieferketten-Verzeichnis geladen. <a @click="clearSupplyChainData">Lieferketten-Daten entfernen</a>, um das Formular zurückzusetzen.
-            Im Formular können Sie den von ihrem Lieferanten übermittelten <b>Emissionsfaktor</b> und <b>Primärdatenanteil</b> einsehen.
-            Es wird angenommen, dass die Angaben zu Treibhausgasemission von Ihrem Lieferanten in <i>kg CO2e pro Stück</i> erfolgen.
-            Sie können eine <b>Mengenangabe</b> als Stückzahl vornehmen und die angegebene Menge über einen <b>Skalierungsfaktor</b> skalieren.
-            Wenn zum Beispiel die Hälfte der angegebenen Menge angerechnet werden soll, geben Sie den <b>Skalierungsfaktor</b> '0,5' an.
-        </div>
- -->
+        -->
 
     </div>
 
@@ -40,6 +33,9 @@ import { usePlacesStore } from '@/stores/place';
 import { mapStores } from 'pinia';
 import { defineComponent } from 'vue';
 
+/**
+ * Allows users to select predefined markings and schemas (if available in current configuration).
+ */
 export default defineComponent({
     computed: {
         ...mapStores(useConfigStore),
@@ -56,7 +52,6 @@ export default defineComponent({
             if (placeTypeId === 'custom') return;
 
             const placeType = this.configStore.getPlaceTypeById(placeTypeId);
-            // this.placesStore.placeType = placeTypeId;
             const schemaString = JSON.stringify(placeType?.schema, null, 2);
             const markingString = JSON.stringify(placeType?.marking, null, 2);
 

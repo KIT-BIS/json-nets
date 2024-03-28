@@ -1,11 +1,14 @@
+/**
+ * Provides utility functions to work with JSON Schema.
+ */
 import Ajv, { type ValidateFunction } from 'ajv'
-import type { JSONObject, JSONValue } from './jsonOperations'
+import type { JSONValue } from './jsonOperations'
 import type { JSONSchema7 } from 'json-schema';
 
 const ajv = new Ajv({ validateSchema: false })
 
 
-// expects a validated Schema!!
+// expects a validated Schema!
 export function compileValidator(schema: JSONSchema7) {
   const validator = ajv.compile(schema);
   return validator;
@@ -43,13 +46,11 @@ export function validateDocumentOld(document: string, schema: string) {
     return { isValid: false, schemaValid: false, error: error.message }
   }
 
-
-    
   const valid = check(JSON.parse(document));
   return { isValid: valid, schemaValid: true, error: ajv.errorsText(check.errors) }
 }
 
-// todo: maybe it makes sense to compile schema only once and store it in place
+// Todo: maybe it makes sense to compile schema only once and store it in place
 // would maybe allow for some better structure here, as one can be sure
 // that a compiled schema is correct
 export function checkSchema(schema: string) {

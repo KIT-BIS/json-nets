@@ -8,128 +8,115 @@ import { checkSchema } from "@/util/jsonSchema"
 import type { JSONSchema7 } from "json-schema";
 
 export type FragmentOperation = {
-  type: "remove"
-  pathExpression: string
+	type: "remove"
+	pathExpression: string
 } | {
-  type: "insert"
-  pathExpression: string
-  fragment: JSONValue
-  key: string | number
+	type: "insert"
+	pathExpression: string
+	fragment: JSONValue
+	key: string | number
 }
 
 
+/**
+ * Implementation of JSON-Nets place.
+ */
 export class Place {
-  readonly id: string
-  private _name: string
-  private _schema: Schema 
-  // private _mode: "assisted" | "expert"
-  public marking: JSONMarking
-  public defaultMarking: JSONMarking
+	readonly id: string
+	private _name: string
+	private _schema: Schema
+	public marking: JSONMarking
+	public defaultMarking: JSONMarking
 
-  /**
-   * Create a new place.
-   * @param {String} id ID of the place.
-   * @param {String} name Name of the place.
-   */
-  constructor(id: string, name: string) {
-    this.id = id // id of the place
-    this._name = name // name of the place
-    this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object"} })
-    // this._mode = "assisted";
-    this.marking = [];
-    this.defaultMarking = [];
-  }
+	/**
+	 * Create a new place.
+	 * @param {String} id ID of the place.
+	 * @param {String} name Name of the place.
+	 */
+	constructor(id: string, name: string) {
+		this.id = id // id of the place
+		this._name = name // name of the place
+		this._schema = new Schema(id, { $id: id, type: "array", items: { type: "object" } })
+		this.marking = [];
+		this.defaultMarking = [];
+	}
 
-  set name(name: string) {
-    this._name = name;
-  }
+	set name(name: string) {
+		this._name = name;
+	}
 
 
-  get name() {
-    return this._name;
-  }
+	get name() {
+		return this._name;
+	}
 
-  // expects 
-  set schema(schema: JSONSchema7) {
-    // to ensure $id doesn't get changed by user
-    schema['$id'] = this.id;
-    // const arraySchema = { $id: this.id, type: "array", items: schema }
-    // let newSchema = { $id: this.id }
-    // Object.assign(newSchema, schema);
-    // this._schema.update(arraySchema)
-    this._schema.update(schema);
-  }
+	set schema(schema: JSONSchema7) {
+		// to ensure $id doesn't get changed by user
+		schema['$id'] = this.id;
+		this._schema.update(schema);
+	}
 
-  get schema(): JSONSchema7 {
-    return this._schema.schema;
-  }
+	get schema(): JSONSchema7 {
+		return this._schema.schema;
+	}
 
-  // set mode(mode: "assisted" | "expert") {
-    // this._mode = mode;
-  // }
+	// Todo: probably move this to schema class?
+	validateSchema(schema: JSONObject) {
+		return checkSchema(JSON.stringify(schema));
+	}
 
-  // get mode() {
-    // return this._mode;
-  // }
+	validateToken(token: JSONObject): CheckResult {
+		return this._schema.validateMarking([token])
+	}
 
-  // todo: probably move this to schema class?
-  validateSchema(schema: JSONObject) {
-    return checkSchema(JSON.stringify(schema));
-  }
+	validateMarking(marking: JSONMarking): CheckResult {
+		return this._schema.validateMarking(marking);
+	}
 
-  validateToken(token: JSONObject): CheckResult {
-    return this._schema.validateMarking([token])
-  }
+	insertValue(pathExpression: string, fragment: JSONValue, key: string | number, check = false) {
+		if (!check) {
+			deepInsert(pathExpression, this.marking, key, fragment);
+			return true;
+		} else {
+			// Todo: this is probably to be solved smarter ... may run into performance issues here with large markings
+			const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
+			const markingToCheck = <JSONMarking>deepInsert(pathExpression, markingCopy, key, fragment)
+			return this._schema.validateMarking(markingToCheck);
+		}
+	}
 
-  validateMarking(marking: JSONMarking): CheckResult {
-    return this._schema.validateMarking(marking);
-  }
+	removeValue(pathExpression: string, check = false) {
+		if (!check) {
+			deepRemove(pathExpression, this.marking)
+			return true;
+		} else {
+			const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
+			const markingToCheck = <JSONMarking>deepRemove(pathExpression, markingCopy)
+			return this._schema.validateMarking(markingToCheck);
+		}
+	}
 
-  insertValue(pathExpression: string, fragment: JSONValue, key: string | number, check = false) {
-    if (!check) {
-      deepInsert(pathExpression, this.marking, key, fragment);
-      return true;
-    } else {
-      // Todo: this is probably to be solved smarter ... may run into performance issues here with large markings
-      const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
-      const markingToCheck = <JSONMarking>deepInsert(pathExpression, markingCopy, key, fragment)
-      return this._schema.validateMarking(markingToCheck);
-    }
-  }
-
-  removeValue(pathExpression: string, check = false) {
-    if (!check) {
-      deepRemove(pathExpression, this.marking)
-      return true;
-    } else {
-      const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
-      const markingToCheck = <JSONMarking>deepRemove(pathExpression, markingCopy)
-      return this._schema.validateMarking(markingToCheck);
-
-    }
-  }
-
-  batchOperation(fragmentOperations: Array<FragmentOperation>, check = false) {
-    if (!check) {
-      for (let i = 0; i < fragmentOperations.length; i++) {
-        const operation = fragmentOperations[i]
-        if (operation.type === 'insert') {
-          deepInsert(operation.pathExpression, this.marking, operation.key, operation.fragment);
-        } else if (operation.type === 'remove') {
-          deepRemove(operation.pathExpression, this.marking)
-        }
-      }
-    } else {
-      const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
-      for (let i = 0; i < fragmentOperations.length; i++) {
-        const operation = fragmentOperations[i]
-        if (operation.type === 'insert') {
-          deepInsert(operation.pathExpression, markingCopy, operation.key, operation.fragment);
-        } else if (operation.type === 'remove') {
-          deepRemove(operation.pathExpression, markingCopy)
-        }
-      }
-      return this._schema.validateMarking(markingCopy);
-    }
-  }
+	batchOperation(fragmentOperations: Array<FragmentOperation>, check = false) {
+		if (!check) {
+			for (let i = 0; i < fragmentOperations.length; i++) {
+				const operation = fragmentOperations[i]
+				if (operation.type === 'insert') {
+					deepInsert(operation.pathExpression, this.marking, operation.key, operation.fragment);
+				} else if (operation.type === 'remove') {
+					deepRemove(operation.pathExpression, this.marking)
+				}
+			}
+		} else {
+			const markingCopy = <JSONMarking>JSON.parse(JSON.stringify(this.marking));
+			for (let i = 0; i < fragmentOperations.length; i++) {
+				const operation = fragmentOperations[i]
+				if (operation.type === 'insert') {
+					deepInsert(operation.pathExpression, markingCopy, operation.key, operation.fragment);
+				} else if (operation.type === 'remove') {
+					deepRemove(operation.pathExpression, markingCopy)
+				}
+			}
+			return this._schema.validateMarking(markingCopy);
+		}
+	}
 }

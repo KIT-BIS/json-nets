@@ -9,6 +9,9 @@ export interface Examples {
   }>
 }
 
+/**
+ * A list of examples for output value expresssions.
+ */
 export const examples: Examples = {
  student: [{
     "id": 1, 

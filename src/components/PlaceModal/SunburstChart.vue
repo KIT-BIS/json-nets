@@ -3,23 +3,8 @@
     <v-chart class="chart" :option="indicatorStore.sunburstOption" autoresize />
 </template>
 <script lang="ts">
-import type { ComposeOption } from 'echarts/core'
-import type { SunburstSeriesOption } from 'echarts/charts'
-import type {
-  TitleComponentOption,
-  TooltipComponentOption,
-  LegendComponentOption
-} from 'echarts/components'
 
-type EChartsOptionZ = ComposeOption<
-  | TitleComponentOption
-  | TooltipComponentOption
-  | LegendComponentOption
-  | SunburstSeriesOption
->
-
-use([TitleComponent, TooltipComponent, LegendComponent, SunburstChart ])
-
+import { defineComponent } from 'vue';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import { SunburstChart } from 'echarts/charts';
@@ -29,12 +14,12 @@ import {
   LegendComponent,
 } from 'echarts/components';
 import VChart, { THEME_KEY } from 'vue-echarts';
-import { ref, defineComponent } from 'vue';
 
 import { useIndicatorStore } from '@/stores/indicator';
 
 import { mapStores } from 'pinia';
 
+use([TitleComponent, TooltipComponent, LegendComponent, SunburstChart ])
 use([
   CanvasRenderer,
   SunburstChart,
@@ -45,21 +30,16 @@ use([
 
 const key = <string><unknown>THEME_KEY;
 
+/**
+ * A sunburst chart to display marking data (data needs to be in a specific format, currently only works with scope3tool configuration).
+ */
 export default defineComponent({
   name: 'Contributions',
-  // components: {
-    // VChart,
-  // },
   provide: {
     [key]: 'light',
   },
   computed: {
     ...mapStores(useIndicatorStore),
-  },
-  setup() {
-    // const option = ref();
-
-    // return { option };
   },
 });
 </script>

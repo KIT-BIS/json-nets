@@ -1,22 +1,20 @@
 <template>
-  <Codemirror v-if="language === 'jsonnet'"
-    v-model="content" 
-    :disabled="true"
-    :autofocus="true"
-    :indent-with-tab="true"
-    :tab-size="2"
-    :extensions="jsonnetExtensions"
-    :class="class"
-  />
-  <Codemirror v-if="language === 'json'"
-    v-model="content" 
-    :disabled="true"
-    :autofocus="true"
-    :indent-with-tab="true"
-    :tab-size="2"
-    :extensions="jsonExtensions"
-    :class="class"
-  />
+	<Codemirror v-if="language === 'jsonnet'" 
+				v-model="content" 
+				:disabled="true" 
+				:autofocus="true"
+				:indent-with-tab="true" 
+				:tab-size="2" 
+				:extensions="jsonnetExtensions" 
+				:class="class" />
+	<Codemirror v-if="language === 'json'" 
+				v-model="content" 
+				:disabled="true" 
+				:autofocus="true" 
+				:indent-with-tab="true"
+				:tab-size="2" 
+				:extensions="jsonExtensions" 
+				:class="class" />
 
 </template>
 
@@ -27,27 +25,29 @@ import { Codemirror } from 'vue-codemirror'
 import { json } from '@codemirror/lang-json'
 import { basicSetup } from 'codemirror';
 
+/**
+ * A reusable component to display non editable code.
+ */
 export default defineComponent({
-  components: {
-    Codemirror
-  },
-  props: {
-    content: String,
-    language: {
-      type: String,
-      default: 'json'
-    },
-    class: String 
-  },
-  setup() {
-    const jsonExtensions = [json()]
-    const jsonnetExtensions = [basicSetup]
-    return {
-      jsonExtensions,
-      jsonnetExtensions
-    }
+	components: {
+		Codemirror
+	},
+	props: {
+		content: String,
+		language: {
+			type: String,
+			default: 'json'
+		},
+		class: String
+	},
+	setup() {
+		const jsonExtensions = [json()]
+		const jsonnetExtensions = [basicSetup]
+		return {
+			jsonExtensions,
+			jsonnetExtensions
+		}
 
-  },
-
+	},
 })
 </script>

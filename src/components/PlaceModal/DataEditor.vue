@@ -3,10 +3,10 @@
         <div class="field">
             <label class="label is-small icon-text">Place marking
                 <HelpButton help-text="
-              Edit the JSON array to insert or remove data. 
-              <a href='https://www.json.org/json-en.html' target='_blank'
-                >Click here</a> for more information about JSON.
-            " />
+                            Edit the JSON array to insert or remove data. 
+                            <a href='https://www.json.org/json-en.html' target='_blank'
+                            >Click here</a> for more information about JSON.
+                            "/>
                 <button class="button is-pulled-right is-small is-ghost" style="margin-left: auto"
                     @click="onAddTokenClick">Add token</button>
 
@@ -16,7 +16,6 @@
             <div class="control is-small jsn-code">
                 <Codemirror v-model="placesStore.markingString" placeholder="Edit place data." :autofocus="true"
                     :indent-with-tab="true" :tab-size="2" :style="{ height: '400px' }" :extensions="extensions" />
-                <!-- @change="onMarkingCodeChange"  -->
             </div>
             <p class="help" v-if="!placesStore.place.hasError">
                 {{ placesStore.place.errorMessage }} &nbsp;
@@ -28,7 +27,11 @@
     </div>
 </template>
 <script lang="ts">
+import type { JSONSchema7 } from 'json-schema';
+
 import { defineComponent } from 'vue';
+import { mapStores } from 'pinia';
+
 import { basicSetup } from 'codemirror';
 import { Codemirror } from 'vue-codemirror';
 import { jsonSchema } from "codemirror-json-schema";
@@ -39,13 +42,13 @@ import { closeBrackets } from "@codemirror/autocomplete";
 import { lintGutter } from "@codemirror/lint";
 import { bracketMatching, syntaxHighlighting } from "@codemirror/language";
 import { oneDarkHighlightStyle } from "@codemirror/theme-one-dark";
-import type { JSONSchema7 } from 'json-schema';
-
 
 import { usePlacesStore } from '@/stores/place';
-import { mapStores } from 'pinia';
 import HelpButton from '@/components/_shared/HelpButton.vue';
 
+/**
+ * Shows an editor to edit the marking of a place.
+ */
 export default defineComponent({
     components: {
         Codemirror,
@@ -78,12 +81,9 @@ export default defineComponent({
     },
     methods: {
         onAddTokenClick() {
-            // todo make token dependent on schema
+            // Todo make token dependent on schema
             this.placesStore.addToken();
         },
-
     }
-
-
 })
 </script>

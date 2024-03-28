@@ -1,14 +1,21 @@
 import { createRouter, createWebHistory } from 'vue-router'
 //import HomeView from '../views/HomeView.vue'
+import ConfigLoader from './ConfigLoader.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    //    {
-    //      path: '/',
-    //      name: 'home',
-    //      component: HomeView
-    //    },
+       {
+         path: '/:configID',
+         name: 'config',
+         component: ConfigLoader
+       },
+       {
+         path: '/:configID/:modelID',
+         name: 'model',
+         component: ConfigLoader
+       },
+
     //    {
     //      path: '/about',
     //      name: 'about',

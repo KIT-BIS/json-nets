@@ -104,7 +104,7 @@ export const MODE_HELP = 'MODE_HELP'
   <HelpModal v-if="uiState.showModal === 'help'" />
   <ExamplesModal v-if="uiState.showModal === 'examples'" />
   <SettingsModal v-if="uiState.showModal === 'settings'" />
-  <!-- <RouterView /> -->
+  <RouterView />
   <div style="position: absolute; bottom: 5px; right: 5px">
     <a @click="useNetStore().resetModel()">Modell zurücksetzen</a>
   </div>

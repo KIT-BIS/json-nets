@@ -35,6 +35,7 @@ import { createPinia } from 'pinia'
 import VueEcharts from 'vue-echarts';
 
 import App from './App.vue'
+import router from './router'
 
 /* add icons to the library */
 library.add(
@@ -64,6 +65,7 @@ library.add(
 
 //import router from './router'
 const app = createApp(App).component('font-awesome-icon', FontAwesomeIcon)
+app.use(router)
 app.use(createPinia())
 app.use(VueCodemirror, {
   // keep the global default extensions empty

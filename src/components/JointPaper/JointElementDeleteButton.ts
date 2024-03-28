@@ -2,6 +2,9 @@ import * as joint from 'jointjs';
 
 import { useNetStore } from '@/stores/net';
 
+/**
+ * A small button shown when hovering over model elements to delete the element.
+ */
 export default class DeleteButton extends joint.elementTools.Button {
     constructor(deleteX: string, element: joint.dia.Element) {
         super({

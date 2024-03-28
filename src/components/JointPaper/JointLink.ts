@@ -2,7 +2,10 @@ import { useNetStore } from '@/stores/net';
 
 import * as joint from 'jointjs';
 
-
+/**
+ * An arc between a place and a transition (preset or postset).
+ * Todo: establish consistent wording (link, arc, edge, ...)
+ */
 export default class Link extends joint.shapes.standard.Link {
   constructor(from: string, to: string, id: string, jsonnetsType: string) {
     super({

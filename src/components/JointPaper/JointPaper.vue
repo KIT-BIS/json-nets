@@ -4,7 +4,6 @@
     'scoped-canvas-panning': isPanningMode,
     'scoped-canvas-pannable': isPannableMode,
     'elements-unmovable': !isInteractive,
-    // 'places-clickable': isPlacesClickable,
   }">
     <div id="jointCanvas"></div>
   </div>
@@ -18,7 +17,6 @@ import { mapStores } from 'pinia'
 import { useUiStateStore } from '@/stores/uiState'
 import { useTransitionsStore } from '@/stores/transition'
 import { usePlacesStore } from '@/stores/place'
-import { useIndicatorStore } from '@/stores/indicator'
 import { useNetStore } from '@/stores/net'
 
 import * as joint from 'jointjs'
@@ -37,16 +35,18 @@ import {
   MODE_CONNECT_START,
   MODE_MOVE,
   MODE_NONE,
-  // MODE_INDICATOR
 } from '@/App.vue'
 
 //Todo: not sure if having a variable declared outside of component
 // is advisable - currently it seems to me the only way
-// to share an object that shouldn't be reactive data across the 
+// to share data that shouldn't be reactive across the 
 // component methods
 let _paper: joint.dia.Paper;
 let _graph: joint.dia.Graph;
 
+/**
+ * Wrapper component to handle interaction of visual display of the model with JointJS.
+ */
 export default defineComponent({
   data() {
     return {

@@ -1,5 +1,8 @@
 import * as joint from 'jointjs';
 
+/**
+ * A small button shown when hovering over model elements to draw arcs.
+ */
 export default class ConnectButton extends joint.elementTools.Connect {
   constructor() {
     super({

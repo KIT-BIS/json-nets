@@ -2,7 +2,9 @@ import * as joint from 'jointjs';
 
 import { useUiStateStore } from '@/stores/uiState';
 
-
+/**
+ * A small button shown on model elements to open corresponding modal to edit the element.
+ */
 export default class InspectorButton extends joint.elementTools.Button {
   constructor(inspectorX: string, element: joint.dia.Element) {
     super({

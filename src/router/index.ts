@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ConfigLoader from './ConfigLoader.vue'
+import Configurator from '@/configs/configurator.vue'
 
 /**
  * Router configuration to load config and model based on given url.
@@ -16,7 +17,11 @@ const router = createRouter({
          path: '/:configID/:modelID',
          name: 'model',
          component: ConfigLoader
-       },
+       }, {
+        path: '/configurator', 
+        name: 'configurator', 
+        component: Configurator 
+      }
   ]
 })
 

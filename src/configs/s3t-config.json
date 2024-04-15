@@ -5,7 +5,8 @@
     "defaultPlaceType": "scope1",
     "allowAutoLayout": false,
     "visualisationConfig": {
-        "show": true
+        "show": true,
+        "allowCustom": false
     },
     "examples": [
         {

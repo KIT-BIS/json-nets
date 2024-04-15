@@ -5,7 +5,10 @@
     "defaultPlaceType": "default",
     "allowAutoLayout": true,
     "examples": [],
-    "visualisationConfig": false,
+    "visualisationConfig": {
+        "show": true,
+        "allowCustom": true
+    },
     "transitionTypes": [
         {
             "id": "default",

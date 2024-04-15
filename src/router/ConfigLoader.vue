@@ -5,6 +5,7 @@
 import { useConfigStore } from '@/stores/config';
 import { defineComponent } from 'vue';
 import s3tConfig from '../configs/s3t-config.json'
+import scenarioConfig from '../configs/scenario-config.json'
 import { mapStores } from 'pinia';
 import type { ConfigData } from '../stores/config'
 import { useNetStore } from '@/stores/net';
@@ -21,6 +22,8 @@ export default defineComponent({
 		const configID = this.$route.params.configID
 		if (configID === "scope3tool") {
 			this.configStore.loadConfig(s3tConfig as ConfigData);
+		} else if (configID === "scenario") {
+			this.configStore.loadConfig(scenarioConfig as ConfigData);
 		}
 		const modelID = this.$route.params.modelID;
 		if (modelID) {

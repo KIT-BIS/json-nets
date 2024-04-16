@@ -6,8 +6,7 @@
     "allowAutoLayout": true,
     "examples": [],
     "visualisationConfig": {
-        "show": true,
-        "allowCustom": true
+        "show": true
     },
     "transitionTypes": [
         {

@@ -1,4 +1,3 @@
-import { getNetInstance } from "@/json-nets/Net";
 import { defineStore } from "pinia"
 import { use } from 'echarts/core'
 import { PieChart } from 'echarts/charts'
@@ -8,7 +7,6 @@ import {
 	LegendComponent
 } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { usePlacesStore } from "./place";
 
 use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
 
@@ -18,11 +16,10 @@ export type SunburstOption = {
 // }
 export type SankeyOption = {}
 
-// Todo: this is doubled here => move to util library
-function roundToSix(num: number) {
+// function roundToSix(num: number) {
 
-	return +(Math.round(Number(String(num) + 'e+6')) + 'e-6');
-}
+	// return +(Math.round(Number(String(num) + 'e+6')) + 'e-6');
+// }
 
 /**
  * Provides state for visualisations.
@@ -55,7 +52,9 @@ export const useIndicatorStore = defineStore('indicator', {
 		setVisualisationData(visualisationData: any) {
 			this.visualisationData = visualisationData;
 			if (visualisationData.type === "number") {
-				this.numberData = visualisationData.description + ": " + visualisationData.value + " " + visualisationData.unit;
+				const precision = 2;
+				const value = +(Math.round(Number(String(visualisationData.value) + 'e+' + precision)) + 'e-' + precision)
+				this.numberData = visualisationData.description + ": " + value + " " + visualisationData.unit;
 			} else if (visualisationData.type === "sunburst") {
 				/**
 				 * Sunburst expects value of type [
@@ -71,12 +70,25 @@ export const useIndicatorStore = defineStore('indicator', {
 				 * ]
 				 */
 
-				this.sunburstData = this.compileSunburstOption(visualisationData.value, '{b}: {c} ' + visualisationData.unit, visualisationData.description);
+				// this.sunburstData = this.compileSunburstOption(visualisationData.value, '{b}: {c} ' + visualisationData.unit, visualisationData.description);
+				this.sunburstData = this.compileSunburstOption(visualisationData.value, this.compileFormatter(6, visualisationData.unit), visualisationData.description);
 			} else if (visualisationData.type === "sankey") {
 				/**
 				 * Sankey expects value of type { data: Array<{ name: <string> }>, links: Array<{source: <string>, target: <string>, value: <number>}>}
 				 */
-				this.sankeyData = this.compileSankeyOption(visualisationData.value, '{a} {b} {c} {d} {e}');
+				// this.sankeyData = this.compileSankeyOption(visualisationData.value, '{b}: {c} ' + visualisationData.unit);
+				this.sankeyData = this.compileSankeyOption(visualisationData.value, this.compileFormatter(6, visualisationData.unit));
+			}
+		},
+		compileFormatter(precision: number, unit: string) {
+			return (params: any) => {
+				// const value = roundToSix(params.data.value)
+				const value = +(Math.round(Number(String(params.value) + 'e+' + precision)) + 'e-' + precision)
+
+				// if (params.name === "Beiträge") {
+					// return "zurück";
+				// }
+				return `${params.data.name}: ${value} ${unit}`;
 			}
 		},
 		compileSunburstOption(data: any, formatter: string | Function, title: string, sanitize = true): SunburstOption {
@@ -135,7 +147,7 @@ export const useIndicatorStore = defineStore('indicator', {
 					emphasis: {
 						focus: 'adjacency'
 					},
-					data: sanitize? this.removeDuplicates(data.data) : data.data,
+					data:  sanitize? this.removeDuplicates(data.data) : data.data,
 					links: data.links
 				}
 			};

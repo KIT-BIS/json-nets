@@ -5,8 +5,7 @@
     "defaultPlaceType": "simple",
     "allowAutoLayout": true,
     "visualisationConfig": {
-        "show": true,
-        "allowCustom": true
+        "show": true
     },
     "transitionTypes": [
         {

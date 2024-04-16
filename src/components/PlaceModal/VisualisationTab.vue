@@ -38,8 +38,9 @@
     <!-- <button class="button is-small is-primary" @click="indicatorStore.updateCustomIndicator()">Update</button> -->
   </div>
   <div class="block">
-    <CustomNumber v-if="indicatorStore.visualisationData.type === 'number'" />
-    <CustomSunburst v-else-if="indicatorStore.visualisationData.type === 'sunburst'" />
+    <NumberDisplay v-if="indicatorStore.visualisationData.type === 'number'" />
+    <SunburstChart v-else-if="indicatorStore.visualisationData.type === 'sunburst'" />
+    <SankeyChart v-else-if="indicatorStore.visualisationData.type === 'sankey'" />
   </div>
   <!-- <div class="block"> -->
   <!-- <p class="has-text-weight-bold">Gesamtwert: {{ indicatorStore.indicatorValue }} -->
@@ -58,10 +59,9 @@ import { defineComponent } from 'vue';
 import { useIndicatorStore } from '../../stores/indicator'
 import { useConfigStore } from '@/stores/config';
 
-import SankeyChart from './SankeyChart.vue';
-import SunburstChart from './SunburstChart.vue';
-import CustomNumber from './Visualisations/CustomNumber.vue';
-import CustomSunburst from './Visualisations/CustomSunburstChart.vue';
+import SankeyChart from './Visualisations/SankeyChart.vue';
+import NumberDisplay from './Visualisations/NumberDisplay.vue';
+import SunburstChart from './Visualisations/SunburstChart.vue';
 import { usePlacesStore } from '@/stores/place';
 
 export type VisualisationData = {
@@ -76,9 +76,8 @@ export type VisualisationData = {
 export default defineComponent({
   components: {
     SankeyChart,
-    SunburstChart,
-    CustomNumber,
-    CustomSunburst
+    NumberDisplay,
+    SunburstChart
   },
   computed: {
     ...mapStores(useIndicatorStore),

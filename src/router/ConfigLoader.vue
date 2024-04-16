@@ -24,6 +24,9 @@ export default defineComponent({
 			this.configStore.loadConfig(s3tConfig as ConfigData);
 		} else if (configID === "scenario") {
 			this.configStore.loadConfig(scenarioConfig as ConfigData);
+		} else {
+			// Todo: temporarily load s3tconfig as default REMOVE
+			this.configStore.loadConfig(s3tConfig as ConfigData);
 		}
 		const modelID = this.$route.params.modelID;
 		if (modelID) {

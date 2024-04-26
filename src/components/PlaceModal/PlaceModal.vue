@@ -36,7 +36,7 @@
 							@click="() => { showTab('schema') }">Schema</a>
 					</li>
 
-					<li v-if="configStore.visualisationConfig" :class="{ 'is-active': shownTab === 'visualisation' }"><a
+					<li v-if="configStore.visualisationConfig.show" :class="{ 'is-active': shownTab === 'visualisation' }"><a
 							@click="() => { showTab('visualisation') }">Visualisation</a>
 					</li>
 				</ul>

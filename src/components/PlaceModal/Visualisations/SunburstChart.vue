@@ -1,9 +1,8 @@
 
 <template>
-    <v-chart class="chart" :option="indicatorStore.sunburstOption" autoresize />
+    <v-chart class="chart" :option="indicatorStore.sunburstData" autoresize />
 </template>
 <script lang="ts">
-
 import { defineComponent } from 'vue';
 import { use } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -31,7 +30,7 @@ use([
 const key = <string><unknown>THEME_KEY;
 
 /**
- * A sunburst chart to display marking data (data needs to be in a specific format, currently only works with scope3tool configuration).
+ * A sunburst chart to display marking data.
  */
 export default defineComponent({
   name: 'Contributions',

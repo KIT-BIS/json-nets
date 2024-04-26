@@ -106,7 +106,6 @@ export const useNetStore = defineStore('net', {
 		addPlace() {
 			let placeData: PlaceData = getNetInstance().addPlace();
 			this.places.push(placeData)
-			this.lastCreatedPlaces = [placeData];
 
 			const config = useConfigStore();
 			this.placeTypes[placeData.id] = config.defaultPlaceType;
@@ -114,7 +113,13 @@ export const useNetStore = defineStore('net', {
 			if (config.defaultPlaceType !== 'custom') {
 				const placeType = config.getPlaceTypeById(config.defaultPlaceType)
 				if (!placeType) return;
-				getNetInstance().updatePlace(placeData.id, placeData.name, placeType.schema, placeType.marking);
+				const updateData = getNetInstance().updatePlace(placeData.id, placeData.name, placeType.schema, placeType.marking);
+				if (updateData) {
+					this.lastCreatedPlaces = [updateData];
+					getNetInstance().setDefaultMarking(placeData.id);
+				}
+			} else {
+				this.lastCreatedPlaces = [placeData];
 			}
 
 		},

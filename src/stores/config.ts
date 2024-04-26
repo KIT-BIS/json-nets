@@ -41,7 +41,7 @@ export type ConfigData = {
 	transitionTypes: Array<ConfigTransitionType>,
 	examples: Array<{ name: string, net: any }>,
 	allowAutoLayout: boolean,
-	visualisationConfig: {} | false
+	visualisationConfig: { show: boolean }
 }
 
 /**
@@ -61,7 +61,7 @@ export const useConfigStore = defineStore('config', {
 			allowAutoLayout: true,
 			// Todo: Visualisations are currently only really viable for Scope3tool
 			// develop generic solution
-			visualisationConfig: false,
+			visualisationConfig: { show: true },
 		} as ConfigData
 	},
 	getters: {

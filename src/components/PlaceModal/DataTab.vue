@@ -84,7 +84,10 @@ export default defineComponent({
 			const model = useNetStore().export();
 
 			const data = { name: this.placesStore.place.name, marking: marking, model: JSON.parse(model) };
-			if (databaseID === '') {
+			// if (databaseID === '') {
+			// console.log('databaseID')
+			// console.log(databaseID)
+			if (!databaseID) {
 				await fetch(externalInteractionSettings.url, {
 					method: "POST",
 					headers: {

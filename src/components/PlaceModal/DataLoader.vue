@@ -13,6 +13,10 @@
 						element.name }}
 					</td>
 					<td>
+						<a v-if="uiStateStore.uiAssistMode === 'expert'" class="mr-5" @click="//@ts-ignore
+							loadModel(element)">
+							Modell öffnen 
+						</a>
 						<a @click="//@ts-ignore
 							setPlaceData(element)">
 							Laden
@@ -34,6 +38,7 @@ import { mapStores } from 'pinia';
 import { usePlacesStore } from '@/stores/place';
 import { useConfigStore } from '@/stores/config';
 import { useNetStore } from '@/stores/net';
+import { useUiStateStore } from '@/stores/uiState';
 
 /**
  * Loads the marking of a place from a remote url.
@@ -48,6 +53,7 @@ export default defineComponent({
 	computed: {
 		...mapStores(usePlacesStore),
 		...mapStores(useNetStore),
+		...mapStores(useUiStateStore),
 		...mapStores(useConfigStore)
 	},
 	created() {
@@ -61,6 +67,9 @@ export default defineComponent({
 
 			const response = await fetch(externalInteractionSettings.url)
 			this.data = await response.json();
+		},
+		loadModel(data: any) {
+			this.netStore.import(data.model);
 		},
 		setPlaceData(data: { name: string, marking: JSONMarking }) {
 			this.placesStore.place.name = data.name;

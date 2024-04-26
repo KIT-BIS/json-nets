@@ -52,7 +52,7 @@ export const useIndicatorStore = defineStore('indicator', {
 		setVisualisationData(visualisationData: any) {
 			this.visualisationData = visualisationData;
 			if (visualisationData.type === "number") {
-				const precision = 2;
+				const precision = 6;
 				const value = +(Math.round(Number(String(visualisationData.value) + 'e+' + precision)) + 'e-' + precision)
 				this.numberData = visualisationData.description + ": " + value + " " + visualisationData.unit;
 			} else if (visualisationData.type === "sunburst") {

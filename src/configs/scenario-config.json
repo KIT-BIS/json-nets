@@ -33,12 +33,12 @@
             "customVariables": {}
         },
         {
-            "id": "scope2",
-            "title": "Prozessinstanzen (Scope 2)",
-            "description": "Transition, die Marken mit ProzessinstanzIDs und Informationen zu Scope 2-Emissionen verbraucht und erzeugt.",
+            "id": "instances-ghg",
+            "title": "Prozessinstanzen THG",
+            "description": "Transition, die Marken mit ProzessinstanzIDs und Informationen zu Treibhausgasemissionen verbraucht und erzeugt.",
             "keySnippet": "'-';",
             "valueSnippet": "instanceToken + {\n'climateChange': climateChange,\n'$visualisations': visualisations\n};",
-            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
             "guard": "true",
             "presetFilter": "$.*",
             "postsetFilter": "$",
@@ -68,7 +68,7 @@
             },
             "schema": {
                 "title": "Prozessinstanzen",
-                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                "description": "Eine Stelle, die Marken mit Prozessinstanz-IDs speichert.",
                 "type": "array",
                 "items": {
                     "type": "object",
@@ -85,13 +85,13 @@
             "marking": []
         },
         {
-            "id": "instances-scope2",
+            "id": "instances-ghg",
             "externalInteraction": {
                 "type": "none"
             },
             "schema": {
-                "title": "Prozessinstanzen Scope 2",
-                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für Scope 2-Emissionen speichert.",
+                "title": "Prozessinstanzen THG",
+                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                 "type": "array",
                 "items": {
                     "type": "object",
@@ -112,13 +112,13 @@
             "marking": []
         },
         {
-            "id": "emissions-scope2",
+            "id": "emissions",
             "externalInteraction": {
                 "type": "none"
             },
             "schema": {
-                "title": "Scope 2-Emissionen",
-                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                "title": "Treibhausgasemissionen",
+                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                 "type": "array",
                 "items": {
                     "type": "object",
@@ -128,11 +128,24 @@
                         },
                         "emissionFactor": {
                             "type": "number"
+                        },
+                        "allocationFactor": {
+                            "type": "number"
+                        },
+                        "scope": {
+                            "type": "number",
+                            "enum": [
+                                1,
+                                2,
+                                3
+                            ]
                         }
                     },
                     "required": [
                         "amount",
-                        "emissionFactor"
+                        "emissionFactor",
+                        "allocationFactor",
+                        "scope"
                     ]
                 }
             },
@@ -141,42 +154,53 @@
     ],
     "examples": [
         {
-            "name": "Scope2Analyse",
+            "name": "THG-Analyse",
             "net": {
                 "typeData": {
                     "placeTypes": {
-                        "4876d2d5-014f-4206-af09-170d900b0acc": "instances-scope2",
-                        "1d43ff03-0740-4ce8-9fca-d6c459704a18": "instances",
-                        "58e67779-3f56-4819-9d47-4de2a1189d47": "instances",
-                        "4528501a-f423-4bef-acf6-1975ee7766cb": "instances",
-                        "499c4196-fac1-4280-b317-33dc927a3fed": "instances",
-                        "52641fb4-fcee-41be-b8f5-d8af3da3ac8d": "instances",
-                        "73573b72-5df0-4564-81e8-9d4d20d92712": "instances",
+                        "4876d2d5-014f-4206-af09-170d900b0acc": "instances-ghg",
+                        "1d43ff03-0740-4ce8-9fca-d6c459704a18": "instances-ghg",
+                        "58e67779-3f56-4819-9d47-4de2a1189d47": "instances-ghg",
+                        "4528501a-f423-4bef-acf6-1975ee7766cb": "instances-ghg",
+                        "499c4196-fac1-4280-b317-33dc927a3fed": "instances-ghg",
+                        "52641fb4-fcee-41be-b8f5-d8af3da3ac8d": "instances-ghg",
+                        "73573b72-5df0-4564-81e8-9d4d20d92712": "instances-ghg",
                         "8ca9f3ce-ee02-4ced-b29e-952277fbf3d7": "simple",
-                        "f5ae0fa5-acab-4e05-83fc-751379fef9e8": "instances",
-                        "772856ca-b248-42d4-870e-88cb29d13c78": "instances",
-                        "8ca9f3ce-ee01-4ced-b29e-952277fbf3d7": "instances",
-                        "22360929-87ca-4b40-8ff1-b5fc9bce77f0": "emissions-scope2",
-                        "5e4737f9-e14f-4414-b556-fa97ac5b33ce": "emissions-scope2",
-                        "3cfcc9c0-4e99-4add-bb16-6fa0bbf42978": "emissions-scope2",
+                        "f5ae0fa5-acab-4e05-83fc-751379fef9e8": "instances-ghg",
+                        "772856ca-b248-42d4-870e-88cb29d13c78": "instances-ghg",
+                        "8ca9f3ce-ee01-4ced-b29e-952277fbf3d7": "instances-ghg",
+                        "22360929-87ca-4b40-8ff1-b5fc9bce77f0": "emissions",
+                        "5e4737f9-e14f-4414-b556-fa97ac5b33ce": "emissions",
+                        "3cfcc9c0-4e99-4add-bb16-6fa0bbf42978": "emissions",
                         "d2367fcf-09d5-47a1-8a22-1da880f7ebee": "emissions-scope2",
-                        "7cc54764-c50e-45c9-80c8-0fad982c6dcb": "emissions-scope2",
-                        "ed65430f-6db7-47ed-a33a-00f3b8e1cfb5": "emissions-scope2",
-                        "9f8ae18b-e462-4844-8e5a-2ddd0ab5e53c": "emissions-scope2",
-                        "124b9b41-d677-4b17-9953-1e708f341943": "emissions-scope2",
-                        "bb9cfc45-953c-4e0d-930d-e2a34c833935": "emissions-scope2",
-                        "6acb76b6-3e03-4056-b32d-1c885da956f5": "emissions-scope2"
+                        "7cc54764-c50e-45c9-80c8-0fad982c6dcb": "emissions",
+                        "ed65430f-6db7-47ed-a33a-00f3b8e1cfb5": "emissions",
+                        "9f8ae18b-e462-4844-8e5a-2ddd0ab5e53c": "emissions",
+                        "124b9b41-d677-4b17-9953-1e708f341943": "emissions",
+                        "bb9cfc45-953c-4e0d-930d-e2a34c833935": "emissions",
+                        "6acb76b6-3e03-4056-b32d-1c885da956f5": "emissions",
+                        "b2841683-d07a-4480-a162-99bf0e73315a": "simple",
+                        "ca2c2c3c-f44e-40ce-ac68-e8c1e15fd949": "simple",
+                        "34129aac-ce86-40ff-8abe-516d0d8820d6": "simple",
+                        "4d88a40c-8b6f-42cc-beb7-55577fb473f7": "emissions",
+                        "4e0f81dc-ebdd-493c-a423-3e041143701e": "emissions",
+                        "766c9a50-7cd8-445c-98f7-5d83344b77ea": "emissions",
+                        "fe15d7b8-6252-4a85-9850-e70bdd5f64a3": "emissions",
+                        "c326acc4-2df8-4ca5-aa96-3f073acac234": "emissions",
+                        "fbbdf700-160d-43f6-9880-4a9d01cd2106": "emissions",
+                        "01ae64d9-13f5-45c7-892a-80d8a656c321": "emissions",
+                        "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21": "emissions"
                     },
                     "transitionTypes": {
-                        "8e754bc9-f9d1-4324-9838-6ea63048046f": "scope2",
+                        "8e754bc9-f9d1-4324-9838-6ea63048046f": "instances-ghg",
                         "5c3f975e-950e-48bd-b168-bdd589dbd61f": "custom",
-                        "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c": "scope2",
-                        "f2b5e259-e916-41bd-9eda-ed593f5db96b": "scope2",
-                        "26b1c55e-a751-4c41-a00d-dbf268342c50": "scope2",
-                        "1a064205-ba07-47e1-8c4f-8e95f398a484": "custom",
-                        "1a524b1b-f347-4f08-9f43-9a2d0aac6a8e": "scope2",
-                        "ff42c022-b73e-4fa2-8b9f-fbe84e514647": "scope2",
-                        "4d4cc127-90e2-4478-abe8-42f258562e43": "scope2"
+                        "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c": "instances-ghg",
+                        "f2b5e259-e916-41bd-9eda-ed593f5db96b": "instances-ghg",
+                        "26b1c55e-a751-4c41-a00d-dbf268342c50": "instances-ghg",
+                        "1a064205-ba07-47e1-8c4f-8e95f398a484": "instances-ghg",
+                        "1a524b1b-f347-4f08-9f43-9a2d0aac6a8e": "instances-ghg",
+                        "ff42c022-b73e-4fa2-8b9f-fbe84e514647": "instances-ghg",
+                        "4d4cc127-90e2-4478-abe8-42f258562e43": "instances-ghg"
                     }
                 },
                 "netData": {
@@ -195,8 +219,8 @@
                                 }
                             ],
                             "schema": {
-                                "title": "Prozessinstanzen Scope 2",
-                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für Scope 2-Emissionen speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -221,18 +245,22 @@
                             "name": "p1",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "1d43ff03-0740-4ce8-9fca-d6c459704a18"
@@ -243,18 +271,22 @@
                             "name": "p3",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "58e67779-3f56-4819-9d47-4de2a1189d47"
@@ -265,18 +297,22 @@
                             "name": "p2",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "4528501a-f423-4bef-acf6-1975ee7766cb"
@@ -287,18 +323,22 @@
                             "name": "p4",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "499c4196-fac1-4280-b317-33dc927a3fed"
@@ -309,18 +349,22 @@
                             "name": "p7",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "52641fb4-fcee-41be-b8f5-d8af3da3ac8d"
@@ -331,18 +375,22 @@
                             "name": "p5",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "73573b72-5df0-4564-81e8-9d4d20d92712"
@@ -353,18 +401,22 @@
                             "name": "p6",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "8ca9f3ce-ee01-4ced-b29e-952277fbf3d7"
@@ -375,18 +427,22 @@
                             "name": "p8",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "f5ae0fa5-acab-4e05-83fc-751379fef9e8"
@@ -397,18 +453,22 @@
                             "name": "p9",
                             "marking": [],
                             "schema": {
-                                "title": "Prozessinstanzen",
-                                "description": "Eine Stelle, die Marken mit ProzessinstanzIDs speichert.",
+                                "title": "Prozessinstanzen THG",
+                                "description": "Eine Stelle, die Prozessinstanzmarken mit einem Indikatorwert für THG-Emissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
                                     "properties": {
                                         "instanceID": {
                                             "type": "string"
+                                        },
+                                        "climateChange": {
+                                            "type": "number"
                                         }
                                     },
                                     "required": [
-                                        "instanceID"
+                                        "instanceID",
+                                        "climateChange"
                                     ]
                                 },
                                 "$id": "772856ca-b248-42d4-870e-88cb29d13c78"
@@ -416,16 +476,18 @@
                         },
                         {
                             "id": "22360929-87ca-4b40-8ff1-b5fc9bce77f0",
-                            "name": "Energie t0",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 2,
-                                    "emissionFactor": 1
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -435,11 +497,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "22360929-87ca-4b40-8ff1-b5fc9bce77f0"
@@ -447,16 +522,18 @@
                         },
                         {
                             "id": "5e4737f9-e14f-4414-b556-fa97ac5b33ce",
-                            "name": "Energie t1",
+                            "name": "Energie Produktion",
                             "marking": [
                                 {
-                                    "amount": 182,
-                                    "emissionFactor": 0.39
+                                    "amount": 0.24,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -466,11 +543,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "5e4737f9-e14f-4414-b556-fa97ac5b33ce"
@@ -478,16 +568,18 @@
                         },
                         {
                             "id": "3cfcc9c0-4e99-4add-bb16-6fa0bbf42978",
-                            "name": "Energie t2",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 1,
-                                    "emissionFactor": 1
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -497,59 +589,43 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "3cfcc9c0-4e99-4add-bb16-6fa0bbf42978"
                             }
                         },
                         {
-                            "id": "d2367fcf-09d5-47a1-8a22-1da880f7ebee",
-                            "name": "Energie t3",
-                            "marking": [
-                                {
-                                    "amount": 3,
-                                    "emissionFactor": 1
-                                }
-                            ],
-                            "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "amount": {
-                                            "type": "number"
-                                        },
-                                        "emissionFactor": {
-                                            "type": "number"
-                                        }
-                                    },
-                                    "required": [
-                                        "amount",
-                                        "emissionFactor"
-                                    ]
-                                },
-                                "$id": "d2367fcf-09d5-47a1-8a22-1da880f7ebee"
-                            }
-                        },
-                        {
                             "id": "7cc54764-c50e-45c9-80c8-0fad982c6dcb",
-                            "name": "Energie t4",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 0.000096,
-                                    "emissionFactor": 0.39
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -559,11 +635,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "7cc54764-c50e-45c9-80c8-0fad982c6dcb"
@@ -574,13 +663,15 @@
                             "name": "Transportleistung",
                             "marking": [
                                 {
-                                    "amount": 0.6,
-                                    "emissionFactor": 0.148
+                                    "amount": 0.03,
+                                    "emissionFactor": 0.0532,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -590,11 +681,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "ed65430f-6db7-47ed-a33a-00f3b8e1cfb5"
@@ -602,16 +706,18 @@
                         },
                         {
                             "id": "9f8ae18b-e462-4844-8e5a-2ddd0ab5e53c",
-                            "name": "Energie t6",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 0.000096,
-                                    "emissionFactor": 0.39
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -621,11 +727,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "9f8ae18b-e462-4844-8e5a-2ddd0ab5e53c"
@@ -633,16 +752,18 @@
                         },
                         {
                             "id": "124b9b41-d677-4b17-9953-1e708f341943",
-                            "name": "Energie t5",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 0.000096,
-                                    "emissionFactor": 0.39
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -652,11 +773,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "124b9b41-d677-4b17-9953-1e708f341943"
@@ -664,16 +798,18 @@
                         },
                         {
                             "id": "bb9cfc45-953c-4e0d-930d-e2a34c833935",
-                            "name": "Energie t7",
+                            "name": "Energie IT",
                             "marking": [
                                 {
-                                    "amount": 0.000096,
-                                    "emissionFactor": 0.39
+                                    "amount": 0.000556,
+                                    "emissionFactor": 0.38,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -683,11 +819,24 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "bb9cfc45-953c-4e0d-930d-e2a34c833935"
@@ -695,16 +844,18 @@
                         },
                         {
                             "id": "6acb76b6-3e03-4056-b32d-1c885da956f5",
-                            "name": "Lager",
+                            "name": "Lager Scope 2",
                             "marking": [
                                 {
                                     "amount": 1,
-                                    "emissionFactor": 4
+                                    "emissionFactor": 0.0912,
+                                    "allocationFactor": 1,
+                                    "scope": 2
                                 }
                             ],
                             "schema": {
-                                "title": "Scope 2-Emissionen",
-                                "description": "Eine Stelle, Angaben zu Scope 2-Emissionen speichert.",
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
                                 "type": "array",
                                 "items": {
                                     "type": "object",
@@ -714,14 +865,395 @@
                                         },
                                         "emissionFactor": {
                                             "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
                                         }
                                     },
                                     "required": [
                                         "amount",
-                                        "emissionFactor"
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
                                     ]
                                 },
                                 "$id": "6acb76b6-3e03-4056-b32d-1c885da956f5"
+                            }
+                        },
+                        {
+                            "id": "4d88a40c-8b6f-42cc-beb7-55577fb473f7",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "4d88a40c-8b6f-42cc-beb7-55577fb473f7"
+                            }
+                        },
+                        {
+                            "id": "4e0f81dc-ebdd-493c-a423-3e041143701e",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "4e0f81dc-ebdd-493c-a423-3e041143701e"
+                            }
+                        },
+                        {
+                            "id": "766c9a50-7cd8-445c-98f7-5d83344b77ea",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "766c9a50-7cd8-445c-98f7-5d83344b77ea"
+                            }
+                        },
+                        {
+                            "id": "fe15d7b8-6252-4a85-9850-e70bdd5f64a3",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "fe15d7b8-6252-4a85-9850-e70bdd5f64a3"
+                            }
+                        },
+                        {
+                            "id": "c326acc4-2df8-4ca5-aa96-3f073acac234",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "c326acc4-2df8-4ca5-aa96-3f073acac234"
+                            }
+                        },
+                        {
+                            "id": "fbbdf700-160d-43f6-9880-4a9d01cd2106",
+                            "name": "IT-Infrastruktur",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 800.3,
+                                    "allocationFactor": 1.2e-7,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "fbbdf700-160d-43f6-9880-4a9d01cd2106"
+                            }
+                        },
+                        {
+                            "id": "01ae64d9-13f5-45c7-892a-80d8a656c321",
+                            "name": "Material",
+                            "marking": [
+                                {
+                                    "amount": 0.01,
+                                    "emissionFactor": 6.52,
+                                    "allocationFactor": 1,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "01ae64d9-13f5-45c7-892a-80d8a656c321"
+                            }
+                        },
+                        {
+                            "id": "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21",
+                            "name": "Lager Scope 3",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "emissionFactor": 0.0652,
+                                    "allocationFactor": 1,
+                                    "scope": 3
+                                }
+                            ],
+                            "schema": {
+                                "title": "Treibhausgasemissionen",
+                                "description": "Eine Stelle, Angaben zu Treibhausgasemissionen speichert.",
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amount": {
+                                            "type": "number"
+                                        },
+                                        "emissionFactor": {
+                                            "type": "number"
+                                        },
+                                        "allocationFactor": {
+                                            "type": "number"
+                                        },
+                                        "scope": {
+                                            "type": "number",
+                                            "enum": [
+                                                1,
+                                                2,
+                                                3
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "amount",
+                                        "emissionFactor",
+                                        "allocationFactor",
+                                        "scope"
+                                    ]
+                                },
+                                "$id": "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21"
                             }
                         }
                     ],
@@ -729,7 +1261,7 @@
                         {
                             "id": "8e754bc9-f9d1-4324-9838-6ea63048046f",
                             "name": "t0: Verfügbarkeit prüfen",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -742,7 +1274,7 @@
                         {
                             "id": "5c3f975e-950e-48bd-b168-bdd589dbd61f",
                             "name": "t4: Versand vorbereiten",
-                            "preface": "local numOutputs = 2;\nlocal sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions)) / numOutputs;\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal allocation(element) = { name: element.name, value: element.value / numOutputs };\nlocal contributionsWithAllocation = std.map(allocation, contributions);\n\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributionsWithAllocation\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 2;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -757,7 +1289,7 @@
                         {
                             "id": "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c",
                             "name": "t1: Produktion durchführen",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -770,7 +1302,7 @@
                         {
                             "id": "f2b5e259-e916-41bd-9eda-ed593f5db96b",
                             "name": "t2: Artikel reservieren",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -783,7 +1315,7 @@
                         {
                             "id": "26b1c55e-a751-4c41-a00d-dbf268342c50",
                             "name": "t3: Artikel aus Lager holen",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -796,8 +1328,8 @@
                         {
                             "id": "1a064205-ba07-47e1-8c4f-8e95f398a484",
                             "name": "t8: Verkaufsprozess abschließen",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
-                            "guard": "input_p6_token.instanceID == input_p8_token.instanceID",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
+                            "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
                                 "output_p9_key": "local output_p9_key = '-';"
@@ -809,7 +1341,7 @@
                         {
                             "id": "1a524b1b-f347-4f08-9f43-9a2d0aac6a8e",
                             "name": "t6: Rechnung verschicken",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -822,7 +1354,7 @@
                         {
                             "id": "ff42c022-b73e-4fa2-8b9f-fbe84e514647",
                             "name": "t5: Rechnung stellen",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -835,7 +1367,7 @@
                         {
                             "id": "4d4cc127-90e2-4478-abe8-42f258562e43",
                             "name": "t7: Transportieren",
-                            "preface": "local sum(arr, n) =\nif (n <= 0) then 0\nelse sum(arr, n-1) + arr[n-1];\nlocal calculateActivityContribution(entry) = if std.objectHas(entry, 'climateChange') then\nentry.climateChange else entry.amount * entry.emissionFactor;\nlocal activityContributions = std.map(calculateActivityContribution, input_values);\nlocal climateChange = sum(activityContributions,std.length(activityContributions));\nlocal findInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(findInstanceToken, input_values)[0];\n// displayed visualisations and indicators\nlocal assembleContributions(index, element) = if !std.objectHas(element, '$visualisations')\nthen\nif std.objectHas(element, 'instanceID')\nthen []\nelse [{ name: input_names[index], value: activityContributions[index] }]\nelse element['$visualisations'][1]['value'][0]['children'];\nlocal contributionArrays = std.mapWithIndex(assembleContributions, input_values);\nlocal returnElement(element) = element;\nlocal contributions = std.flatMap(returnElement, contributionArrays);\nlocal visualisations =  [\n{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': climateChange\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [{\n'name': 'Scope 2',\n'children': contributions\n}]\n}\n];",
+                            "preface": "// general function library (these are reimplementations of missing standard functions)\nlocal sumRecursive(arr, n) =\n  if (n <= 0) then 0\n  else sumRecursive(arr, n-1) + arr[n-1];\nlocal sum(arr) = sumRecursive(arr, std.length(arr));\n// helper functions and variables\nlocal isInstanceToken(token) = std.objectHas(token, 'instanceID');\nlocal instanceToken = std.filter(isInstanceToken, input_values)[0];\nlocal isScope(scope, token) = std.objectHas(token, 'scope') && token.scope == scope;\n// calculation of climate change value and contributions\nlocal outputAllocation = 1;\nlocal calculateContribution(token) = \n  if isInstanceToken(token) then token.climateChange \n  else token.amount * token.emissionFactor * token.allocationFactor;\nlocal contributions = std.map(calculateContribution, input_values);\nlocal climateChange = sum(contributions) / outputAllocation;\n// assemble data for visualisations and indicators\nlocal applyOutputAllocation(contribution) = { name: contribution.name, value: contribution.value / outputAllocation};\nlocal assembleScope1Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][0]['children'])\n  else if isScope(1,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope1ContributionArrays = std.mapWithIndex(assembleScope1Contributions, input_values);\nlocal scope1Contributions = std.flattenArrays(scope1ContributionArrays);\nlocal assembleScope2Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][1]['children'])\n  else if isScope(2,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope2ContributionArrays = std.mapWithIndex(assembleScope2Contributions, input_values);\nlocal scope2Contributions = std.flattenArrays(scope2ContributionArrays);\nlocal assembleScope3Contributions(index, token) = \n  if std.objectHas(token, '$visualisations') then\n    std.map(applyOutputAllocation,token['$visualisations'][1]['value'][2]['children'])\n  else if isScope(3,token) then\n    [{ name: input_names[index], value: contributions[index] / outputAllocation }]\n  else [];\nlocal scope3ContributionArrays = std.mapWithIndex(assembleScope3Contributions, input_values);\nlocal scope3Contributions = std.flattenArrays(scope3ContributionArrays);\nlocal visualisations =  [\n  {\n    'type': 'number',\n    'unit': 'kg CO2e',\n    'description': 'THG-Fussabdruck',\n    'value': climateChange\n  },\n  {\n    'type': 'sunburst',\n    'unit': 'kg CO2e',\n    'description': 'THG-Beiträge (Sunburst)',\n    'value': [\n    {\n      'name': 'Scope 1',\n      'children': scope1Contributions\n    },\n    {\n      'name': 'Scope 2',\n      'children': scope2Contributions\n    },\n    {\n    'name': 'Scope 3',\n    'children': scope3Contributions\n    }]\n  }\n];",
                             "guard": "true",
                             "customVariables": {},
                             "keyVarSnippets": {
@@ -980,12 +1512,6 @@
                             "toId": "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c"
                         },
                         {
-                            "id": "e70aa186-b3c1-4e2d-a258-90126d4a3993",
-                            "filter": "$.*",
-                            "fromId": "d2367fcf-09d5-47a1-8a22-1da880f7ebee",
-                            "toId": "26b1c55e-a751-4c41-a00d-dbf268342c50"
-                        },
-                        {
                             "id": "cd7bfae8-34bf-43dc-a00b-d82665722aa7",
                             "filter": "$.*",
                             "fromId": "124b9b41-d677-4b17-9953-1e708f341943",
@@ -1026,6 +1552,54 @@
                             "filter": "$.*",
                             "fromId": "3cfcc9c0-4e99-4add-bb16-6fa0bbf42978",
                             "toId": "f2b5e259-e916-41bd-9eda-ed593f5db96b"
+                        },
+                        {
+                            "id": "09e9aa54-7118-46b5-80d5-482edf655ae7",
+                            "filter": "$.*",
+                            "fromId": "4d88a40c-8b6f-42cc-beb7-55577fb473f7",
+                            "toId": "8e754bc9-f9d1-4324-9838-6ea63048046f"
+                        },
+                        {
+                            "id": "3c73e0d0-f3ca-4aed-ae6d-d7ca1602a3aa",
+                            "filter": "$.*",
+                            "fromId": "4e0f81dc-ebdd-493c-a423-3e041143701e",
+                            "toId": "f2b5e259-e916-41bd-9eda-ed593f5db96b"
+                        },
+                        {
+                            "id": "e17d521e-e53f-4ee3-b579-b91664d1189e",
+                            "filter": "$.*",
+                            "fromId": "766c9a50-7cd8-445c-98f7-5d83344b77ea",
+                            "toId": "5c3f975e-950e-48bd-b168-bdd589dbd61f"
+                        },
+                        {
+                            "id": "79fa0305-9adf-43ec-a002-5eafcca63155",
+                            "filter": "$.*",
+                            "fromId": "fe15d7b8-6252-4a85-9850-e70bdd5f64a3",
+                            "toId": "ff42c022-b73e-4fa2-8b9f-fbe84e514647"
+                        },
+                        {
+                            "id": "a9b58c49-0a61-41e1-b38c-58e98d251f03",
+                            "filter": "$.*",
+                            "fromId": "c326acc4-2df8-4ca5-aa96-3f073acac234",
+                            "toId": "1a524b1b-f347-4f08-9f43-9a2d0aac6a8e"
+                        },
+                        {
+                            "id": "c0c7287f-969b-466f-8ca4-15b10593c972",
+                            "filter": "$.*",
+                            "fromId": "fbbdf700-160d-43f6-9880-4a9d01cd2106",
+                            "toId": "1a064205-ba07-47e1-8c4f-8e95f398a484"
+                        },
+                        {
+                            "id": "c3d4cc24-efa6-4579-a84f-1b35f99bf8db",
+                            "filter": "$.*",
+                            "fromId": "01ae64d9-13f5-45c7-892a-80d8a656c321",
+                            "toId": "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c"
+                        },
+                        {
+                            "id": "fd792a2c-5b7f-4f07-8f44-94c72335901a",
+                            "filter": "$.*",
+                            "fromId": "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21",
+                            "toId": "26b1c55e-a751-4c41-a00d-dbf268342c50"
                         }
                     ]
                 },
@@ -1757,8 +2331,8 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 312,
-                                "y": 168
+                                "x": 252,
+                                "y": 144
                             },
                             "angle": 0,
                             "tokens": 1,
@@ -1772,7 +2346,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t0"
+                                    "text": "Energie IT"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -1801,8 +2375,8 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 756,
-                                "y": 36
+                                "x": 684,
+                                "y": 48
                             },
                             "angle": 0,
                             "tokens": 1,
@@ -1816,7 +2390,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t1"
+                                    "text": "Energie Produktion"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -1845,8 +2419,8 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 611,
-                                "y": 455
+                                "x": 672,
+                                "y": 456
                             },
                             "angle": 0,
                             "tokens": 1,
@@ -1860,7 +2434,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t2"
+                                    "text": "Energie IT"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -1889,12 +2463,12 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 876,
-                                "y": 456
+                                "x": 1404,
+                                "y": 600
                             },
                             "angle": 0,
                             "tokens": 1,
-                            "id": "d2367fcf-09d5-47a1-8a22-1da880f7ebee",
+                            "id": "7cc54764-c50e-45c9-80c8-0fad982c6dcb",
                             "jsonnetsType": "place",
                             "z": 23,
                             "attrs": {
@@ -1904,51 +2478,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t3"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 1380,
-                                "y": 636
-                            },
-                            "angle": 0,
-                            "tokens": 1,
-                            "id": "7cc54764-c50e-45c9-80c8-0fad982c6dcb",
-                            "jsonnetsType": "place",
-                            "z": 24,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "Energie t4"
+                                    "text": "Energie IT"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -1984,7 +2514,7 @@
                             "tokens": 1,
                             "id": "ed65430f-6db7-47ed-a33a-00f3b8e1cfb5",
                             "jsonnetsType": "place",
-                            "z": 25,
+                            "z": 24,
                             "attrs": {
                                 ".root": {
                                     "stroke": "hsl(204, 71%, 39%)",
@@ -2021,12 +2551,56 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 612,
+                                "x": 660,
                                 "y": 636
                             },
                             "angle": 0,
                             "tokens": 1,
                             "id": "9f8ae18b-e462-4844-8e5a-2ddd0ab5e53c",
+                            "jsonnetsType": "place",
+                            "z": 25,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Energie IT"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 864,
+                                "y": 636
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "124b9b41-d677-4b17-9953-1e708f341943",
                             "jsonnetsType": "place",
                             "z": 26,
                             "attrs": {
@@ -2036,7 +2610,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t6"
+                                    "text": "Energie IT"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -2065,12 +2639,12 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 924,
-                                "y": 636
+                                "x": 360,
+                                "y": 516
                             },
                             "angle": 0,
                             "tokens": 1,
-                            "id": "124b9b41-d677-4b17-9953-1e708f341943",
+                            "id": "bb9cfc45-953c-4e0d-930d-e2a34c833935",
                             "jsonnetsType": "place",
                             "z": 27,
                             "attrs": {
@@ -2080,7 +2654,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t5"
+                                    "text": "Energie IT"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -2109,12 +2683,12 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 312,
-                                "y": 528
+                                "x": 864,
+                                "y": 456
                             },
                             "angle": 0,
                             "tokens": 1,
-                            "id": "bb9cfc45-953c-4e0d-930d-e2a34c833935",
+                            "id": "6acb76b6-3e03-4056-b32d-1c885da956f5",
                             "jsonnetsType": "place",
                             "z": 28,
                             "attrs": {
@@ -2124,7 +2698,7 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Energie t7"
+                                    "text": "Lager Scope 2"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -2153,12 +2727,12 @@
                                 "height": 50
                             },
                             "position": {
-                                "x": 996,
-                                "y": 456
+                                "x": 384,
+                                "y": 144
                             },
                             "angle": 0,
                             "tokens": 1,
-                            "id": "6acb76b6-3e03-4056-b32d-1c885da956f5",
+                            "id": "4d88a40c-8b6f-42cc-beb7-55577fb473f7",
                             "jsonnetsType": "place",
                             "z": 29,
                             "attrs": {
@@ -2168,7 +2742,271 @@
                                 },
                                 ".label": {
                                     "fill": "#7a7e9b",
-                                    "text": "Lager"
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 516,
+                                "y": 456
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "4e0f81dc-ebdd-493c-a423-3e041143701e",
+                            "jsonnetsType": "place",
+                            "z": 30,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 1404,
+                                "y": 708
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "766c9a50-7cd8-445c-98f7-5d83344b77ea",
+                            "jsonnetsType": "place",
+                            "z": 31,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 984,
+                                "y": 636
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "fe15d7b8-6252-4a85-9850-e70bdd5f64a3",
+                            "jsonnetsType": "place",
+                            "z": 32,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 515,
+                                "y": 635
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "c326acc4-2df8-4ca5-aa96-3f073acac234",
+                            "jsonnetsType": "place",
+                            "z": 33,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 228,
+                                "y": 516
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "fbbdf700-160d-43f6-9880-4a9d01cd2106",
+                            "jsonnetsType": "place",
+                            "z": 34,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "IT-Infrastruktur"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 852,
+                                "y": 48
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "01ae64d9-13f5-45c7-892a-80d8a656c321",
+                            "jsonnetsType": "place",
+                            "z": 35,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Material"
                                 },
                                 ".tokens > circle": {
                                     "fill": "#7a7e9b"
@@ -2208,7 +3046,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 30,
+                            "z": 36,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2237,7 +3075,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 31,
+                            "z": 37,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2266,7 +3104,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 32,
+                            "z": 38,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2295,7 +3133,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 33,
+                            "z": 39,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2324,7 +3162,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 34,
+                            "z": 40,
                             "vertices": [
                                 {
                                     "x": 1248,
@@ -2358,7 +3196,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 35,
+                            "z": 41,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2387,7 +3225,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 36,
+                            "z": 42,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2416,7 +3254,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 37,
+                            "z": 43,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2445,7 +3283,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 38,
+                            "z": 44,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2474,7 +3312,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 39,
+                            "z": 45,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2503,7 +3341,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 40,
+                            "z": 46,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2532,7 +3370,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 41,
+                            "z": 47,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2561,7 +3399,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 42,
+                            "z": 48,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2590,7 +3428,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 43,
+                            "z": 49,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2619,7 +3457,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 44,
+                            "z": 50,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2648,7 +3486,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 45,
+                            "z": 51,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2677,7 +3515,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 46,
+                            "z": 52,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2706,7 +3544,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 47,
+                            "z": 53,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2735,7 +3573,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 48,
+                            "z": 54,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2764,7 +3602,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 49,
+                            "z": 55,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2793,7 +3631,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 50,
+                            "z": 56,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2822,36 +3660,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 51,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "d2367fcf-09d5-47a1-8a22-1da880f7ebee",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "26b1c55e-a751-4c41-a00d-dbf268342c50",
-                                "selector": ".root"
-                            },
-                            "id": "e70aa186-b3c1-4e2d-a258-90126d4a3993",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 52,
+                            "z": 57,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2880,7 +3689,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 53,
+                            "z": 58,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2909,7 +3718,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 54,
+                            "z": 59,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2938,7 +3747,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 55,
+                            "z": 60,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2967,7 +3776,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 56,
+                            "z": 61,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -2996,7 +3805,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 57,
+                            "z": 62,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -3025,7 +3834,7 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 58,
+                            "z": 63,
                             "vertices": [],
                             "attrs": {
                                 ".connection": {
@@ -3054,8 +3863,283 @@
                                     "cornerType": "cubic"
                                 }
                             },
-                            "z": 59,
+                            "z": 64,
                             "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "4d88a40c-8b6f-42cc-beb7-55577fb473f7",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "8e754bc9-f9d1-4324-9838-6ea63048046f",
+                                "selector": ".root"
+                            },
+                            "id": "09e9aa54-7118-46b5-80d5-482edf655ae7",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 65,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "4e0f81dc-ebdd-493c-a423-3e041143701e",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "f2b5e259-e916-41bd-9eda-ed593f5db96b",
+                                "selector": ".root"
+                            },
+                            "id": "3c73e0d0-f3ca-4aed-ae6d-d7ca1602a3aa",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 66,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "766c9a50-7cd8-445c-98f7-5d83344b77ea",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "5c3f975e-950e-48bd-b168-bdd589dbd61f",
+                                "selector": ".root"
+                            },
+                            "id": "e17d521e-e53f-4ee3-b579-b91664d1189e",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 67,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "fe15d7b8-6252-4a85-9850-e70bdd5f64a3",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "ff42c022-b73e-4fa2-8b9f-fbe84e514647",
+                                "selector": ".root"
+                            },
+                            "id": "79fa0305-9adf-43ec-a002-5eafcca63155",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 68,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "c326acc4-2df8-4ca5-aa96-3f073acac234",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "1a524b1b-f347-4f08-9f43-9a2d0aac6a8e",
+                                "selector": ".root"
+                            },
+                            "id": "a9b58c49-0a61-41e1-b38c-58e98d251f03",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 69,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "fbbdf700-160d-43f6-9880-4a9d01cd2106",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "1a064205-ba07-47e1-8c4f-8e95f398a484",
+                                "selector": ".root"
+                            },
+                            "id": "c0c7287f-969b-466f-8ca4-15b10593c972",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 70,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "01ae64d9-13f5-45c7-892a-80d8a656c321",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "ce46dfb7-5437-4e7a-ae61-58bfe7e5ff5c",
+                                "selector": ".root"
+                            },
+                            "id": "c3d4cc24-efa6-4579-a84f-1b35f99bf8db",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 71,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 996,
+                                "y": 456
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21",
+                            "jsonnetsType": "place",
+                            "z": 72,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Lager Scope 3"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "4f409ac9-20e1-48d3-a2cd-9e1b1b363b21",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "26b1c55e-a751-4c41-a00d-dbf268342c50",
+                                "selector": ".root"
+                            },
+                            "id": "fd792a2c-5b7f-4f07-8f44-94c72335901a",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 73,
                             "attrs": {
                                 ".connection": {
                                     "fill": "none",

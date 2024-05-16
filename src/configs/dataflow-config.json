@@ -1,0 +1,91 @@
+{
+    "name": "Control Flow",
+    "defaultUIAssistMode": "expert",
+    "defaultTransitionType": "instances",
+    "defaultPlaceType": "instances",
+    "allowAutoLayout": true,
+    "visualisationConfig": {
+        "show": false
+    },
+    "transitionTypes": [
+        {
+            "id": "instances",
+            "title": "Process instances",
+            "description": "Transition that creates and consumes tokens with process instance IDs.",
+            "keySnippet": "'-';",
+            "valueSnippet": "input_values[0];",
+            "preface": "",
+            "guard": "true",
+            "presetFilter": "$.*",
+            "postsetFilter": "$",
+            "customVariables": {}
+        }
+    ],
+    "placeTypes": [
+        {
+            "id": "instances",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "title": "Process instances",
+                "description": "Place that stores tokens with process instance IDs.",
+                "type": "array",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "instanceID": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "instanceID"
+                    ]
+                }
+            },
+            "marking": []
+        },
+        {
+            "id": "instances-helper",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "title": "Process instances (helper)",
+                "description": "Place that stores tokens with process instance IDs within a helper construction.",
+                "type": "array",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "data": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "instanceID": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "instanceID"
+                                ]
+                            }
+                        }
+                    },
+                    "required": [
+                        "data"
+                    ]
+                }
+            },
+            "marking": [
+                {
+                    "data": []
+                }
+            ]
+        }
+    ],
+    "examples": [
+    ]
+}

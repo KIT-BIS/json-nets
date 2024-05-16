@@ -44,9 +44,13 @@ export const useNetStore = defineStore('net', {
 			return JSON.stringify({ typeData, netData, layoutData }, null, 2);
 		},
 		import(json: { typeData?: { placeTypes: Record<string, string>, transitionTypes: Record<string, string> }, netData: ImportData, layoutData: any }) {
+
 			if (json.typeData) {
 				this.placeTypes = json.typeData.placeTypes;
 				this.transitionTypes = json.typeData.transitionTypes;
+			} else {
+				this.placeTypes = {};
+				this.transitionTypes = {};
 			}
 			const layoutData = json.layoutData;
 			const netData = getNetInstance().import(json.netData)
@@ -125,7 +129,7 @@ export const useNetStore = defineStore('net', {
 		},
 
 		deletePlace(id: string) {
-			// Todo: clean up types as well
+			delete this.placeTypes[id];
 			this.lastRemovedCells = getNetInstance().removePlace(id);
 		},
 		addTransition() {
@@ -153,7 +157,7 @@ export const useNetStore = defineStore('net', {
 		},
 
 		deleteTransition(id: string) {
-			// Todo: clean up types as well
+			delete this.transitionTypes[id];
 			this.lastRemovedCells = getNetInstance().removeTransition(id);
 		},
 		disconnect(id: string) {

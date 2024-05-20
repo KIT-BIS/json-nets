@@ -7,6 +7,7 @@ import { defineComponent } from 'vue';
 import s3tConfig from '../configs/s3t-config.json'
 import scenarioConfig from '../configs/scenario-config.json'
 import controlFlowConfig from '../configs/controlflow-config.json'
+import dataFlowConfig from '../configs/dataflow-config.json'
 import { mapStores } from 'pinia';
 import type { ConfigData } from '../stores/config'
 import { useNetStore } from '@/stores/net';
@@ -27,6 +28,8 @@ export default defineComponent({
 			this.configStore.loadConfig(scenarioConfig as ConfigData);
 		}  else if (configID === "controlflow") {
 			this.configStore.loadConfig(controlFlowConfig as ConfigData);
+		}  else if (configID === "dataflow") {
+			this.configStore.loadConfig(dataFlowConfig as ConfigData);
 		}
 		// else {
 			// Todo: temporarily load s3tconfig as default REMOVE

@@ -12955,1336 +12955,647 @@
         {
             "name": "wdp-32-33-data-transfer-input-and-output",
             "net": {
-                "typeData": {
-                    "placeTypes": {
-                        "6f246a7f-f5e9-4989-a3b8-5c459f409841": "instances",
-                        "09235a13-f4b1-44c9-b618-8e821ffe14a6": "instances",
-                        "2a8acd55-6011-4b8f-8318-a55b5cdeadd8": "instances",
-                        "d1488ada-faa0-44ef-8d13-13591dd400ac": "instances",
-                        "7f074c12-11be-4738-aa7a-f5913a85ac1e": "instances",
-                        "8b84971e-d322-49ed-a8e2-d96a4b1b7742": "instances",
-                        "7f92d634-c3a4-4dba-8233-3f9054e2724b": "custom"
-                    },
-                    "transitionTypes": {
-                        "d291b915-c476-4a7f-9d52-497f7f674d88": "custom",
-                        "a92c2e45-02a6-4015-8768-fea23cecca8d": "custom",
-                        "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d": "custom",
-                        "18c3785e-4c51-416c-b4f1-4d10c1cb2116": "custom"
-                    }
-                },
-                "netData": {
-                    "places": [
-                        {
-                            "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
-                            "name": "i1",
-                            "marking": [
-                                {
-                                    "instanceID": "i0"
-                                }
-                            ],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "6f246a7f-f5e9-4989-a3b8-5c459f409841"
-                            }
-                        },
-                        {
-                            "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
-                            "name": "p1",
-                            "marking": [],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "09235a13-f4b1-44c9-b618-8e821ffe14a6"
-                            }
-                        },
-                        {
-                            "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
-                            "name": "p2",
-                            "marking": [],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "d1488ada-faa0-44ef-8d13-13591dd400ac"
-                            }
-                        },
-                        {
-                            "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
-                            "name": "o1",
-                            "marking": [],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742"
-                            }
-                        },
-                        {
-                            "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "name": "data repository",
-                            "marking": [
-                                {
-                                    "X": 8.6498,
-                                    "N": "AB01"
-                                }
-                            ],
-                            "schema": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object"
-                                },
-                                "$id": "7f92d634-c3a4-4dba-8233-3f9054e2724b"
-                            }
-                        },
-                        {
-                            "id": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8",
-                            "name": "p3",
-                            "marking": [],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8"
-                            }
-                        },
-                        {
-                            "id": "7f074c12-11be-4738-aa7a-f5913a85ac1e",
-                            "name": "p4",
-                            "marking": [],
-                            "schema": {
-                                "title": "Process instances",
-                                "description": "Place that stores tokens with process instance IDs.",
-                                "type": "array",
-                                "maxItems": 1,
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "instanceID": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "instanceID"
-                                    ]
-                                },
-                                "$id": "7f074c12-11be-4738-aa7a-f5913a85ac1e"
-                            }
-                        }
-                    ],
-                    "transitions": [
-                        {
-                            "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                            "name": "A",
-                            "preface": "local ref = \"X\";\nlocal X = input_dataRepository_value[ref];",
-                            "guard": "true",
-                            "customVariables": {},
-                            "keyVarSnippets": {
-                                "output_p1_key": "local output_p1_key = '-';",
-                                "output_dataRepository_key": "local output_dataRepository_key = '-';",
-                                "output_p3_key": "local output_p3_key = '-';"
-                            },
-                            "fragmentVarSnippets": {
-                                "output_p1_value": "local output_p1_value = input_i1_value + { ref: ref, X: X };",
-                                "output_dataRepository_value": "local output_dataRepository_value = input_dataRepository_value;",
-                                "output_p3_value": "local output_p3_value = input_i1_value + { ref: ref, X: X };"
-                            }
-                        },
-                        {
-                            "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                            "name": "B",
-                            "preface": "local ref = input_p1_value.ref;\nlocal X = input_dataRepository_value[ref];",
-                            "guard": "true",
-                            "customVariables": {},
-                            "keyVarSnippets": {
-                                "output_p2_key": "local output_p2_key = '-';",
-                                "output_dataRepository_key": "local output_dataRepository_key = '-';"
-                            },
-                            "fragmentVarSnippets": {
-                                "output_p2_value": "local output_p2_value = input_p1_value + { ref: ref, X: X };",
-                                "output_dataRepository_value": "local output_dataRepository_value = input_dataRepository_value;"
-                            }
-                        },
-                        {
-                            "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                            "name": "C",
-                            "preface": "local ref = input_p3_value.ref;\nlocal X = input_dataRepository_value[ref];",
-                            "guard": "true",
-                            "customVariables": {},
-                            "keyVarSnippets": {
-                                "output_dataRepository_key": "local output_dataRepository_key = '-';",
-                                "output_p4_key": "local output_p4_key = '-';"
-                            },
-                            "fragmentVarSnippets": {
-                                "output_dataRepository_value": "local output_dataRepository_value = input_dataRepository_value;",
-                                "output_p4_value": "local output_p4_value = input_p3_value + { ref: ref, X: X };"
-                            }
-                        },
-                        {
-                            "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                            "name": "D",
-                            "preface": "local ref = input_p2_value.ref;\nlocal X = input_dataRepository_value[ref];",
-                            "guard": "true",
-                            "customVariables": {},
-                            "keyVarSnippets": {
-                                "output_o1_key": "local output_o1_key = '-';",
-                                "output_dataRepository_key": "local output_dataRepository_key = '-';"
-                            },
-                            "fragmentVarSnippets": {
-                                "output_o1_value": "local output_o1_value = input_p2_value;",
-                                "output_dataRepository_value": "local output_dataRepository_value = input_dataRepository_value;"
-                            }
-                        }
-                    ],
-                    "arcs": [
-                        {
-                            "id": "2ed67a98-efba-40c5-ae40-733f1def4a86",
-                            "filter": "$.*",
-                            "fromId": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
-                            "toId": "d291b915-c476-4a7f-9d52-497f7f674d88"
-                        },
-                        {
-                            "id": "3950614a-7f91-443f-b832-60356c41b880",
-                            "filter": "$",
-                            "fromId": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                            "toId": "09235a13-f4b1-44c9-b618-8e821ffe14a6"
-                        },
-                        {
-                            "id": "b0cc730f-ea6b-4659-b6f0-a5c7c329f7e6",
-                            "filter": "$.*",
-                            "fromId": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
-                            "toId": "a92c2e45-02a6-4015-8768-fea23cecca8d"
-                        },
-                        {
-                            "id": "c69cce68-a0e8-446b-8e61-dccf5636c6ec",
-                            "filter": "$",
-                            "fromId": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                            "toId": "d1488ada-faa0-44ef-8d13-13591dd400ac"
-                        },
-                        {
-                            "id": "4267ed15-6cc1-40b6-b3bc-388bbebb815d",
-                            "filter": "$.*",
-                            "fromId": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "toId": "a92c2e45-02a6-4015-8768-fea23cecca8d"
-                        },
-                        {
-                            "id": "39a98b0f-6767-4a03-b80f-9fbc07f58b4f",
-                            "filter": "$",
-                            "fromId": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                            "toId": "7f92d634-c3a4-4dba-8233-3f9054e2724b"
-                        },
-                        {
-                            "id": "6813d598-cc2d-42c3-88e9-7cc533ae2e81",
-                            "filter": "$.*",
-                            "fromId": "d1488ada-faa0-44ef-8d13-13591dd400ac",
-                            "toId": "18c3785e-4c51-416c-b4f1-4d10c1cb2116"
-                        },
-                        {
-                            "id": "2094194e-2bbc-4a1c-8c13-253fa8f49a6f",
-                            "filter": "$",
-                            "fromId": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                            "toId": "8b84971e-d322-49ed-a8e2-d96a4b1b7742"
-                        },
-                        {
-                            "id": "9ab03ff5-82da-40e2-89af-a539cf2f6d14",
-                            "filter": "$",
-                            "fromId": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                            "toId": "7f92d634-c3a4-4dba-8233-3f9054e2724b"
-                        },
-                        {
-                            "id": "bf232f55-fa34-4495-a157-ab1d4e93e5e9",
-                            "filter": "$.*",
-                            "fromId": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "toId": "d291b915-c476-4a7f-9d52-497f7f674d88"
-                        },
-                        {
-                            "id": "323455fe-3ef5-438a-8abb-89754bd0ed7d",
-                            "filter": "$.*",
-                            "fromId": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "toId": "18c3785e-4c51-416c-b4f1-4d10c1cb2116"
-                        },
-                        {
-                            "id": "91dcfd7b-792e-44b9-a5f5-a665fb6f918c",
-                            "filter": "$",
-                            "fromId": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                            "toId": "7f92d634-c3a4-4dba-8233-3f9054e2724b"
-                        },
-                        {
-                            "id": "d929dfe3-a315-4cc6-be3b-5609cb6c6a25",
-                            "filter": "$",
-                            "fromId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                            "toId": "7f92d634-c3a4-4dba-8233-3f9054e2724b"
-                        },
-                        {
-                            "id": "004a7228-9c4a-432d-bbd7-9728fef82579",
-                            "filter": "$.*",
-                            "fromId": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "toId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d"
-                        },
-                        {
-                            "id": "48935a95-7f9a-4835-9f27-8bce716f5527",
-                            "filter": "$",
-                            "fromId": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                            "toId": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8"
-                        },
-                        {
-                            "id": "db0d3dae-f8d6-4f52-b659-bf0fa4b77fab",
-                            "filter": "$.*",
-                            "fromId": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8",
-                            "toId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d"
-                        },
-                        {
-                            "id": "a9b61078-8ba6-40ee-8759-658202d889ae",
-                            "filter": "$",
-                            "fromId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                            "toId": "7f074c12-11be-4738-aa7a-f5913a85ac1e"
-                        },
-                        {
-                            "id": "00df35c6-79f7-40f9-bebe-4f0f4cbea027",
-                            "filter": "$.*",
-                            "fromId": "7f074c12-11be-4738-aa7a-f5913a85ac1e",
-                            "toId": "18c3785e-4c51-416c-b4f1-4d10c1cb2116"
-                        }
-                    ]
-                },
-                "layoutData": {
-                    "cells": [
-                        {
-                            "type": "pn.Transition",
-                            "size": {
-                                "width": 100,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 150,
-                                "y": 0
-                            },
-                            "angle": 0,
-                            "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                            "jsonnetsType": "transition",
-                            "z": 1,
-                            "attrs": {
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "A"
-                                },
-                                ".root": {
-                                    "fill": "hsl(204, 71%, 39%)",
-                                    "stroke": "hsl(0, 0%, 21%)"
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Transition",
-                            "size": {
-                                "width": 100,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 504,
-                                "y": -72
-                            },
-                            "angle": 0,
-                            "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                            "jsonnetsType": "transition",
-                            "z": 2,
-                            "attrs": {
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "B"
-                                },
-                                ".root": {
-                                    "fill": "hsl(204, 71%, 39%)",
-                                    "stroke": "hsl(0, 0%, 21%)"
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Transition",
-                            "size": {
-                                "width": 100,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 504,
-                                "y": 96
-                            },
-                            "angle": 0,
-                            "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                            "jsonnetsType": "transition",
-                            "z": 3,
-                            "attrs": {
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "C"
-                                },
-                                ".root": {
-                                    "fill": "hsl(204, 71%, 39%)",
-                                    "stroke": "hsl(0, 0%, 21%)"
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Transition",
-                            "size": {
-                                "width": 100,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 828,
-                                "y": 0
-                            },
-                            "angle": 0,
-                            "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                            "jsonnetsType": "transition",
-                            "z": 4,
-                            "attrs": {
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "D"
-                                },
-                                ".root": {
-                                    "fill": "hsl(204, 71%, 39%)",
-                                    "stroke": "hsl(0, 0%, 21%)"
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 0,
-                                "y": 0
-                            },
-                            "angle": 0,
-                            "tokens": 1,
-                            "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
-                            "jsonnetsType": "place",
-                            "z": 5,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "i1"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 360,
-                                "y": -72
-                            },
-                            "angle": 0,
-                            "tokens": 0,
-                            "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
-                            "jsonnetsType": "place",
-                            "z": 6,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "p1"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 696,
-                                "y": -72
-                            },
-                            "angle": 0,
-                            "tokens": 0,
-                            "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
-                            "jsonnetsType": "place",
-                            "z": 7,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "p2"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 996,
-                                "y": 0
-                            },
-                            "angle": 0,
-                            "tokens": 0,
-                            "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
-                            "jsonnetsType": "place",
-                            "z": 8,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "o1"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 528,
-                                "y": -228
-                            },
-                            "angle": 0,
-                            "tokens": 1,
-                            "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                            "jsonnetsType": "place",
-                            "z": 9,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "data repository"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 360,
-                                "y": 96
-                            },
-                            "angle": 0,
-                            "tokens": 0,
-                            "id": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8",
-                            "jsonnetsType": "place",
-                            "z": 10,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "p3"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "pn.Place",
-                            "size": {
-                                "width": 50,
-                                "height": 50
-                            },
-                            "position": {
-                                "x": 696,
-                                "y": 96
-                            },
-                            "angle": 0,
-                            "tokens": 0,
-                            "id": "7f074c12-11be-4738-aa7a-f5913a85ac1e",
-                            "jsonnetsType": "place",
-                            "z": 11,
-                            "attrs": {
-                                ".root": {
-                                    "stroke": "hsl(204, 71%, 39%)",
-                                    "stroke-width": 3
-                                },
-                                ".label": {
-                                    "fill": "#7a7e9b",
-                                    "text": "p4"
-                                },
-                                ".tokens > circle": {
-                                    "fill": "#7a7e9b"
-                                },
-                                ".alot > text": {
-                                    "fill": "#7a7e9b",
-                                    "font-family": "Courier New",
-                                    "font-size": 20,
-                                    "font-weight": "bold",
-                                    "ref-x": 0,
-                                    "ref-y": 0,
-                                    "y-alignment": -0.2
-                                },
-                                "body": {
-                                    "cursor": "auto"
-                                },
-                                "label": {
-                                    "cursor": "auto"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                                "selector": ".root"
-                            },
-                            "id": "2ed67a98-efba-40c5-ae40-733f1def4a86",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 12,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
-                                "selector": ".root"
-                            },
-                            "id": "3950614a-7f91-443f-b832-60356c41b880",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 13,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                                "selector": ".root"
-                            },
-                            "id": "b0cc730f-ea6b-4659-b6f0-a5c7c329f7e6",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 14,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
-                                "selector": ".root"
-                            },
-                            "id": "c69cce68-a0e8-446b-8e61-dccf5636c6ec",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 15,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                                "selector": ".root"
-                            },
-                            "id": "4267ed15-6cc1-40b6-b3bc-388bbebb815d",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 16,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "id": "39a98b0f-6767-4a03-b80f-9fbc07f58b4f",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 17,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                                "selector": ".root"
-                            },
-                            "id": "6813d598-cc2d-42c3-88e9-7cc533ae2e81",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 18,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
-                                "selector": ".root"
-                            },
-                            "id": "2094194e-2bbc-4a1c-8c13-253fa8f49a6f",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 19,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "id": "9ab03ff5-82da-40e2-89af-a539cf2f6d14",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 20,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                                "selector": ".root"
-                            },
-                            "id": "bf232f55-fa34-4495-a157-ab1d4e93e5e9",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 21,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                                "selector": ".root"
-                            },
-                            "id": "323455fe-3ef5-438a-8abb-89754bd0ed7d",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 22,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "id": "91dcfd7b-792e-44b9-a5f5-a665fb6f918c",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 23,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "id": "d929dfe3-a315-4cc6-be3b-5609cb6c6a25",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 24,
-                            "vertices": [
-                                {
-                                    "x": 648,
-                                    "y": 24
-                                },
-                                {
-                                    "x": 648,
-                                    "y": -84
-                                }
-                            ],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "7f92d634-c3a4-4dba-8233-3f9054e2724b",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                                "selector": ".root"
-                            },
-                            "id": "004a7228-9c4a-432d-bbd7-9728fef82579",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 25,
-                            "vertices": [
-                                {
-                                    "x": 648,
-                                    "y": -84
-                                },
-                                {
-                                    "x": 648,
-                                    "y": 24
-                                }
-                            ],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8",
-                                "selector": ".root"
-                            },
-                            "id": "48935a95-7f9a-4835-9f27-8bce716f5527",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 26,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "2a8acd55-6011-4b8f-8318-a55b5cdeadd8",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                                "selector": ".root"
-                            },
-                            "id": "db0d3dae-f8d6-4f52-b659-bf0fa4b77fab",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 27,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "7f074c12-11be-4738-aa7a-f5913a85ac1e",
-                                "selector": ".root"
-                            },
-                            "id": "a9b61078-8ba6-40ee-8759-658202d889ae",
-                            "jsonnetsType": "postset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 28,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        },
-                        {
-                            "type": "standard.Link",
-                            "source": {
-                                "id": "7f074c12-11be-4738-aa7a-f5913a85ac1e",
-                                "selector": ".root"
-                            },
-                            "target": {
-                                "id": "18c3785e-4c51-416c-b4f1-4d10c1cb2116",
-                                "selector": ".root"
-                            },
-                            "id": "00df35c6-79f7-40f9-bebe-4f0f4cbea027",
-                            "jsonnetsType": "preset",
-                            "connector": {
-                                "name": "straight",
-                                "args": {
-                                    "cornerType": "cubic"
-                                }
-                            },
-                            "z": 29,
-                            "vertices": [],
-                            "attrs": {
-                                ".connection": {
-                                    "fill": "none",
-                                    "stroke-linejoin": "round",
-                                    "stroke-width": "2",
-                                    "stroke": "#4b4a67"
-                                }
-                            }
-                        }
-                    ]
-                }
+                  "typeData": {
+    "placeTypes": {
+      "6f246a7f-f5e9-4989-a3b8-5c459f409841": "custom",
+      "09235a13-f4b1-44c9-b618-8e821ffe14a6": "instances",
+      "d1488ada-faa0-44ef-8d13-13591dd400ac": "instances",
+      "8b84971e-d322-49ed-a8e2-d96a4b1b7742": "instances"
+    },
+    "transitionTypes": {
+      "d291b915-c476-4a7f-9d52-497f7f674d88": "instances",
+      "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d": "instances",
+      "a92c2e45-02a6-4015-8768-fea23cecca8d": "custom"
+    }
+  },
+  "netData": {
+    "places": [
+      {
+        "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
+        "name": "i1",
+        "marking": [
+          {
+            "instanceID": "i0",
+            "X": 657
+          }
+        ],
+        "schema": {
+          "title": "Process instances",
+          "description": "Place that stores tokens with process instance IDs.",
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "instanceID": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instanceID"
+            ]
+          },
+          "$id": "6f246a7f-f5e9-4989-a3b8-5c459f409841"
+        }
+      },
+      {
+        "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
+        "name": "p1",
+        "marking": [],
+        "schema": {
+          "title": "Process instances",
+          "description": "Place that stores tokens with process instance IDs.",
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "instanceID": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instanceID"
+            ]
+          },
+          "$id": "09235a13-f4b1-44c9-b618-8e821ffe14a6"
+        }
+      },
+      {
+        "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
+        "name": "p2",
+        "marking": [],
+        "schema": {
+          "title": "Process instances",
+          "description": "Place that stores tokens with process instance IDs.",
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "instanceID": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instanceID"
+            ]
+          },
+          "$id": "d1488ada-faa0-44ef-8d13-13591dd400ac"
+        }
+      },
+      {
+        "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
+        "name": "o1",
+        "marking": [],
+        "schema": {
+          "title": "Process instances",
+          "description": "Place that stores tokens with process instance IDs.",
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "instanceID": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "instanceID"
+            ]
+          },
+          "$id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742"
+        }
+      }
+    ],
+    "transitions": [
+      {
+        "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
+        "name": "A",
+        "preface": "",
+        "guard": "true",
+        "customVariables": {},
+        "keyVarSnippets": {
+          "output_p1_key": "local output_p1_key = '-';"
+        },
+        "fragmentVarSnippets": {
+          "output_p1_value": "local output_p1_value = input_values[0];"
+        }
+      },
+      {
+        "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
+        "name": "B",
+        "preface": "local times10(x) = x * 10;\nlocal divideBy2(x) = x / 2;\n\nlocal X_in = times10(input_p1_value.X);\nlocal X_out = divideBy2(X_in);",
+        "guard": "true",
+        "customVariables": {},
+        "keyVarSnippets": {
+          "output_p2_key": "local output_p2_key = '-';"
+        },
+        "fragmentVarSnippets": {
+          "output_p2_value": "local output_p2_value = input_p1_value + { X: X_out };"
+        }
+      },
+      {
+        "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
+        "name": "C",
+        "preface": "",
+        "guard": "true",
+        "customVariables": {},
+        "keyVarSnippets": {
+          "output_o1_key": "local output_o1_key = '-';"
+        },
+        "fragmentVarSnippets": {
+          "output_o1_value": "local output_o1_value = input_values[0];"
+        }
+      }
+    ],
+    "arcs": [
+      {
+        "id": "2ed67a98-efba-40c5-ae40-733f1def4a86",
+        "filter": "$.*",
+        "fromId": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
+        "toId": "d291b915-c476-4a7f-9d52-497f7f674d88"
+      },
+      {
+        "id": "3950614a-7f91-443f-b832-60356c41b880",
+        "filter": "$",
+        "fromId": "d291b915-c476-4a7f-9d52-497f7f674d88",
+        "toId": "09235a13-f4b1-44c9-b618-8e821ffe14a6"
+      },
+      {
+        "id": "b0cc730f-ea6b-4659-b6f0-a5c7c329f7e6",
+        "filter": "$.*",
+        "fromId": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
+        "toId": "a92c2e45-02a6-4015-8768-fea23cecca8d"
+      },
+      {
+        "id": "c69cce68-a0e8-446b-8e61-dccf5636c6ec",
+        "filter": "$",
+        "fromId": "a92c2e45-02a6-4015-8768-fea23cecca8d",
+        "toId": "d1488ada-faa0-44ef-8d13-13591dd400ac"
+      },
+      {
+        "id": "963e1f02-4ecd-4e39-b0ae-ced9bbbffcaa",
+        "filter": "$.*",
+        "fromId": "d1488ada-faa0-44ef-8d13-13591dd400ac",
+        "toId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d"
+      },
+      {
+        "id": "e2ae029d-b3ac-4026-844d-dd298ab9526c",
+        "filter": "$",
+        "fromId": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
+        "toId": "8b84971e-d322-49ed-a8e2-d96a4b1b7742"
+      }
+    ]
+  },
+  "layoutData": {
+    "cells": [
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 150,
+          "y": 0
+        },
+        "angle": 0,
+        "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
+        "jsonnetsType": "transition",
+        "z": 1,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "A"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 504,
+          "y": 0
+        },
+        "angle": 0,
+        "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
+        "jsonnetsType": "transition",
+        "z": 2,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "B"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Transition",
+        "size": {
+          "width": 100,
+          "height": 50
+        },
+        "position": {
+          "x": 850,
+          "y": 0
+        },
+        "angle": 0,
+        "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
+        "jsonnetsType": "transition",
+        "z": 3,
+        "attrs": {
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "C"
+          },
+          ".root": {
+            "fill": "hsl(204, 71%, 39%)",
+            "stroke": "hsl(0, 0%, 21%)"
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Place",
+        "size": {
+          "width": 50,
+          "height": 50
+        },
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "angle": 0,
+        "tokens": 1,
+        "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
+        "jsonnetsType": "place",
+        "z": 4,
+        "attrs": {
+          ".root": {
+            "stroke": "hsl(204, 71%, 39%)",
+            "stroke-width": 3
+          },
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "i1"
+          },
+          ".tokens > circle": {
+            "fill": "#7a7e9b"
+          },
+          ".alot > text": {
+            "fill": "#7a7e9b",
+            "font-family": "Courier New",
+            "font-size": 20,
+            "font-weight": "bold",
+            "ref-x": 0,
+            "ref-y": 0,
+            "y-alignment": -0.2
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Place",
+        "size": {
+          "width": 50,
+          "height": 50
+        },
+        "position": {
+          "x": 350,
+          "y": 0
+        },
+        "angle": 0,
+        "tokens": 0,
+        "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
+        "jsonnetsType": "place",
+        "z": 5,
+        "attrs": {
+          ".root": {
+            "stroke": "hsl(204, 71%, 39%)",
+            "stroke-width": 3
+          },
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "p1"
+          },
+          ".tokens > circle": {
+            "fill": "#7a7e9b"
+          },
+          ".alot > text": {
+            "fill": "#7a7e9b",
+            "font-family": "Courier New",
+            "font-size": 20,
+            "font-weight": "bold",
+            "ref-x": 0,
+            "ref-y": 0,
+            "y-alignment": -0.2
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Place",
+        "size": {
+          "width": 50,
+          "height": 50
+        },
+        "position": {
+          "x": 700,
+          "y": 0
+        },
+        "angle": 0,
+        "tokens": 0,
+        "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
+        "jsonnetsType": "place",
+        "z": 6,
+        "attrs": {
+          ".root": {
+            "stroke": "hsl(204, 71%, 39%)",
+            "stroke-width": 3
+          },
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "p2"
+          },
+          ".tokens > circle": {
+            "fill": "#7a7e9b"
+          },
+          ".alot > text": {
+            "fill": "#7a7e9b",
+            "font-family": "Courier New",
+            "font-size": 20,
+            "font-weight": "bold",
+            "ref-x": 0,
+            "ref-y": 0,
+            "y-alignment": -0.2
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "pn.Place",
+        "size": {
+          "width": 50,
+          "height": 50
+        },
+        "position": {
+          "x": 1050,
+          "y": 0
+        },
+        "angle": 0,
+        "tokens": 0,
+        "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
+        "jsonnetsType": "place",
+        "z": 7,
+        "attrs": {
+          ".root": {
+            "stroke": "hsl(204, 71%, 39%)",
+            "stroke-width": 3
+          },
+          ".label": {
+            "fill": "#7a7e9b",
+            "text": "o1"
+          },
+          ".tokens > circle": {
+            "fill": "#7a7e9b"
+          },
+          ".alot > text": {
+            "fill": "#7a7e9b",
+            "font-family": "Courier New",
+            "font-size": 20,
+            "font-weight": "bold",
+            "ref-x": 0,
+            "ref-y": 0,
+            "y-alignment": -0.2
+          },
+          "body": {
+            "cursor": "auto"
+          },
+          "label": {
+            "cursor": "auto"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "6f246a7f-f5e9-4989-a3b8-5c459f409841",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
+          "selector": ".root"
+        },
+        "id": "2ed67a98-efba-40c5-ae40-733f1def4a86",
+        "jsonnetsType": "preset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 8,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "d291b915-c476-4a7f-9d52-497f7f674d88",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
+          "selector": ".root"
+        },
+        "id": "3950614a-7f91-443f-b832-60356c41b880",
+        "jsonnetsType": "postset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 9,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "09235a13-f4b1-44c9-b618-8e821ffe14a6",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
+          "selector": ".root"
+        },
+        "id": "b0cc730f-ea6b-4659-b6f0-a5c7c329f7e6",
+        "jsonnetsType": "preset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 10,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "a92c2e45-02a6-4015-8768-fea23cecca8d",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
+          "selector": ".root"
+        },
+        "id": "c69cce68-a0e8-446b-8e61-dccf5636c6ec",
+        "jsonnetsType": "postset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 11,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "d1488ada-faa0-44ef-8d13-13591dd400ac",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
+          "selector": ".root"
+        },
+        "id": "963e1f02-4ecd-4e39-b0ae-ced9bbbffcaa",
+        "jsonnetsType": "preset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 12,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      },
+      {
+        "type": "standard.Link",
+        "source": {
+          "id": "34cd1cf1-1a26-4abc-b3f7-ccfe8165069d",
+          "selector": ".root"
+        },
+        "target": {
+          "id": "8b84971e-d322-49ed-a8e2-d96a4b1b7742",
+          "selector": ".root"
+        },
+        "id": "e2ae029d-b3ac-4026-844d-dd298ab9526c",
+        "jsonnetsType": "postset",
+        "connector": {
+          "name": "straight",
+          "args": {
+            "cornerType": "cubic"
+          }
+        },
+        "z": 13,
+        "vertices": [],
+        "attrs": {
+          ".connection": {
+            "fill": "none",
+            "stroke-linejoin": "round",
+            "stroke-width": "2",
+            "stroke": "#4b4a67"
+          }
+        }
+      }
+    ]
+  }
+
             }
         },
         {

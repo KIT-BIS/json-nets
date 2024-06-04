@@ -1,0 +1,1692 @@
+{
+    "name": "scope3tool",
+    "defaultUIAssistMode": "assisted",
+    "defaultTransitionType": "activity",
+    "defaultPlaceType": "scope1",
+    "allowAutoLayout": false,
+    "visualisationConfig": {
+        "show": true
+    },
+    "examples": [
+        {
+            "name": "Camera",
+            "net": {
+                "typeData": {
+                    "placeTypes": {
+                        "c49b0296-19cf-4857-90c0-3f93b638b877": "start",
+                        "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d": "control",
+                        "cd4b6f24-d1b8-458d-815a-5dece4b147ac": "end",
+                        "bd54b190-4747-4b82-a2b0-0b4851681059": "control"
+                    },
+                    "transitionTypes": {
+                        "9ab06d0d-29d3-4580-bf44-8e36194e65f1": "activity",
+                        "7f9900f0-7d76-4067-b22e-391bdd91a101": "activity",
+                        "a8940d72-5eff-49ae-98f3-ac64e086ff8d": "activity"
+                    }
+                },
+                "netData": {
+                    "places": [
+                        {
+                            "id": "c49b0296-19cf-4857-90c0-3f93b638b877",
+                            "name": "Start",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "ghgFactor": 0,
+                                    "scope": "start",
+                                    "pds": 0
+                                }
+                            ],
+                            "schema": {
+                                "type": "array",
+                                "title": "start",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "c49b0296-19cf-4857-90c0-3f93b638b877"
+                            }
+                        },
+                        {
+                            "id": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d",
+                            "name": "p1",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "control",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d"
+                            }
+                        },
+                        {
+                            "id": "cd4b6f24-d1b8-458d-815a-5dece4b147ac",
+                            "name": "Camera",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "end",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "cd4b6f24-d1b8-458d-815a-5dece4b147ac"
+                            }
+                        },
+                        {
+                            "id": "bd54b190-4747-4b82-a2b0-0b4851681059",
+                            "name": "p2",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "control",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "bd54b190-4747-4b82-a2b0-0b4851681059"
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "id": "9ab06d0d-29d3-4580-bf44-8e36194e65f1",
+                            "name": "Assembly",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_p1_key": "local output_p1_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_p1_value": "local output_p1_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        },
+                        {
+                            "id": "7f9900f0-7d76-4067-b22e-391bdd91a101",
+                            "name": "Cleaning",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_p2_key": "local output_p2_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_p2_value": "local output_p2_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        },
+                        {
+                            "id": "a8940d72-5eff-49ae-98f3-ac64e086ff8d",
+                            "name": "Check",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_camera_key": "local output_camera_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_camera_value": "local output_camera_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        }
+                    ],
+                    "arcs": [
+                        {
+                            "id": "2fec368f-9bd4-41f2-bfb6-fd0901c9d325",
+                            "filter": "$.*",
+                            "fromId": "c49b0296-19cf-4857-90c0-3f93b638b877",
+                            "toId": "9ab06d0d-29d3-4580-bf44-8e36194e65f1"
+                        },
+                        {
+                            "id": "03a523fd-aa6c-4f9e-aebc-b30acdb1dc04",
+                            "filter": "$",
+                            "fromId": "9ab06d0d-29d3-4580-bf44-8e36194e65f1",
+                            "toId": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d"
+                        },
+                        {
+                            "id": "6b836a80-ac07-4b53-b0ee-7367cb417425",
+                            "filter": "$.*",
+                            "fromId": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d",
+                            "toId": "7f9900f0-7d76-4067-b22e-391bdd91a101"
+                        },
+                        {
+                            "id": "3e4a241e-f6b4-49fd-963a-485682dee440",
+                            "filter": "$",
+                            "fromId": "7f9900f0-7d76-4067-b22e-391bdd91a101",
+                            "toId": "bd54b190-4747-4b82-a2b0-0b4851681059"
+                        },
+                        {
+                            "id": "aee2a50a-3045-49ff-9a60-2a4bede9ba1d",
+                            "filter": "$.*",
+                            "fromId": "bd54b190-4747-4b82-a2b0-0b4851681059",
+                            "toId": "a8940d72-5eff-49ae-98f3-ac64e086ff8d"
+                        },
+                        {
+                            "id": "12e6cf18-84f2-41cd-bff2-1a211d93754d",
+                            "filter": "$",
+                            "fromId": "a8940d72-5eff-49ae-98f3-ac64e086ff8d",
+                            "toId": "cd4b6f24-d1b8-458d-815a-5dece4b147ac"
+                        }
+                    ]
+                },
+                "layoutData": {
+                    "cells": [
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 348,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "id": "9ab06d0d-29d3-4580-bf44-8e36194e65f1",
+                            "jsonnetsType": "transition",
+                            "z": 1,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Assembly"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 696,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "id": "7f9900f0-7d76-4067-b22e-391bdd91a101",
+                            "jsonnetsType": "transition",
+                            "z": 2,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Cleaning"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 1032,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "id": "a8940d72-5eff-49ae-98f3-ac64e086ff8d",
+                            "jsonnetsType": "transition",
+                            "z": 3,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Check"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 204,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "c49b0296-19cf-4857-90c0-3f93b638b877",
+                            "jsonnetsType": "place",
+                            "z": 4,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Start"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 552,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d",
+                            "jsonnetsType": "place",
+                            "z": 5,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "p1"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 1248,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "cd4b6f24-d1b8-458d-815a-5dece4b147ac",
+                            "jsonnetsType": "place",
+                            "z": 6,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Camera"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 900,
+                                "y": 360
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "bd54b190-4747-4b82-a2b0-0b4851681059",
+                            "jsonnetsType": "place",
+                            "z": 7,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "p2"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "c49b0296-19cf-4857-90c0-3f93b638b877",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "9ab06d0d-29d3-4580-bf44-8e36194e65f1",
+                                "selector": ".root"
+                            },
+                            "id": "2fec368f-9bd4-41f2-bfb6-fd0901c9d325",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 8,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "9ab06d0d-29d3-4580-bf44-8e36194e65f1",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d",
+                                "selector": ".root"
+                            },
+                            "id": "03a523fd-aa6c-4f9e-aebc-b30acdb1dc04",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 9,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "f1f4dfea-5277-4c6a-88f2-b76d3a12ce5d",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "7f9900f0-7d76-4067-b22e-391bdd91a101",
+                                "selector": ".root"
+                            },
+                            "id": "6b836a80-ac07-4b53-b0ee-7367cb417425",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 10,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "7f9900f0-7d76-4067-b22e-391bdd91a101",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "bd54b190-4747-4b82-a2b0-0b4851681059",
+                                "selector": ".root"
+                            },
+                            "id": "3e4a241e-f6b4-49fd-963a-485682dee440",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 11,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "bd54b190-4747-4b82-a2b0-0b4851681059",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "a8940d72-5eff-49ae-98f3-ac64e086ff8d",
+                                "selector": ".root"
+                            },
+                            "id": "aee2a50a-3045-49ff-9a60-2a4bede9ba1d",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 12,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "a8940d72-5eff-49ae-98f3-ac64e086ff8d",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "cd4b6f24-d1b8-458d-815a-5dece4b147ac",
+                                "selector": ".root"
+                            },
+                            "id": "12e6cf18-84f2-41cd-bff2-1a211d93754d",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 13,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Connector",
+            "net": {
+                "typeData": {
+                    "placeTypes": {
+                        "167bbbd6-95ec-4fd6-be40-26c1a487f170": "start",
+                        "834fca4a-9079-417a-8768-afd52bcc0c94": "end",
+                        "77993295-6870-418a-bd0d-b145e603292f": "control",
+                        "2f69a08e-2351-4bdf-84d7-564928a829aa": "control"
+                    },
+                    "transitionTypes": {
+                        "67438c44-8f16-41b3-ac44-0438014633c0": "activity",
+                        "e6d19788-6dec-476e-a333-14397384d651": "activity",
+                        "480049a0-4dbe-4f96-b7fc-2fdd039ed064": "activity"
+                    }
+                },
+                "netData": {
+                    "places": [
+                        {
+                            "id": "167bbbd6-95ec-4fd6-be40-26c1a487f170",
+                            "name": "Start",
+                            "marking": [
+                                {
+                                    "amount": 1,
+                                    "ghgFactor": 0,
+                                    "scope": "start",
+                                    "pds": 0
+                                }
+                            ],
+                            "schema": {
+                                "type": "array",
+                                "title": "start",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "167bbbd6-95ec-4fd6-be40-26c1a487f170"
+                            }
+                        },
+                        {
+                            "id": "77993295-6870-418a-bd0d-b145e603292f",
+                            "name": "p1",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "control",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "77993295-6870-418a-bd0d-b145e603292f"
+                            }
+                        },
+                        {
+                            "id": "2f69a08e-2351-4bdf-84d7-564928a829aa",
+                            "name": "p2",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "control",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "2f69a08e-2351-4bdf-84d7-564928a829aa"
+                            }
+                        },
+                        {
+                            "id": "834fca4a-9079-417a-8768-afd52bcc0c94",
+                            "name": "Connector",
+                            "marking": [],
+                            "schema": {
+                                "type": "array",
+                                "title": "end",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "834fca4a-9079-417a-8768-afd52bcc0c94"
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "id": "67438c44-8f16-41b3-ac44-0438014633c0",
+                            "name": "Cleaning",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_p1_key": "local output_p1_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_p1_value": "local output_p1_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        },
+                        {
+                            "id": "e6d19788-6dec-476e-a333-14397384d651",
+                            "name": "Soldering",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_p2_key": "local output_p2_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_p2_value": "local output_p2_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        },
+                        {
+                            "id": "480049a0-4dbe-4f96-b7fc-2fdd039ed064",
+                            "name": "Cutting",
+                            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+                            "guard": "true",
+                            "customVariables": {
+                                "Allokation": "100"
+                            },
+                            "keyVarSnippets": {
+                                "output_connector_key": "local output_connector_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_connector_value": "local output_connector_value = { scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };"
+                            }
+                        }
+                    ],
+                    "arcs": [
+                        {
+                            "id": "9005b5ac-3466-4378-8277-3332c51a2afe",
+                            "filter": "$.*",
+                            "fromId": "167bbbd6-95ec-4fd6-be40-26c1a487f170",
+                            "toId": "67438c44-8f16-41b3-ac44-0438014633c0"
+                        },
+                        {
+                            "id": "55fe0403-4136-4ace-8504-60e737ca6bef",
+                            "filter": "$",
+                            "fromId": "67438c44-8f16-41b3-ac44-0438014633c0",
+                            "toId": "77993295-6870-418a-bd0d-b145e603292f"
+                        },
+                        {
+                            "id": "e983560b-dfff-4fd4-ad18-21f9e485d471",
+                            "filter": "$.*",
+                            "fromId": "77993295-6870-418a-bd0d-b145e603292f",
+                            "toId": "e6d19788-6dec-476e-a333-14397384d651"
+                        },
+                        {
+                            "id": "c20f81e1-d19b-46b4-9262-438307da4af6",
+                            "filter": "$",
+                            "fromId": "e6d19788-6dec-476e-a333-14397384d651",
+                            "toId": "2f69a08e-2351-4bdf-84d7-564928a829aa"
+                        },
+                        {
+                            "id": "26da7c32-e6b0-4221-9a5b-2ccb9ce7560b",
+                            "filter": "$.*",
+                            "fromId": "2f69a08e-2351-4bdf-84d7-564928a829aa",
+                            "toId": "480049a0-4dbe-4f96-b7fc-2fdd039ed064"
+                        },
+                        {
+                            "id": "3826748f-3eb9-49d9-8d2a-54ae1952f284",
+                            "filter": "$",
+                            "fromId": "480049a0-4dbe-4f96-b7fc-2fdd039ed064",
+                            "toId": "834fca4a-9079-417a-8768-afd52bcc0c94"
+                        }
+                    ]
+                },
+                "layoutData": {
+                    "cells": [
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 300,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "id": "67438c44-8f16-41b3-ac44-0438014633c0",
+                            "jsonnetsType": "transition",
+                            "z": 1,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Cleaning"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 683,
+                                "y": 311
+                            },
+                            "angle": 0,
+                            "id": "e6d19788-6dec-476e-a333-14397384d651",
+                            "jsonnetsType": "transition",
+                            "z": 2,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Soldering"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 1056,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "id": "480049a0-4dbe-4f96-b7fc-2fdd039ed064",
+                            "jsonnetsType": "transition",
+                            "z": 3,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Cutting"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 132,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "167bbbd6-95ec-4fd6-be40-26c1a487f170",
+                            "jsonnetsType": "place",
+                            "z": 4,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Start"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 528,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "77993295-6870-418a-bd0d-b145e603292f",
+                            "jsonnetsType": "place",
+                            "z": 5,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "p1"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 876,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "2f69a08e-2351-4bdf-84d7-564928a829aa",
+                            "jsonnetsType": "place",
+                            "z": 6,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "p2"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 1284,
+                                "y": 312
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "834fca4a-9079-417a-8768-afd52bcc0c94",
+                            "jsonnetsType": "place",
+                            "z": 7,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Connector"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "167bbbd6-95ec-4fd6-be40-26c1a487f170",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "67438c44-8f16-41b3-ac44-0438014633c0",
+                                "selector": ".root"
+                            },
+                            "id": "9005b5ac-3466-4378-8277-3332c51a2afe",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 8,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "67438c44-8f16-41b3-ac44-0438014633c0",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "77993295-6870-418a-bd0d-b145e603292f",
+                                "selector": ".root"
+                            },
+                            "id": "55fe0403-4136-4ace-8504-60e737ca6bef",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 9,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "77993295-6870-418a-bd0d-b145e603292f",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "e6d19788-6dec-476e-a333-14397384d651",
+                                "selector": ".root"
+                            },
+                            "id": "e983560b-dfff-4fd4-ad18-21f9e485d471",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 10,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "e6d19788-6dec-476e-a333-14397384d651",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "2f69a08e-2351-4bdf-84d7-564928a829aa",
+                                "selector": ".root"
+                            },
+                            "id": "c20f81e1-d19b-46b4-9262-438307da4af6",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 11,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "2f69a08e-2351-4bdf-84d7-564928a829aa",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "480049a0-4dbe-4f96-b7fc-2fdd039ed064",
+                                "selector": ".root"
+                            },
+                            "id": "26da7c32-e6b0-4221-9a5b-2ccb9ce7560b",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 12,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "480049a0-4dbe-4f96-b7fc-2fdd039ed064",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "834fca4a-9079-417a-8768-afd52bcc0c94",
+                                "selector": ".root"
+                            },
+                            "id": "3826748f-3eb9-49d9-8d2a-54ae1952f284",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 13,
+                            "vertices": [],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "transitionTypes": [
+        {
+            "id": "activity",
+            "title": "Activity",
+            "description": "A transition represents an activity (e.g. 'Soldering') in a process model. You can add inventory-places (circles) of type 'Scope 1 - Emissions', 'Scope 2 - Emissions' or 'Scope 3 - Emissions', to collect data about activity-specific GHG emissions. The field 'allocation' is used to procentually scale all inputs.",
+            "keySnippet": "'-';",
+            "valueSnippet": "{ scope: 'control', ghgFactorUnit: 'kg CO2e / piece', ghgFactor: totalFootprint, amount: 1, unit: 'Pieces', type: 'Primary', pds: outputPDS, footprintContributions: footprintContributions, sankeyNodes: sankeyNodes,sankeyLinks: sankeyLinks, nodeName: transition_name, '$visualisations': visualisations };",
+            "preface": "// calculations\n// ghg factors in kg CO2e per g\nlocal ghgFactors = { 'NF3': 13.4, 'SF6': 18.3, 'CF4': 5.3};\nlocal calculateFootprint(component) = component.amount  * (if component.scope == 1 then (if component.unit == 'mg' then 0.001 else if component.unit == 'kg' then 1000 else 1) * ghgFactors[component.ghg] * component.scalingFactor else if component.scope == 2 then (if component.unit == 'Wh' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'g CO2e / kWh' then 0.001 else if component.ghgFactorUnit == 'mg CO2e / kWh' then 0.000001 else 1) * component.scalingFactor else if component.scope == 3 then (if component.unit == 'mg (weight)' then 0.000001 else if component.unit == 'g (weight)' then 0.001 else 1) * component.ghgFactor * (if component.ghgFactorUnit == 'mg CO2e / piece or kg' then 0.000001 else if component.ghgFactorUnit == 'g CO2e / piece or kg' then 0.001 else 1) * component.scalingFactor else component.ghgFactor) * Allokation / 100;\nlocal individualFootprints = std.map(calculateFootprint,input_values);\n// calculate Scope 1-Emissions\nlocal generateScope1Contribution(index,element) = if (element.scope == 1) then { name: input_names[index], value: individualFootprints[index] };\nlocal sum(arr, n) = if (n <= 0) then 0 else sum(arr, n-1) + arr[n-1];\nlocal totalFootprint = sum(individualFootprints, std.length(individualFootprints));\nlocal calculatePCFShare(partFootprint) = if totalFootprint > 0 then partFootprint/totalFootprint else 0;\nlocal footprintShares = std.map(calculatePCFShare,individualFootprints);\nlocal calculatePrimaryDataShare(index) = footprintShares[index] * input_values[index].pds;\nlocal primaryDataShares = std.map(calculatePrimaryDataShare,std.range(0,std.length(input_values)-1));\nlocal outputPDS = sum(primaryDataShares,std.length(primaryDataShares));\n// for each emission input (not start or control-flow place) an object containing name and ghg-emission as value is created\nlocal generateFootprintContribution(index,element) = if ((element.scope != 'start') && (element.scope != 'control')) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope2Contribution(index,element) = if (element.scope == 2) then { name: input_names[index], value: individualFootprints[index] };\nlocal generateScope3Contribution(index,element) = if (element.scope == 3) then { name: input_names[index], value: individualFootprints[index] };\nlocal filterNull(element) = element != null;\nlocal footprintContributionsFromThisTransition = std.filter(filterNull,std.mapWithIndex(generateFootprintContribution,input_values));\nlocal scope1FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope1Contribution,input_values));\nlocal scope2FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope2Contribution,input_values));\nlocal scope3FromThisTransition = std.filter(filterNull,std.mapWithIndex(generateScope3Contribution,input_values));\n// fetch contributions from incoming places\nlocal filterControl(element) = element.scope == 'control';\nlocal incomingControlPlaces = std.filter(filterControl, input_values);\nlocal getContribution(element) = element.footprintContributions;\nlocal getScope1Contribution(element) = element.footprintContributions['1'];\nlocal getScope2Contribution(element) = element.footprintContributions['2'];\nlocal getScope3Contribution(element) = element.footprintContributions['3'];\nlocal incomingScope1Contributions = std.flattenArrays(std.map(getScope1Contribution,incomingControlPlaces));\nlocal incomingScope2Contributions = std.flattenArrays(std.map(getScope2Contribution,incomingControlPlaces));\nlocal incomingScope3Contributions = std.flattenArrays(std.map(getScope3Contribution,incomingControlPlaces));\nlocal footprintContributions = { '1': incomingScope1Contributions + scope1FromThisTransition, '2': incomingScope2Contributions + scope2FromThisTransition,'3': incomingScope3Contributions + scope3FromThisTransition};\nlocal scope1Contributions = incomingScope1Contributions + scope1FromThisTransition;\nlocal scope2Contributions = incomingScope2Contributions + scope2FromThisTransition;\nlocal scope3Contributions = incomingScope3Contributions + scope3FromThisTransition;\n// for each incoming place\nlocal generateSankeyNode(index,element) = if (input_values[index].scope != 'control') && (input_values[index].scope != 'start') then { name: element }; local getNodes(element) = element.sankeyNodes;\nlocal incomingNodes = std.flattenArrays(std.map(getNodes,incomingControlPlaces));\nlocal sankeyNodes = incomingNodes + std.filter(filterNull,std.mapWithIndex(generateSankeyNode,input_names)) + [{ name: transition_name }];\n//currently assuming we have exactly one output place\nlocal generateSankeyLink(element) = { source: element.name, value: element.value, target: transition_name };\nlocal getLinks(element) = element.sankeyLinks;\nlocal incomingLinks = std.flattenArrays(std.map(getLinks,incomingControlPlaces));\nlocal controlLink = if std.length(incomingControlPlaces) > 0 then [{ source: incomingControlPlaces[0].nodeName, target: transition_name, value: incomingControlPlaces[0].ghgFactor }] else [];\nlocal sankeyLinks = incomingLinks + std.map(generateSankeyLink,footprintContributionsFromThisTransition) + controlLink;\n// Visualisations:\nlocal visualisations = [{\n'type': 'number',\n'unit': 'kg CO2e',\n'description': 'THG-Fussabdruck',\n'value': totalFootprint\n},\n{\n'type': 'sunburst',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sunburst)',\n'value': [\n{\n'name': 'Scope 1',\n'children': scope1Contributions\n},\n{\n'name': 'Scope 2',\n'children': scope2Contributions\n},\n{\n'name': 'Scope 3',\n'children': scope3Contributions\n}\n]\n}\n,{\n'type': 'sankey',\n'unit': 'kg CO2e',\n'description': 'THG-Beiträge (Sankey)',\n'value': {\n'data': sankeyNodes,\n'links': sankeyLinks\n}\n},\n{\n'type': 'number',\n'unit': '%',\n'description': 'Primärdatenanteil',\n'value': outputPDS * 100\n}];",
+            "guard": "true",
+            "presetFilter": "$.*",
+            "postsetFilter": "$",
+            "customVariables": {
+                "Allokation": "100"
+            }
+        }
+    ],
+    "placeTypes": [
+        {
+            "id": "start",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "type": "array",
+                "title": "Start",
+                "description": "The process model must have exactly one place of type 'Start'.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object"
+                }
+            },
+            "marking": [
+                {
+                    "amount": 1,
+                    "ghgFactor": 0,
+                    "scope": "start",
+                    "pds": 0
+                }
+            ]
+        },
+        {
+            "id": "end",
+            "externalInteraction": {
+                "type": "push",
+                "url": "https://s3t.uber.space/footprints/"
+            },
+            "schema": {
+                "type": "array",
+                "title": "End",
+                "description": "The process model must have exactly one place of type 'End'. When the simulation has finished, you can load the containing data into the supply-chain repository.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object"
+                }
+            },
+            "marking": []
+        },
+        {
+            "id": "control",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "type": "array",
+                "title": "Control Flow",
+                "description": "Activities must be connected by places of type 'Control Flow'.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object"
+                }
+            },
+            "marking": []
+        },
+        {
+            "id": "scope1",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "type": "array",
+                "title": "Scope 1 - Emissions",
+                "description": "First choose a <b>greenhouse gas</b> in the form. As <b>unit</b> you can choose 'mg', 'g' oder 'kg'. The <b>scaling factor</b> can be used to scale/allocate the given <b>amount</b> to one activity instance.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "number",
+                            "title": "Scope",
+                            "enum": [
+                                1
+                            ],
+                            "readOnly": true
+                        },
+                        "ghg": {
+                            "type": "string",
+                            "title": "Greenhouse Gas",
+                            "enum": [
+                                "NF3",
+                                "SF6",
+                                "CF4"
+                            ],
+                            "default": "NF3",
+                            "description": "Select a greenhouse gas."
+                        },
+                        "unit": {
+                            "type": "string",
+                            "title": "Unit",
+                            "enum": [
+                                "mg",
+                                "g",
+                                "kg"
+                            ],
+                            "default": "g",
+                            "description": "Select the unit of measurement for the given amount."
+                        },
+                        "amount": {
+                            "type": "number",
+                            "title": "Amount",
+                            "description": "Amount in mg, g or kg for given greenhouse gas."
+                        },
+                        "scalingFactor": {
+                            "type": "number",
+                            "title": "Scaling factor",
+                            "default": 1,
+                            "description": "Given amount is multiplied with scaling factor."
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "Primary"
+                            ],
+                            "title": "Data type",
+                            "readOnly": true
+                        },
+                        "note": {
+                            "type": "string",
+                            "title": "Note",
+                            "description": "Enter notes for documentation."
+                        }
+                    },
+                    "required": [
+                        "scope",
+                        "ghg",
+                        "unit",
+                        "amount",
+                        "scalingFactor",
+                        "type"
+                    ]
+                }
+            },
+            "marking": [
+                {
+                    "scope": 1,
+                    "amount": 1,
+                    "unit": "g",
+                    "ghg": "NF3",
+                    "scalingFactor": 1,
+                    "type": "Primary",
+                    "pds": 1,
+                    "note": ""
+                }
+            ]
+        },
+        {
+            "id": "scope2",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "type": "array",
+                "title": "Scope 2 - Emissions",
+                "description": "First choose a  <b>Unit</b> ('Wh' or 'kWh') for the provided <b>Energy use</b>. The <b>Emission factor</b> measures, measures the amount of greenhouse gases <i>per kWh</i>. You can choose 'mg', 'g' or 'kg' CO2e / kWh as <b>Unit for the emission factor</b>. The <b>Scaling factor</b> can be used to scale/allocate the given <b>amount</b> to one activity instance.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "number",
+                            "enum": [
+                                2
+                            ],
+                            "title": "Scope",
+                            "readOnly": true
+                        },
+                        "unit": {
+                            "type": "string",
+                            "enum": [
+                                "Wh",
+                                "kWh"
+                            ],
+                            "default": "kWh",
+                            "title": "Unit for energy use",
+                            "description": "Choose unit for energy use."
+                        },
+                        "amount": {
+                            "type": "number",
+                            "title": "Energy use",
+                            "description": "Amount of energy used."
+                        },
+                        "ghgFactorUnit": {
+                            "type": "string",
+                            "enum": [
+                                "mg CO2e / kWh",
+                                "g CO2e / kWh",
+                                "kg CO2e / kWh"
+                            ],
+                            "default": "kg CO2e / kWh",
+                            "title": "Unit for emission factor",
+                            "description": "Choose unit for emission factor."
+                        },
+                        "ghgFactor": {
+                            "type": "number",
+                            "title": "Emission factor",
+                            "description": "Amount of emitted greenhouse gases in mg, g or kg CO2e per kWh."
+                        },
+                        "scalingFactor": {
+                            "type": "number",
+                            "title": "Scaling factor",
+                            "default": 1,
+                            "description": "Given amount is multiplied with scaling factor."
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "Primary"
+                            ],
+                            "title": "Datentyp",
+                            "readOnly": true
+                        },
+                        "note": {
+                            "type": "string",
+                            "title": "Note",
+                            "description": "Enter notes for documentation."
+
+                        }
+                    },
+                    "required": [
+                        "scope",
+                        "unit",
+                        "amount",
+                        "ghgFactorUnit",
+                        "ghgFactor",
+                        "scalingFactor",
+                        "type"
+                    ]
+                }
+            },
+            "marking": [
+                {
+                    "scope": 2,
+                    "unit": "kWh",
+                    "amount": 1,
+                    "ghgFactorUnit": "kg CO2e / kWh",
+                    "ghgFactor": 1,
+                    "scalingFactor": 1,
+                    "type": "Primary",
+                    "pds": 1,
+                    "note": ""
+                }
+            ]
+        },
+        {
+            "id": "scope3-secondary",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "type": "array",
+                "title": "Scope 3 - Emissions (Secondary data)",
+                "description": "First choose a <b>Unit</b> (Either 'pieces' or 'weight' in mg, g oder kg) for the provided amount of material or components. The <b>Emission factor</b> measures ther amount of greenhouse gases that are associated with the production of the material or component. The emission factor is always measured <i>per piece or kg</i>. You can choose 'mg', 'g' oder 'kg' CO2e / Stück or kg <b>Unit for the emission factor</b>. The <b>Scaling factor</b> can be used to scale/allocate the given <b>amount</b> to one activity instance.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "number",
+                            "enum": [
+                                3
+                            ],
+                            "readOnly": true
+                        },
+                        "unit": {
+                            "type": "string",
+                            "title": "Unit",
+                            "enum": [
+                                "mg (weight)",
+                                "g (weight)",
+                                "kg (weight)",
+                                "Pieces"
+                            ],
+                            "description": "Choose a unit for the given amount of components or material."
+                        },
+                        "amount": {
+                            "type": "number",
+                            "title": "Amount",
+                            "description": "Amount in weight (mg, g or kg) or pieces."
+                        },
+                        "ghgFactorUnit": {
+                            "type": "string",
+                            "enum": [
+                                "mg CO2e / piece or kg",
+                                "g CO2e / piece or kg",
+                                "kg CO2e / piece or kg"
+                            ],
+                            "default": "kg CO2e / piece or kg",
+                            "title": "Unit for emission factor",
+                            "description": "Choose unit for emission factor."
+                        },
+                        "ghgFactor": {
+                            "type": "number",
+                            "title": "Emission factor",
+                            "description": "Amount of emitted greenhouse gases in mg, g or kg CO2e / piece or kg."
+                        },
+                        "scalingFactor": {
+                            "type": "number",
+                            "title": "Scaling factor",
+                            "default": 1,
+                            "description": "Given amount is multiplied with scaling factor."
+                        },
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "Secondary"
+                            ],
+                            "title": "Data type",
+                            "readOnly": true
+                        },
+                        "note": {
+                            "type": "string",
+                            "title": "Notiz",
+                            "description": "Enter notes for documentation."
+                        }
+                    },
+                    "required": [
+                        "scope",
+                        "unit",
+                        "amount",
+                        "ghgFactorUnit",
+                        "ghgFactor",
+                        "scalingFactor",
+                        "type"
+                    ]
+                }
+            },
+            "marking": [
+                {
+                    "scope": 3,
+                    "unit": "Pieces",
+                    "amount": 1,
+                    "ghgFactorUnit": "kg CO2e / piece or kg",
+                    "ghgFactor": 1,
+                    "scalingFactor": 1,
+                    "type": "Secondary",
+                    "pds": 0,
+                    "note": ""
+                }
+            ]
+        },
+        {
+            "id": "scope3-primary",
+            "externalInteraction": {
+                "type": "pull",
+                "url": "https://s3t.uber.space/footprints/",
+                "enforcedMarking": {
+                    "scope": 3,
+                    "title": "scope3",
+                    "scalingFactor": 1,
+                    "fromSupplyChain": true,
+                    "note": "loaded"
+                }
+            },
+            "schema": {
+                "type": "array",
+                "title": "Scope 3 - Emissions (Primary data)",
+                "description": "Load data from supply chain repository.",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "scope": {
+                            "type": "number",
+                            "title": "Scope",
+                            "enum": [
+                                3
+                            ],
+                            "readOnly": true
+                        },
+                        "unit": {
+                            "type": "string",
+                            "title": "Unit",
+                            "enum": [
+                                "Pieces"
+                            ],
+                            "readOnly": true
+                        },
+                        "amount": {
+                            "type": "number",
+                            "title": "Amount",
+                            "description": "Amount in pieces."
+                        },
+                        "ghgFactorUnit": {
+                            "type": "string",
+                            "enum": [
+                                "kg CO2e / piece"
+                            ],
+                            "default": "kg CO2e / piece",
+                            "title": "Unit for emission factor",
+                            "readOnly": true
+                        },
+                        "scalingFactor": {
+                            "type": "number",
+                            "title": "Scaling factor",
+                            "default": 1,
+                            "description": "Given amount is multiplied with scaling factor."
+                        },
+                        "ghgFactor": {
+                            "type": "number",
+                            "title": "Emission factor",
+                            "readOnly": true
+                        },
+                        "pds": {
+                            "type": "number",
+                            "title": "Share of primary data",
+                            "readOnly": true
+                        },
+                        "note": {
+                            "type": "string",
+                            "title": "Note",
+                            "description": "Enter notes for documentation."
+                        }
+                    },
+                    "required": [
+                        "scope",
+                        "unit",
+                        "amount",
+                        "ghgFactorUnit",
+                        "ghgFactor",
+                        "scalingFactor",
+                        "pds"
+                    ]
+                }
+            },
+            "marking": []
+        }
+    ]
+}

@@ -1,10 +1,10 @@
 <template>
     <div class="block">
         <div class="field">
-            <label class="label is-small">Knotentyp:</label>
+            <label class="label is-small">Node type:</label>
             <div class="select is-small">
             <select @change="setPlaceType">
-                <option value="custom" :selected="'custom' === netStore.placeTypes[placesStore.place.id]">Individuell</option>
+                <option value="custom" :selected="'custom' === netStore.placeTypes[placesStore.place.id]">Individual</option>
                 <option v-for="placeType in configStore.placeTypes" :value="placeType.id" :selected="placeType.id === netStore.placeTypes[placesStore.place.id]">{{ placeType.schema.title }}</option>
             </select>
             </div>
@@ -12,7 +12,7 @@
     </div>
     <div class="block" >
         <div v-if="'custom' === netStore.placeTypes[placesStore.place.id]" class="notification is-info is-light is-size-7">
-            Sie können Schema und Markierung anpassen.
+            You can enter an individual schema or marking.
         </div>
         <div v-else class="notification is-info is-light is-size-7" v-html="configStore.getPlaceTypeById(netStore.placeTypes[placesStore.place.id])?.schema.description">
         </div>

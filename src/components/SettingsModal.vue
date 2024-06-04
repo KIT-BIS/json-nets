@@ -3,7 +3,7 @@
 		<div class="modal-background"></div>
 		<div class="modal-card jsn-modal-wide">
 			<header class="modal-card-head">
-				<p class="modal-card-title">Einstellungen</p>
+				<p class="modal-card-title">Settings</p>
 				<button class="delete" aria-label="close" @click="close"></button>
 			</header>
 			<section class="modal-card-body">

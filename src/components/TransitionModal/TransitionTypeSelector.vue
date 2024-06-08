@@ -1,11 +1,11 @@
 <template>
 	<div class="block">
 		<div class="field">
-			<label class="label is-small">Knotentyp:</label>
+			<label class="label is-small">Node type:</label>
 			<div class="select is-small">
 				<select @change="setTransitionType">
 					<option value="custom"
-						:selected="'custom' === netStore.transitionTypes[transitionsStore.transition.id]">Individuell
+						:selected="'custom' === netStore.transitionTypes[transitionsStore.transition.id]">Individual
 					</option>
 					<option v-for="transitionType in configStore.transitionTypes" :value="transitionType.id"
 						:selected="transitionType.id === netStore.transitionTypes[transitionsStore.transition.id]">{{
@@ -17,7 +17,7 @@
 	<div class="block">
 		<div v-if="'custom' === netStore.transitionTypes[transitionsStore.transition.id]"
 			class="notification is-info is-light is-size-7">
-			Sie können die Transitionsinschrift anpassen.
+			You can enter an individual inscription.
 		</div>
 		<div v-else class="notification is-info is-light is-size-7"
 			v-html="configStore.getTransitionTypeById(netStore.transitionTypes[transitionsStore.transition.id])?.description">

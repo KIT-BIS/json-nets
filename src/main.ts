@@ -26,7 +26,10 @@ import {
 	faXmark,
 	faCheck,
 	faChartSimple,
-	faPercent
+	faPercent,
+	faPlus,
+	faMinus,
+	faCrosshairs
 } from '@fortawesome/free-solid-svg-icons'
 
 import { createApp } from 'vue'
@@ -60,7 +63,10 @@ library.add(
 	faXmark,
 	faCheck,
 	faChartSimple,
-	faPercent
+	faPercent,
+	faPlus,
+	faMinus,
+	faCrosshairs
 )
 
 const app = createApp(App).component('font-awesome-icon', FontAwesomeIcon)

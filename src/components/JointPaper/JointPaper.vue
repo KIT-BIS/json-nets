@@ -7,6 +7,23 @@
 	}">
 		<div id="jointCanvas"></div>
 	</div>
+	<div id="zoomButtons">
+		<button class="button is-small" @click="zoomIn()">
+			<span class="icon is-small">
+				<font-awesome-icon icon="fas fa-plus" />
+    		</span>
+		</button> 
+		<button class="button is-small" @click="zoomOut()">
+			<span class="icon is-small">
+				<font-awesome-icon icon="fas fa-minus" />
+    		</span>
+		</button> 
+		<button class="button is-small" @click="resetZoom()">
+			<span class="icon is-small">
+				<font-awesome-icon icon="fas fa-crosshairs" />
+    		</span>
+		</button>
+	</div>
 </template>
 <script lang="ts">
 import type { ArcData, ImportData, TransitionData, PlaceData, FireEvent } from '@/json-nets/Net'
@@ -54,7 +71,10 @@ export default defineComponent({
 			panY: 0,
 			clickX: 0,
 			clickY: 0,
-			isPanning: false
+			isPanning: false,
+			graphScale: 1
+
+
 		}
 	},
 	computed: {
@@ -68,10 +88,10 @@ export default defineComponent({
 			return this.uiStateStore.mode === MODE_ADD_PLACE || this.uiStateStore.mode === MODE_ADD_TRANSITION
 		},
 		isPannableMode() {
-			return this.uiStateStore.mode === MODE_MOVE && !this.isPanning
+			return (this.uiStateStore.mode === MODE_MOVE || this.uiStateStore.mode === MODE_PLAY) && !this.isPanning
 		},
 		isPanningMode() {
-			return this.uiStateStore.mode === MODE_MOVE && this.isPanning
+			return (this.uiStateStore.mode === MODE_MOVE || this.uiStateStore.mode === MODE_PLAY) && this.isPanning
 		},
 		...mapStores(useUiStateStore),
 		...mapStores(useTransitionsStore),
@@ -224,6 +244,11 @@ export default defineComponent({
 
 		this.netStore.setLayout(_graph)
 
+		//resize paper when window is resized
+		window.onresize = function() {
+    		_paper.setDimensions(window.innerWidth, window.innerHeight);
+		};
+
 		_paper.on('blank:pointerclick', (event, eventX, eventY) => {
 			this.onPaperClick(eventX, eventY)
 		})
@@ -274,6 +299,21 @@ export default defineComponent({
 
 	},
 	methods: {
+		scalePaper(sx: number, sy: number) {
+     		_paper.scale(sx, sy);
+		},
+		zoomOut() {
+    		this.graphScale -= 0.1;
+			this.scalePaper(this.graphScale, this.graphScale)
+		},
+		zoomIn() {
+			this.graphScale += 0.1;
+			this.scalePaper(this.graphScale, this.graphScale)
+		},
+		resetZoom() {
+			this.graphScale = 1;
+			this.scalePaper(this.graphScale, this.graphScale)
+		},
 		onModeChange(newMode: string) {
 			_paper.removeTools();
 			// reset cursors
@@ -352,15 +392,15 @@ export default defineComponent({
 			_paper.unfreeze()
 		},
 		onDragStart(x: number, y: number) {
-			if (this.uiStateStore.mode === MODE_MOVE) {
+			if (this.uiStateStore.mode === MODE_MOVE || this.uiStateStore.mode === MODE_PLAY) {
 				this.isPanning = true
 				document.getElementById('canvasContainer')?.classList.add('panning-mode')
-				this.panX = x
-				this.panY = y
+				this.panX = x * this.graphScale
+				this.panY = y * this.graphScale
 			}
 		},
 		onDragEnd() {
-			if (this.uiStateStore.mode === MODE_MOVE) {
+			if (this.uiStateStore.mode === MODE_MOVE || this.uiStateStore.mode === MODE_PLAY) {
 				document.getElementById('canvasContainer')?.classList.remove('panning-mode')
 				this.isPanning = false
 			}
@@ -384,5 +424,15 @@ export default defineComponent({
 
 .scoped-canvas-panning {
 	cursor: grabbing !important;
+}
+
+#jointCanvas {
+    overflow: hidden;
+}
+
+#zoomButtons {
+	position: fixed;
+	right: 5px;
+	top: 5px;
 }
 </style>

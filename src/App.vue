@@ -76,7 +76,7 @@ export const MODE_HELP = 'MODE_HELP'
 				uiState.setModal('examples');
 			}
 			" class="button is-primary is-outlined">
-			Beispiele
+			Examples
 		</button>
 
 		<ModeButton icon="fas fa-question" :mode="MODE_HELP" :callback="() => {
@@ -92,10 +92,10 @@ export const MODE_HELP = 'MODE_HELP'
 	<SettingsModal v-if="uiState.showModal === 'settings'" />
 	<RouterView />
 	<div style="position: absolute; bottom: 5px; right: 5px">
-		<a @click="useNetStore().resetModel()">Modell zurücksetzen</a>
+		<a @click="useNetStore().resetModel()">Reset Model</a>
 	</div>
 	<div style="position: absolute; bottom: 5px; left: 5px">
-		<a @click="() => { uiState.showModal = 'settings' }">Einstellungen</a>
+		<a @click="() => { uiState.showModal = 'settings' }">Settings</a>
 	</div>
 
 </template>

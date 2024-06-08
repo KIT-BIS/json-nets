@@ -3,7 +3,7 @@
 		<div class="modal-background"></div>
 		<div class="modal-card jsn-modal-wide">
 			<header class="modal-card-head">
-				<p class="modal-card-title">Einstellungen</p>
+				<p class="modal-card-title">Settings</p>
 				<button class="delete" aria-label="close" @click="close"></button>
 			</header>
 			<section class="modal-card-body">
@@ -15,6 +15,8 @@
 								<select @change="setConfig">
 									<option value="default" :selected="configStore.name === 'default'">Default</option>
 									<option value="scope3tool" :selected="configStore.name === 'scope3tool'">Scope3tool
+									</option>
+									<option value="scenario" :selected="configStore.name === 'scenario'">Scenario
 									</option>
 									<!-- <option value="test" :selected="configStore.name === 'test'">Test</option> -->
 									<option value="uploaded" :selected="configStore.name === 'uploaded'">Upload custom
@@ -63,6 +65,7 @@ import { useNetStore } from '@/stores/net';
 import { readFile } from '@/util/files';
 
 import s3tConfig from '../configs/s3t-config.json';
+import scenarioConfig from '../configs/scenario-config.json';
 
 /**
  * Shows a window to switch between assisted UI mode and expert UI mode. Allows to select predefined config or load a custom one.
@@ -99,6 +102,8 @@ export default defineComponent({
 				this.configStore.loadConfig(s3tConfig as ConfigData);
 				// } else if (configID === "test") {
 				// this.configStore.loadConfig(testConfig as ConfigData);
+			} else if (configID === "scenario") {
+				this.configStore.loadConfig(scenarioConfig as ConfigData);
 			} else if (configID === "uploaded") {
 				this.configStore.resetConfig();
 				this.configStore.name = "uploaded";

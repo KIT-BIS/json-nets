@@ -1,4 +1,3 @@
-import { getNetInstance } from "@/json-nets/Net";
 import { defineStore } from "pinia"
 import { use } from 'echarts/core'
 import { PieChart } from 'echarts/charts'
@@ -8,15 +7,19 @@ import {
 	LegendComponent
 } from 'echarts/components'
 import { SVGRenderer } from 'echarts/renderers'
-import { usePlacesStore } from "./place";
 
 use([TitleComponent, TooltipComponent, LegendComponent, PieChart, SVGRenderer])
 
-// Todo: this is doubled here => move to util library
-function roundToSix(num: number) {
-
-	return +(Math.round(Number(String(num) + 'e+6')) + 'e-6');
+export type SunburstOption = {
 }
+// export type PieOption = {
+// }
+export type SankeyOption = {}
+
+// function roundToSix(num: number) {
+
+	// return +(Math.round(Number(String(num) + 'e+6')) + 'e-6');
+// }
 
 /**
  * Provides state for visualisations.
@@ -25,24 +28,87 @@ function roundToSix(num: number) {
 export const useIndicatorStore = defineStore('indicator', {
 	state: () => {
 		return {
-			indicatorValue: "<keine Daten>" as string,
-			indicatorType: 'pcf-sunburst' as string,
+			visualisationData: "" as any,
+			// indicatorValue: "<keine Daten>" as string,
+			// indicatorType: 'pcf-sunburst' as string,
 
-			sunburstOption: {
+			// customIndicatorType: 'number' as 'sunburst' | 'sankey' | 'pie' | 'number',
+			// valuePath: '/0/number' as string,
+			// value: false as any,
+
+
+			numberData: {
+
+			},
+			sunburstData: {
+			} as SunburstOption,
+			// pieOption: {
+			// } as PieOption,
+			sankeyData: {
+			} as SankeyOption 
+		}
+	},
+	actions: {
+		setVisualisationData(visualisationData: any) {
+			this.visualisationData = visualisationData;
+			if (visualisationData.type === "number") {
+				const precision = 6;
+				const value = +(Math.round(Number(String(visualisationData.value) + 'e+' + precision)) + 'e-' + precision)
+				this.numberData = visualisationData.description + ": " + value + " " + visualisationData.unit;
+			} else if (visualisationData.type === "sunburst") {
+				/**
+				 * Sunburst expects value of type [
+				 * { 
+				 * 		name: "1st level name"
+				 * 		children: [
+				 * 			{
+				 * 				"name": "some name"
+				 * 				"value": 5
+				 * 			}
+				 * 		]
+				 * }
+				 * ]
+				 */
+
+				// this.sunburstData = this.compileSunburstOption(visualisationData.value, '{b}: {c} ' + visualisationData.unit, visualisationData.description);
+				this.sunburstData = this.compileSunburstOption(visualisationData.value, this.compileFormatter(6, visualisationData.unit), visualisationData.description);
+			} else if (visualisationData.type === "sankey") {
+				/**
+				 * Sankey expects value of type { data: Array<{ name: <string> }>, links: Array<{source: <string>, target: <string>, value: <number>}>}
+				 */
+				// this.sankeyData = this.compileSankeyOption(visualisationData.value, '{b}: {c} ' + visualisationData.unit);
+				this.sankeyData = this.compileSankeyOption(visualisationData.value, this.compileFormatter(6, visualisationData.unit));
+			}
+		},
+		compileFormatter(precision: number, unit: string) {
+			return (params: any) => {
+				// const value = roundToSix(params.data.value)
+				const value = +(Math.round(Number(String(params.value) + 'e+' + precision)) + 'e-' + precision)
+
+				// if (params.name === "Beiträge") {
+					// return "zurück";
+				// }
+				return `${params.data.name}: ${value} ${unit}`;
+			}
+		},
+		compileSunburstOption(data: any, formatter: string | Function, title: string, sanitize = true): SunburstOption {
+			if (sanitize) {
+				// let sanitizedData = [];
+				for (let i = 0; i < data.length; i++) {
+					let sanitizedEntry = this.processContributions(data[i].children);
+					data[i].children = sanitizedEntry;
+					// sanitizedData.push(sanitizedEntry);
+				}
+				// data = sanitizedData;
+			}
+			let option = {
 				title: {
-					text: 'Beiträge',
+					text: title,
 					left: 'center',
 				},
 				tooltip: {
 					trigger: 'item',
-					// formatter: '{a} <br/>{b} : {c} ({d}%)',
-					formatter: (params: any) => {
-						const value = roundToSix(params.data.value)
-						if (params.name === "Beiträge") {
-							return "zurück";
-						}
-						return `${params.data.name} : ${value} kgCO2eq`;
-					},
+					formatter: formatter,
 				},
 				legend: {
 					orient: 'vertical',
@@ -50,7 +116,7 @@ export const useIndicatorStore = defineStore('indicator', {
 					data: [] as Array<string>,
 				},
 				series: [{
-					name: 'Beiträge',
+					name: title,
 					// radius: '55%',
 					center: ['50%', '50%'],
 					type: 'sunburst',
@@ -61,92 +127,37 @@ export const useIndicatorStore = defineStore('indicator', {
 							shadowColor: 'rgba(0, 0, 0, 0.5)',
 						},
 					},
-					data: [
-						{
-							name: 'Scope 1',
-							children: [
-							]
-						},
-						{
-							name: 'Scope 2',
-							children: [
-							]
-						},
-						{
-							name: 'Scope 3',
-							children: []
-						}
-					],
+					data: data,
 					radius: [60, '80%'],
 				}]
-			} as any,
-			pieOption: {
-				title: {
-					text: 'Beiträge',
-					left: 'center',
-				},
-				tooltip: {
-					trigger: 'item',
-					formatter: '{a} <br/>{b} : {c} ({d}%)',
-				},
-				legend: {
-					orient: 'vertical',
-					left: 'left',
-					data: [] as Array<string>,
-				},
-				series: [
-					{
-						name: 'Beiträge',
-						type: 'pie',
-						radius: '55%',
-						center: ['50%', '60%'],
-						data: [] as Array<{ name: string, value: number }>,
-						emphasis: {
-							itemStyle: {
-								shadowBlur: 10,
-								shadowOffsetX: 0,
-								shadowColor: 'rgba(0, 0, 0, 0.5)',
-							},
-						},
-					},
-				],
-			} as any,
-			sankeyOption: {
+			}
+			return option;
+		},
+		compileSankeyOption(data: any, formatter: string | Function, sanitize = true) {
+			let option = {
 				series: {
 					type: 'sankey',
 					layout: 'none',
 					nodeAlign: 'right',
 					label: {
 						normal: {
-							formatter: '{b}'  // {b} is the node name
+							formatter: formatter  // {b} is the node name
 						}
 					},
 					emphasis: {
 						focus: 'adjacency'
 					},
-					data: [
-						{
-							name: 'a',
-						},
-						{
-							name: 'b',
-						}
-					],
-					links: [
-						{
-							source: 'a',
-							target: 'b',
-							value: 1
-						}
-					]
+					data:  sanitize? this.removeDuplicates(data.data) : data.data,
+					links: data.links
 				}
-			} as any
-		}
-	},
-	actions: {
-		roundToTwo(num: number) {
-			return +(Math.round(Number(String(num) + 'e+2')) + 'e-2');
+			};
+			return option;
 		},
+		// roundToTwo(num: number) {
+			// return +(Math.round(Number(String(num) + 'e+2')) + 'e-2');
+		// },
+		// echarts expects unique names, which may not be the case in provided data
+		// this function adds up values with same names (could be solved in transition inscriptions instead)
 		processContributions(arrayOfContribs: Array<{ name: string, value: number }>): Array<{ name: string, value: number }> {
 			const returnArray = [] as Array<{ name: string, value: number }>;
 
@@ -163,6 +174,7 @@ export const useIndicatorStore = defineStore('indicator', {
 			}
 			return returnArray;
 		},
+		// same as for processContributions: enforce unique names (could be solved in transition inscriptions instead)
 		removeDuplicates(data: Array<any>) {
 			const returnArray = data.filter((value, index, self) =>
 				index === self.findIndex((t) => (t.name === value.name))
@@ -170,64 +182,57 @@ export const useIndicatorStore = defineStore('indicator', {
 			return returnArray;
 
 		},
-		updateIndicator() {
-			const placeData = getNetInstance().findPlace(usePlacesStore().place.id)
-			if (placeData) {
-				const content = <{
-					ghgFactor: number, amount: number, pds: number,
-					type: string, footprintContributions: Array<{ name: string, value: number }>, names: Array<string>,
-					sankeyNodes: Array<any>, sankeyLinks: Array<any>
-				}>placeData.marking[0];
-
-				if (this.indicatorType === 'pcf-pie') {
-					//@ts-ignore
-					if (content && content.footprintContributions) {
-						this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
-						this.pieOption.series[0].data = this.processContributions(content.footprintContributions);
-					} else {
-						this.pieOption.series[0].data = [];
-						this.indicatorValue = "<keine Daten>";
-
-					}
-					//@ts-ignore
-					//TODO: generate names from footprintContributions (if necessary)
-				} else if (this.indicatorType === 'pcf-sunburst') {
-					//@ts-ignore
-					if (content && content.footprintContributions) {
-						this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
-						//@ts-ignore
-						this.sunburstOption.series[0].data[0].children = this.processContributions(content.footprintContributions[1]);
-						//@ts-ignore
-						this.sunburstOption.series[0].data[1].children = this.processContributions(content.footprintContributions[2]);
-						//@ts-ignore
-						this.sunburstOption.series[0].data[2].children = this.processContributions(content.footprintContributions[3]);
-					} else {
-						this.pieOption.series[0].data = [];
-						this.indicatorValue = "<keine Daten>";
-
-					}
-
-
-				} else if (this.indicatorType === 'pcf-sankey') {
-					//@ts-ignore
-					if (content && content.footprintContributions) {
-						this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
-						this.sankeyOption.series.data = this.removeDuplicates(content.sankeyNodes);
-						this.sankeyOption.series.links = content.sankeyLinks;
-					} else {
-						this.sankeyOption.series.data = [];
-						this.sankeyOption.series.links = [];
-						this.indicatorValue = "<keine Daten>";
-
-					}
-				} else if (this.indicatorType === 'pds') {
-					if (content) {
-						this.indicatorValue = Math.round(content.pds * 100) + "% Primärdaten";
-					} else {
-						this.indicatorValue = "<keine Daten>";
-					}
-				}
-			}
-		}
+//		updateIndicator() {
+//			const placeData = getNetInstance().findPlace(usePlacesStore().place.id)
+//			if (placeData) {
+//				const content = <{
+//					ghgFactor: number,
+//					amount: number,
+//					pds: number,
+//					type: string,
+//					footprintContributions: Array<{ name: string, value: number }>,
+//					names: Array<string>,
+//					sankeyNodes: Array<any>,
+//					sankeyLinks: Array<any>
+//				}>placeData.marking[0];
+//
+//				if (this.indicatorType === 'pcf-sunburst') {
+//					//@ts-ignore
+//					if (content && content.footprintContributions) {
+//						this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
+//						//@ts-ignore
+//						this.sunburstOption.series[0].data[0].children = this.processContributions(content.footprintContributions[1]);
+//						//@ts-ignore
+//						this.sunburstOption.series[0].data[1].children = this.processContributions(content.footprintContributions[2]);
+//						//@ts-ignore
+//						this.sunburstOption.series[0].data[2].children = this.processContributions(content.footprintContributions[3]);
+//					} else {
+//						this.pieOption.series[0].data = [];
+//						this.indicatorValue = "<keine Daten>";
+//
+//					}
+//
+//
+//				} else if (this.indicatorType === 'pcf-sankey') {
+//					//@ts-ignore
+//					if (content && content.footprintContributions) {
+//						this.indicatorValue = this.roundToTwo(content.ghgFactor * content.amount) + " kg CO2e";
+//						this.sankeyOption.series.data = this.removeDuplicates(content.sankeyNodes);
+//						this.sankeyOption.series.links = content.sankeyLinks;
+//					} else {
+//						this.sankeyOption.series.data = [];
+//						this.sankeyOption.series.links = [];
+//						this.indicatorValue = "<keine Daten>";
+//
+//					}
+//				} else if (this.indicatorType === 'pds') {
+//					if (content) {
+//						this.indicatorValue = Math.round(content.pds * 100) + "% Primärdaten";
+//					} else {
+//						this.indicatorValue = "<keine Daten>";
+//					}
+//				}
+//			}
+//		}
 	}
 })

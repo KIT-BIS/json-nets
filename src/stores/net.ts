@@ -44,9 +44,13 @@ export const useNetStore = defineStore('net', {
 			return JSON.stringify({ typeData, netData, layoutData }, null, 2);
 		},
 		import(json: { typeData?: { placeTypes: Record<string, string>, transitionTypes: Record<string, string> }, netData: ImportData, layoutData: any }) {
+
 			if (json.typeData) {
 				this.placeTypes = json.typeData.placeTypes;
 				this.transitionTypes = json.typeData.transitionTypes;
+			} else {
+				this.placeTypes = {};
+				this.transitionTypes = {};
 			}
 			const layoutData = json.layoutData;
 			const netData = getNetInstance().import(json.netData)
@@ -106,7 +110,6 @@ export const useNetStore = defineStore('net', {
 		addPlace() {
 			let placeData: PlaceData = getNetInstance().addPlace();
 			this.places.push(placeData)
-			this.lastCreatedPlaces = [placeData];
 
 			const config = useConfigStore();
 			this.placeTypes[placeData.id] = config.defaultPlaceType;
@@ -114,13 +117,19 @@ export const useNetStore = defineStore('net', {
 			if (config.defaultPlaceType !== 'custom') {
 				const placeType = config.getPlaceTypeById(config.defaultPlaceType)
 				if (!placeType) return;
-				getNetInstance().updatePlace(placeData.id, placeData.name, placeType.schema, placeType.marking);
+				const updateData = getNetInstance().updatePlace(placeData.id, placeData.name, placeType.schema, placeType.marking);
+				if (updateData) {
+					this.lastCreatedPlaces = [updateData];
+					getNetInstance().setDefaultMarking(placeData.id);
+				}
+			} else {
+				this.lastCreatedPlaces = [placeData];
 			}
 
 		},
 
 		deletePlace(id: string) {
-			// Todo: clean up types as well
+			delete this.placeTypes[id];
 			this.lastRemovedCells = getNetInstance().removePlace(id);
 		},
 		addTransition() {
@@ -148,7 +157,7 @@ export const useNetStore = defineStore('net', {
 		},
 
 		deleteTransition(id: string) {
-			// Todo: clean up types as well
+			delete this.transitionTypes[id];
 			this.lastRemovedCells = getNetInstance().removeTransition(id);
 		},
 		disconnect(id: string) {

@@ -1,5 +1,5 @@
 <template>
-    <v-chart class="chart" :option="indicatorStore.sankeyOption" autoresize />
+    <v-chart class="chart" :option="indicatorStore.sankeyData" autoresize />
 </template>
 <script lang="ts">
 import { use } from 'echarts/core'

@@ -1,0 +1,1386 @@
+{
+    "name": "Data Flow (Substructures)",
+    "defaultUIAssistMode": "expert",
+    "defaultTransitionType": "instances",
+    "defaultPlaceType": "instances",
+    "allowAutoLayout": true,
+    "visualisationConfig": {
+        "show": false
+    },
+    "transitionTypes": [
+        {
+            "id": "instances",
+            "title": "Process instances",
+            "description": "Transition that creates and consumes tokens with process instance IDs.",
+            "keySnippet": "'-';",
+            "valueSnippet": "input_values[0];",
+            "preface": "",
+            "guard": "true",
+            "presetFilter": "$.*",
+            "postsetFilter": "$",
+            "customVariables": {}
+        }
+    ],
+    "placeTypes": [
+        {
+            "id": "instances",
+            "externalInteraction": {
+                "type": "none"
+            },
+            "schema": {
+                "title": "Process instances",
+                "description": "Place that stores tokens with process instance IDs.",
+                "type": "array",
+                "maxItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "instanceID": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "instanceID"
+                    ]
+                }
+            },
+            "marking": []
+        }
+    ],
+    "examples": [
+        {
+            "name": "smp-1-2-insert-delete-substructure",
+            "net": {
+                "typeData": {
+                    "placeTypes": {
+                        "93294661-9171-46f0-802e-49a9e9dfdc63": "custom",
+                        "da404193-63a9-4a6e-bec6-ce55572575ee": "custom",
+                        "4bbb0f1a-8651-4f68-905c-c557905789e4": "instances"
+                    },
+                    "transitionTypes": {
+                        "c9cdbe57-597f-4025-82c4-cc4324e9dffc": "custom"
+                    }
+                },
+                "netData": {
+                    "places": [
+                        {
+                            "id": "93294661-9171-46f0-802e-49a9e9dfdc63",
+                            "name": "Flight Request",
+                            "marking": [
+                                {
+                                    "flightNo": 135,
+                                    "name": "Newman",
+                                    "date": "11/15/94"
+                                }
+                            ],
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "93294661-9171-46f0-802e-49a9e9dfdc63"
+                            }
+                        },
+                        {
+                            "id": "da404193-63a9-4a6e-bec6-ce55572575ee",
+                            "name": "Flight",
+                            "marking": [
+                                {
+                                    "flightNo": 135,
+                                    "passengers": [
+                                        {
+                                            "seatNo": 1,
+                                            "name": "Ford"
+                                        },
+                                        {
+                                            "seatNo": 2,
+                                            "name": "Jones"
+                                        },
+                                        {
+                                            "seatNo": 3,
+                                            "name": "Smith"
+                                        },
+                                        {
+                                            "seatNo": 4,
+                                            "name": "Johnson"
+                                        },
+                                        {
+                                            "seatNo": 5,
+                                            "name": "Brown"
+                                        },
+                                        {
+                                            "seatNo": 6,
+                                            "name": "Taylor"
+                                        },
+                                        {
+                                            "seatNo": 7,
+                                            "name": "Anderson"
+                                        },
+                                        {
+                                            "seatNo": 8,
+                                            "name": "Thomas"
+                                        },
+                                        {
+                                            "seatNo": 9,
+                                            "name": "Jackson"
+                                        },
+                                        {
+                                            "seatNo": 10,
+                                            "name": "White"
+                                        },
+                                        {
+                                            "seatNo": 11,
+                                            "name": "Harris"
+                                        },
+                                        {
+                                            "seatNo": 12,
+                                            "name": "Martin"
+                                        },
+                                        {
+                                            "seatNo": 13,
+                                            "name": "Thompson"
+                                        },
+                                        {
+                                            "seatNo": 14,
+                                            "name": "Garcia"
+                                        },
+                                        {
+                                            "seatNo": 15,
+                                            "name": "Martinez"
+                                        },
+                                        {
+                                            "seatNo": 16,
+                                            "name": "Robinson"
+                                        },
+                                        {
+                                            "seatNo": 17,
+                                            "name": "Clark"
+                                        },
+                                        {
+                                            "seatNo": 18,
+                                            "name": "Rodriguez"
+                                        },
+                                        {
+                                            "seatNo": 19,
+                                            "name": "Lewis"
+                                        },
+                                        {
+                                            "seatNo": 20,
+                                            "name": "Lee"
+                                        },
+                                        {
+                                            "seatNo": 21,
+                                            "name": "Walker"
+                                        },
+                                        {
+                                            "seatNo": 22,
+                                            "name": "Hall"
+                                        },
+                                        {
+                                            "seatNo": 23,
+                                            "name": "Allen"
+                                        },
+                                        {
+                                            "seatNo": 24,
+                                            "name": "Young"
+                                        },
+                                        {
+                                            "seatNo": 25,
+                                            "name": "Hernandez"
+                                        },
+                                        {
+                                            "seatNo": 26,
+                                            "name": "King"
+                                        },
+                                        {
+                                            "seatNo": 27,
+                                            "name": "Wright"
+                                        },
+                                        {
+                                            "seatNo": 28,
+                                            "name": "Lopez"
+                                        },
+                                        {
+                                            "seatNo": 29,
+                                            "name": "Hill"
+                                        },
+                                        {
+                                            "seatNo": 30,
+                                            "name": "Scott"
+                                        },
+                                        {
+                                            "seatNo": 31,
+                                            "name": "Green"
+                                        },
+                                        {
+                                            "seatNo": 32,
+                                            "name": "Adams"
+                                        },
+                                        {
+                                            "seatNo": 33,
+                                            "name": "Baker"
+                                        },
+                                        {
+                                            "seatNo": 34,
+                                            "name": "Gonzalez"
+                                        },
+                                        {
+                                            "seatNo": 35,
+                                            "name": "Nelson"
+                                        },
+                                        {
+                                            "seatNo": 36,
+                                            "name": "Carter"
+                                        },
+                                        {
+                                            "seatNo": 37,
+                                            "name": "Mitchell"
+                                        },
+                                        {
+                                            "seatNo": 38,
+                                            "name": "Perez"
+                                        },
+                                        {
+                                            "seatNo": 39,
+                                            "name": "Roberts"
+                                        },
+                                        {
+                                            "seatNo": 40,
+                                            "name": "Turner"
+                                        },
+                                        {
+                                            "seatNo": 41,
+                                            "name": "Phillips"
+                                        },
+                                        {
+                                            "seatNo": 42,
+                                            "name": "Campbell"
+                                        },
+                                        {
+                                            "seatNo": 43,
+                                            "name": "Parker"
+                                        },
+                                        {
+                                            "seatNo": 44,
+                                            "name": "Evans"
+                                        },
+                                        {
+                                            "seatNo": 45,
+                                            "name": "Edwards"
+                                        },
+                                        {
+                                            "seatNo": 46,
+                                            "name": "Collins"
+                                        },
+                                        {
+                                            "seatNo": 47,
+                                            "name": "Stewart"
+                                        },
+                                        {
+                                            "seatNo": 48,
+                                            "name": "Sanchez"
+                                        },
+                                        {
+                                            "seatNo": 49,
+                                            "name": "Morris"
+                                        },
+                                        {
+                                            "seatNo": 50,
+                                            "name": "Rogers"
+                                        },
+                                        {
+                                            "seatNo": 51,
+                                            "name": "Reed"
+                                        },
+                                        {
+                                            "seatNo": 52,
+                                            "name": "Cook"
+                                        },
+                                        {
+                                            "seatNo": 53,
+                                            "name": "Morgan"
+                                        },
+                                        {
+                                            "seatNo": 54,
+                                            "name": "Bell"
+                                        },
+                                        {
+                                            "seatNo": 55,
+                                            "name": "Murphy"
+                                        },
+                                        {
+                                            "seatNo": 56,
+                                            "name": "Bailey"
+                                        },
+                                        {
+                                            "seatNo": 57,
+                                            "name": "Rivera"
+                                        },
+                                        {
+                                            "seatNo": 58,
+                                            "name": "Cooper"
+                                        },
+                                        {
+                                            "seatNo": 59,
+                                            "name": "Richardson"
+                                        },
+                                        {
+                                            "seatNo": 60,
+                                            "name": "Cox"
+                                        },
+                                        {
+                                            "seatNo": 61,
+                                            "name": "Howard"
+                                        },
+                                        {
+                                            "seatNo": 62,
+                                            "name": "Ward"
+                                        },
+                                        {
+                                            "seatNo": 63,
+                                            "name": "Torres"
+                                        },
+                                        {
+                                            "seatNo": 64,
+                                            "name": "Peterson"
+                                        },
+                                        {
+                                            "seatNo": 65,
+                                            "name": "Gray"
+                                        },
+                                        {
+                                            "seatNo": 66,
+                                            "name": "Ramirez"
+                                        },
+                                        {
+                                            "seatNo": 67,
+                                            "name": "James"
+                                        },
+                                        {
+                                            "seatNo": 68,
+                                            "name": "Watson"
+                                        },
+                                        {
+                                            "seatNo": 69,
+                                            "name": "Brooks"
+                                        },
+                                        {
+                                            "seatNo": 70,
+                                            "name": "Kelly"
+                                        },
+                                        {
+                                            "seatNo": 71,
+                                            "name": "Sanders"
+                                        },
+                                        {
+                                            "seatNo": 72,
+                                            "name": "Price"
+                                        },
+                                        {
+                                            "seatNo": 73,
+                                            "name": "Bennett"
+                                        },
+                                        {
+                                            "seatNo": 74,
+                                            "name": "Wood"
+                                        },
+                                        {
+                                            "seatNo": 75,
+                                            "name": "Barnes"
+                                        },
+                                        {
+                                            "seatNo": 76,
+                                            "name": "Ross"
+                                        },
+                                        {
+                                            "seatNo": 77,
+                                            "name": "Henderson"
+                                        },
+                                        {
+                                            "seatNo": 78,
+                                            "name": "Coleman"
+                                        },
+                                        {
+                                            "seatNo": 79,
+                                            "name": "Jenkins"
+                                        },
+                                        {
+                                            "seatNo": 80,
+                                            "name": "Perry"
+                                        },
+                                        {
+                                            "seatNo": 81,
+                                            "name": "Powell"
+                                        },
+                                        {
+                                            "seatNo": 82,
+                                            "name": "Long"
+                                        },
+                                        {
+                                            "seatNo": 83,
+                                            "name": "Patterson"
+                                        },
+                                        {
+                                            "seatNo": 84,
+                                            "name": "Hughes"
+                                        },
+                                        {
+                                            "seatNo": 85,
+                                            "name": "Flores"
+                                        },
+                                        {
+                                            "seatNo": 86,
+                                            "name": "Washington"
+                                        },
+                                        {
+                                            "seatNo": 87,
+                                            "name": "Butler"
+                                        },
+                                        {
+                                            "seatNo": 88,
+                                            "name": "Simmons"
+                                        },
+                                        {
+                                            "seatNo": 89,
+                                            "name": "Foster"
+                                        },
+                                        {
+                                            "seatNo": 90,
+                                            "name": "Gonzales"
+                                        },
+                                        {
+                                            "seatNo": 91,
+                                            "name": "Bryant"
+                                        },
+                                        {
+                                            "seatNo": 92,
+                                            "name": "Alexander"
+                                        },
+                                        {
+                                            "seatNo": 93,
+                                            "name": "Russell"
+                                        },
+                                        {
+                                            "seatNo": 94,
+                                            "name": "Griffin"
+                                        },
+                                        {
+                                            "seatNo": 95,
+                                            "name": "Diaz"
+                                        },
+                                        {
+                                            "seatNo": 96,
+                                            "name": "Hayes"
+                                        },
+                                        {
+                                            "seatNo": 97,
+                                            "name": "Myers"
+                                        },
+                                        {
+                                            "seatNo": 98,
+                                            "name": "Ford"
+                                        },
+                                        {
+                                            "seatNo": 99,
+                                            "name": "Hamilton"
+                                        },
+                                        {
+                                            "seatNo": 100,
+                                            "name": "Graham"
+                                        },
+                                        {
+                                            "seatNo": 101,
+                                            "name": "Sullivan"
+                                        },
+                                        {
+                                            "seatNo": 102,
+                                            "name": "Wallace"
+                                        },
+                                        {
+                                            "seatNo": 103,
+                                            "name": "Woods"
+                                        },
+                                        {
+                                            "seatNo": 104,
+                                            "name": "Cole"
+                                        },
+                                        {
+                                            "seatNo": 105,
+                                            "name": "West"
+                                        },
+                                        {
+                                            "seatNo": 106,
+                                            "name": "Jordan"
+                                        },
+                                        {
+                                            "seatNo": 107,
+                                            "name": "Owens"
+                                        },
+                                        {
+                                            "seatNo": 108,
+                                            "name": "Reynolds"
+                                        },
+                                        {
+                                            "seatNo": 109,
+                                            "name": "Fisher"
+                                        },
+                                        {
+                                            "seatNo": 110,
+                                            "name": "Ellis"
+                                        },
+                                        {
+                                            "seatNo": 111,
+                                            "name": "Harrison"
+                                        },
+                                        {
+                                            "seatNo": 112,
+                                            "name": "Gibson"
+                                        },
+                                        {
+                                            "seatNo": 113,
+                                            "name": "Mcdonald"
+                                        },
+                                        {
+                                            "seatNo": 114,
+                                            "name": "Cruz"
+                                        },
+                                        {
+                                            "seatNo": 115,
+                                            "name": "Marshall"
+                                        },
+                                        {
+                                            "seatNo": 116,
+                                            "name": "Ortiz"
+                                        },
+                                        {
+                                            "seatNo": 117,
+                                            "name": "Gomez"
+                                        },
+                                        {
+                                            "seatNo": 118,
+                                            "name": "Murray"
+                                        },
+                                        {
+                                            "seatNo": 119,
+                                            "name": "Freeman"
+                                        },
+                                        {
+                                            "seatNo": 120,
+                                            "name": "Green"
+                                        }
+                                    ],
+                                    "availableSeats": [
+                                        121,
+                                        122,
+                                        123,
+                                        124,
+                                        125,
+                                        126,
+                                        127,
+                                        128,
+                                        129,
+                                        130,
+                                        131,
+                                        132,
+                                        133,
+                                        134,
+                                        135,
+                                        136,
+                                        137,
+                                        138,
+                                        139,
+                                        140,
+                                        141,
+                                        142,
+                                        143,
+                                        144,
+                                        145,
+                                        146,
+                                        147,
+                                        148,
+                                        149,
+                                        150,
+                                        151,
+                                        152,
+                                        153,
+                                        154,
+                                        155,
+                                        156,
+                                        157,
+                                        158,
+                                        159,
+                                        160,
+                                        161,
+                                        162,
+                                        163,
+                                        164,
+                                        165,
+                                        166,
+                                        167,
+                                        168,
+                                        169,
+                                        170,
+                                        171,
+                                        172,
+                                        173,
+                                        174,
+                                        175,
+                                        176,
+                                        177,
+                                        178,
+                                        179,
+                                        180,
+                                        181,
+                                        182,
+                                        183,
+                                        184,
+                                        185,
+                                        186,
+                                        187,
+                                        188,
+                                        189,
+                                        190,
+                                        191,
+                                        192,
+                                        193,
+                                        194,
+                                        195,
+                                        196,
+                                        197,
+                                        198,
+                                        199,
+                                        200,
+                                        201,
+                                        202,
+                                        203,
+                                        204,
+                                        205,
+                                        206,
+                                        207,
+                                        208,
+                                        209,
+                                        210,
+                                        211,
+                                        212,
+                                        213,
+                                        214,
+                                        215,
+                                        216,
+                                        217,
+                                        218,
+                                        219,
+                                        220,
+                                        221,
+                                        222,
+                                        223,
+                                        224,
+                                        225,
+                                        226,
+                                        227,
+                                        228,
+                                        229,
+                                        230,
+                                        231,
+                                        232,
+                                        233,
+                                        234,
+                                        235
+                                    ],
+                                    "price": 820,
+                                    "date": "11/15/94"
+                                }
+                            ],
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "da404193-63a9-4a6e-bec6-ce55572575ee"
+                            }
+                        },
+                        {
+                            "id": "4bbb0f1a-8651-4f68-905c-c557905789e4",
+                            "name": "Flight Reservation",
+                            "marking": [],
+                            "schema": {
+                                "title": "Process instances",
+                                "description": "Place that stores tokens with process instance IDs.",
+                                "type": "array",
+                                "maxItems": 1,
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "instanceID": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "instanceID"
+                                    ]
+                                },
+                                "$id": "4bbb0f1a-8651-4f68-905c-c557905789e4"
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                            "name": "Accept-flight-reservation",
+                            "preface": "",
+                            "guard": "input_flightRequest_token.flightNo == input_flight_token.flightNo &&\ninput_flightRequest_token.date == input_flightRequest_token.date",
+                            "customVariables": {},
+                            "keyVarSnippets": {
+                                "output_flightReservation_key": "local output_flightReservation_key = '-';",
+                                "output_flight_key": "local output_flight_key = '-';"
+                            },
+                            "fragmentVarSnippets": {
+                                "output_flightReservation_value": "local output_flightReservation_value = {\n  flightNo: input_flight_token.flightNo,\n  name: input_flightRequest_token.name,\n  date: input_flight_token.date,\n  price: input_flight_token.price\n};",
+                                "output_flight_value": "local output_flight_value = {\n  seatNo: input_flight_value,\n  name: input_flightRequest_value.name\n};"
+                            }
+                        }
+                    ],
+                    "arcs": [
+                        {
+                            "id": "2c9ebdbc-91d2-4f00-843f-3c822886d668",
+                            "filter": "$.*",
+                            "fromId": "93294661-9171-46f0-802e-49a9e9dfdc63",
+                            "toId": "c9cdbe57-597f-4025-82c4-cc4324e9dffc"
+                        },
+                        {
+                            "id": "a2a90434-7c08-4284-afb2-a82b4095da58",
+                            "filter": "$.*.availableSeats.*",
+                            "fromId": "da404193-63a9-4a6e-bec6-ce55572575ee",
+                            "toId": "c9cdbe57-597f-4025-82c4-cc4324e9dffc"
+                        },
+                        {
+                            "id": "5a88ae79-9472-44e5-853a-f3191281365c",
+                            "filter": "$.*.passengers",
+                            "fromId": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                            "toId": "da404193-63a9-4a6e-bec6-ce55572575ee"
+                        },
+                        {
+                            "id": "88818d5d-d7a3-46ab-87ad-e01ad21a1021",
+                            "filter": "$",
+                            "fromId": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                            "toId": "4bbb0f1a-8651-4f68-905c-c557905789e4"
+                        }
+                    ]
+                },
+                "layoutData": {
+                    "cells": [
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": -12,
+                                "y": -36
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "93294661-9171-46f0-802e-49a9e9dfdc63",
+                            "jsonnetsType": "place",
+                            "z": 1,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Flight Request"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": -12,
+                                "y": 144
+                            },
+                            "angle": 0,
+                            "tokens": 1,
+                            "id": "da404193-63a9-4a6e-bec6-ce55572575ee",
+                            "jsonnetsType": "place",
+                            "z": 2,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Flight"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 372,
+                                "y": 48
+                            },
+                            "angle": 0,
+                            "tokens": 0,
+                            "id": "4bbb0f1a-8651-4f68-905c-c557905789e4",
+                            "jsonnetsType": "place",
+                            "z": 3,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Flight Reservation"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 150,
+                                "y": 50
+                            },
+                            "angle": 0,
+                            "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                            "jsonnetsType": "transition",
+                            "z": 4,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Accept-flight-reservation"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "93294661-9171-46f0-802e-49a9e9dfdc63",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                                "selector": ".root"
+                            },
+                            "id": "2c9ebdbc-91d2-4f00-843f-3c822886d668",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 5,
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "da404193-63a9-4a6e-bec6-ce55572575ee",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                                "selector": ".root"
+                            },
+                            "id": "a2a90434-7c08-4284-afb2-a82b4095da58",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 6,
+                            "vertices": [
+                                {
+                                    "x": 120,
+                                    "y": 144
+                                }
+                            ],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "da404193-63a9-4a6e-bec6-ce55572575ee",
+                                "selector": ".root"
+                            },
+                            "id": "5a88ae79-9472-44e5-853a-f3191281365c",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 7,
+                            "vertices": [
+                                {
+                                    "x": 84,
+                                    "y": 96
+                                }
+                            ],
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "c9cdbe57-597f-4025-82c4-cc4324e9dffc",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "4bbb0f1a-8651-4f68-905c-c557905789e4",
+                                "selector": ".root"
+                            },
+                            "id": "88818d5d-d7a3-46ab-87ad-e01ad21a1021",
+                            "jsonnetsType": "postset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 8,
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "name": "smp-3-concurrent-manipulation-of-substructures",
+            "net": {
+                "typeData": {
+                    "placeTypes": {
+                        "421aa912-0b08-4c33-8d76-10766db1b262": "custom"
+                    },
+                    "transitionTypes": {
+                        "5cab3aeb-d3e6-4497-ad91-0f47e599260c": "custom",
+                        "2b6cb65f-bb5b-4aa7-a4e2-84179ac4e276": "custom",
+                        "a36fb1e0-ed99-40c8-9cf3-5f0712141f19": "custom"
+                    }
+                },
+                "netData": {
+                    "places": [
+                        {
+                            "id": "421aa912-0b08-4c33-8d76-10766db1b262",
+                            "name": "Hotel",
+                            "marking": [
+                                {
+                                    "name": "hotel1",
+                                    "availableRooms": [
+                                        "r1",
+                                        "r7",
+                                        "r22"
+                                    ]
+                                },
+                                {
+                                    "name": "hotel2",
+                                    "availableRooms": [
+                                        "r6",
+                                        "r9",
+                                        "r12",
+                                        "r13"
+                                    ]
+                                }
+                            ],
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object"
+                                },
+                                "$id": "421aa912-0b08-4c33-8d76-10766db1b262"
+                            }
+                        }
+                    ],
+                    "transitions": [
+                        {
+                            "id": "5cab3aeb-d3e6-4497-ad91-0f47e599260c",
+                            "name": "Remove Hotel",
+                            "preface": "",
+                            "guard": "true",
+                            "customVariables": {},
+                            "keyVarSnippets": {},
+                            "fragmentVarSnippets": {}
+                        },
+                        {
+                            "id": "2b6cb65f-bb5b-4aa7-a4e2-84179ac4e276",
+                            "name": "Hotel Reservation 1",
+                            "preface": "",
+                            "guard": "true",
+                            "customVariables": {},
+                            "keyVarSnippets": {},
+                            "fragmentVarSnippets": {}
+                        },
+                        {
+                            "id": "a36fb1e0-ed99-40c8-9cf3-5f0712141f19",
+                            "name": "Hotel Reservation 2",
+                            "preface": "",
+                            "guard": "true",
+                            "customVariables": {},
+                            "keyVarSnippets": {},
+                            "fragmentVarSnippets": {}
+                        }
+                    ],
+                    "arcs": [
+                        {
+                            "id": "a1e92450-aa6d-422e-b486-518dc46a0418",
+                            "filter": "$.*",
+                            "fromId": "421aa912-0b08-4c33-8d76-10766db1b262",
+                            "toId": "5cab3aeb-d3e6-4497-ad91-0f47e599260c"
+                        },
+                        {
+                            "id": "1cedb822-44d4-4316-ba9a-60ae7a0b4b37",
+                            "filter": "$.*.availableRooms.*",
+                            "fromId": "421aa912-0b08-4c33-8d76-10766db1b262",
+                            "toId": "2b6cb65f-bb5b-4aa7-a4e2-84179ac4e276"
+                        },
+                        {
+                            "id": "8abfa0a0-9d3c-4b18-84dc-0256b054b1e0",
+                            "filter": "$.*.availableRooms.*",
+                            "fromId": "421aa912-0b08-4c33-8d76-10766db1b262",
+                            "toId": "a36fb1e0-ed99-40c8-9cf3-5f0712141f19"
+                        }
+                    ]
+                },
+                "layoutData": {
+                    "cells": [
+                        {
+                            "type": "pn.Place",
+                            "size": {
+                                "width": 50,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 0,
+                                "y": 150
+                            },
+                            "angle": 0,
+                            "tokens": 2,
+                            "id": "421aa912-0b08-4c33-8d76-10766db1b262",
+                            "jsonnetsType": "place",
+                            "z": 1,
+                            "attrs": {
+                                ".root": {
+                                    "stroke": "hsl(204, 71%, 39%)",
+                                    "stroke-width": 3
+                                },
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Hotel"
+                                },
+                                ".tokens > circle": {
+                                    "fill": "#7a7e9b"
+                                },
+                                ".alot > text": {
+                                    "fill": "#7a7e9b",
+                                    "font-family": "Courier New",
+                                    "font-size": 20,
+                                    "font-weight": "bold",
+                                    "ref-x": 0,
+                                    "ref-y": 0,
+                                    "y-alignment": -0.2
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 150,
+                                "y": 0
+                            },
+                            "angle": 0,
+                            "id": "5cab3aeb-d3e6-4497-ad91-0f47e599260c",
+                            "jsonnetsType": "transition",
+                            "z": 2,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Remove Hotel"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 150,
+                                "y": 150
+                            },
+                            "angle": 0,
+                            "id": "2b6cb65f-bb5b-4aa7-a4e2-84179ac4e276",
+                            "jsonnetsType": "transition",
+                            "z": 3,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Hotel Reservation 1"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "pn.Transition",
+                            "size": {
+                                "width": 100,
+                                "height": 50
+                            },
+                            "position": {
+                                "x": 150,
+                                "y": 300
+                            },
+                            "angle": 0,
+                            "id": "a36fb1e0-ed99-40c8-9cf3-5f0712141f19",
+                            "jsonnetsType": "transition",
+                            "z": 4,
+                            "attrs": {
+                                ".label": {
+                                    "fill": "#7a7e9b",
+                                    "text": "Hotel Reservation 2"
+                                },
+                                ".root": {
+                                    "fill": "hsl(204, 71%, 39%)",
+                                    "stroke": "hsl(0, 0%, 21%)"
+                                },
+                                "body": {
+                                    "cursor": "auto"
+                                },
+                                "label": {
+                                    "cursor": "auto"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "421aa912-0b08-4c33-8d76-10766db1b262",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "5cab3aeb-d3e6-4497-ad91-0f47e599260c",
+                                "selector": ".root"
+                            },
+                            "id": "a1e92450-aa6d-422e-b486-518dc46a0418",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 5,
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "421aa912-0b08-4c33-8d76-10766db1b262",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "2b6cb65f-bb5b-4aa7-a4e2-84179ac4e276",
+                                "selector": ".root"
+                            },
+                            "id": "1cedb822-44d4-4316-ba9a-60ae7a0b4b37",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 6,
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        },
+                        {
+                            "type": "standard.Link",
+                            "source": {
+                                "id": "421aa912-0b08-4c33-8d76-10766db1b262",
+                                "selector": ".root"
+                            },
+                            "target": {
+                                "id": "a36fb1e0-ed99-40c8-9cf3-5f0712141f19",
+                                "selector": ".root"
+                            },
+                            "id": "8abfa0a0-9d3c-4b18-84dc-0256b054b1e0",
+                            "jsonnetsType": "preset",
+                            "connector": {
+                                "name": "straight",
+                                "args": {
+                                    "cornerType": "cubic"
+                                }
+                            },
+                            "z": 7,
+                            "attrs": {
+                                ".connection": {
+                                    "fill": "none",
+                                    "stroke-linejoin": "round",
+                                    "stroke-width": "2",
+                                    "stroke": "#4b4a67"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

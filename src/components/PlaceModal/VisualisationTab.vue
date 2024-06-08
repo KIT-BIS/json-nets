@@ -1,27 +1,55 @@
 <template>
   <div class="block">
-    <div class="field">
-      <label class="label is-small">Visualisierung:</label>
+    <div class="field" v-if="visualisations">
+      <label class="label is-small">Available visualisations and indicators:</label>
+      <div class="select is-small">
+        <!-- <select v-model="indicatorStore.indicatorType" @change="indicatorStore.updateIndicator()"> -->
+          <select @change="onVisualisationSelect">
+            <option v-for="(vis,index) in visualisations" :value="index">{{vis.description}}</option>
 
-      <div class="select mb-5 is-small">
-        <select v-model="indicatorStore.indicatorType" @change="indicatorStore.updateIndicator()">
-          <option value="pcf-sankey">THG-Fußabdruck (Sankey)</option>
-          <option value="pcf-sunburst">THG-Fußabdruck (Sunburst)</option>
-          <option value="pds">Primärdatenanteil</option>
-        </select>
+          </select>
       </div>
+
+      <!-- <div v-if="false"> -->
+        <!-- <select v-model="indicatorStore.indicatorType" @change="indicatorStore.updateIndicator()"> -->
+          <!-- <option value="pcf-sankey">THG-Fußabdruck (Sankey)</option> -->
+          <!-- <option value="pcf-sunburst">THG-Fußabdruck (Sunburst)</option> -->
+          <!-- <option value="pds">Primärdatenanteil</option> -->
+        <!-- </select> -->
+      <!-- </div> -->
+      <!-- <div v-else class="select is-small"> -->
+        <!-- <select v-model="indicatorStore.customIndicatorType" @change="indicatorStore.updateCustomIndicator()"> -->
+          <!-- <option value="sankey">Sankey</option> -->
+          <!-- <option value="sunburst">Sunburst</option> -->
+          <!-- <option value="number">Value</option> -->
+        <!-- </select> -->
+      <!-- </div> -->
     </div>
+    <div v-else class="notification is-info is-light is-size-7">
+      No visualisations available.
+    </div>
+    <!-- <div class="field"> -->
+      <!-- <label class="label is-small">Path: -->
+      <!-- </label> -->
+      <!-- <div class="control" :style="{ width: '200px' }"> -->
+        <!-- <input class="input is-small" v-model="indicatorStore.valuePath"> -->
+      <!-- </div> -->
+    <!-- </div> -->
+    <!-- <button class="button is-small is-primary" @click="indicatorStore.updateCustomIndicator()">Update</button> -->
   </div>
   <div class="block">
-    <p class="has-text-weight-bold">Gesamtwert: {{ indicatorStore.indicatorValue }}
-    </p>
+    <NumberDisplay v-if="indicatorStore.visualisationData.type === 'number'" />
+    <SunburstChart v-else-if="indicatorStore.visualisationData.type === 'sunburst'" />
+    <SankeyChart v-else-if="indicatorStore.visualisationData.type === 'sankey'" />
   </div>
-
-
-  <div class="block">
-    <SankeyChart v-if="indicatorStore.indicatorType == 'pcf-sankey'" />
-    <SunburstChart v-if="indicatorStore.indicatorType == 'pcf-sunburst'" />
-  </div>
+  <!-- <div class="block"> -->
+  <!-- <p class="has-text-weight-bold">Gesamtwert: {{ indicatorStore.indicatorValue }} -->
+  <!-- </p> -->
+  <!-- </div> -->
+  <!-- <div class="block"> -->
+  <!-- <SankeyChart v-if="indicatorStore.indicatorType == 'pcf-sankey'" /> -->
+  <!-- <SunburstChart v-if="indicatorStore.indicatorType == 'pcf-sunburst'" /> -->
+  <!-- </div> -->
 
 </template>
 <script lang="ts">
@@ -29,8 +57,17 @@ import { mapStores } from 'pinia';
 import { defineComponent } from 'vue';
 
 import { useIndicatorStore } from '../../stores/indicator'
-import SankeyChart from './SankeyChart.vue';
-import SunburstChart from './SunburstChart.vue';
+import { useConfigStore } from '@/stores/config';
+
+import SankeyChart from './Visualisations/SankeyChart.vue';
+import NumberDisplay from './Visualisations/NumberDisplay.vue';
+import SunburstChart from './Visualisations/SunburstChart.vue';
+import { usePlacesStore } from '@/stores/place';
+
+export type VisualisationData = {
+  description: string
+  type: "number" | "sunburst"
+}
 
 /**
  * A tab that provides different options to visualise marking data. Currently only works with scope3tool configuration.
@@ -39,13 +76,39 @@ import SunburstChart from './SunburstChart.vue';
 export default defineComponent({
   components: {
     SankeyChart,
+    NumberDisplay,
     SunburstChart
   },
   computed: {
-    ...mapStores(useIndicatorStore)
+    ...mapStores(useIndicatorStore),
+    ...mapStores(useConfigStore),
+    ...mapStores(usePlacesStore),
+    visualisations(): Array<VisualisationData> | false {
+      // Todo: by convention, visualisation data is pulled from first token, $visualisations field
+      // provide documentation (also in UI), maybe allow to visualise also other tokens
+      const visualisations = this.placesStore.place.marking[0]["$visualisations"];
+      if (visualisations) {
+        return <Array<VisualisationData>> visualisations;
+      } else {
+        return false
+      }
+    }
   },
   mounted() {
-    this.indicatorStore.updateIndicator();
+      if (this.visualisations) {
+        this.indicatorStore.setVisualisationData(this.visualisations[0]);
+      }
+    // this.indicatorStore.updateIndicator();
+    // this.indicatorStore.updateCustomIndicator();
+  },
+  methods: {
+    onVisualisationSelect(event: Event) {
+      const index = Number((event.target as HTMLInputElement).value);
+      // console.log(event.target.value);
+      if (this.visualisations) {
+        this.indicatorStore.setVisualisationData(this.visualisations[index]);
+      }
+    }
   }
 });
 </script>

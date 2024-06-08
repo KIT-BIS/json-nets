@@ -5,6 +5,11 @@
 import { useConfigStore } from '@/stores/config';
 import { defineComponent } from 'vue';
 import s3tConfig from '../configs/s3t-config.json'
+import scenarioConfig from '../configs/scenario-config.json'
+import controlFlowConfig from '../configs/controlflow-config.json'
+import dataFlowConfig from '../configs/dataflow-config.json'
+import substructuresConfig from '../configs/substructures-config.json'
+import hectorschoolConfig from '../configs/hectorschool-config.json'
 import { mapStores } from 'pinia';
 import type { ConfigData } from '../stores/config'
 import { useNetStore } from '@/stores/net';
@@ -21,7 +26,23 @@ export default defineComponent({
 		const configID = this.$route.params.configID
 		if (configID === "scope3tool") {
 			this.configStore.loadConfig(s3tConfig as ConfigData);
+		} else if (configID === "scenario") {
+			this.configStore.loadConfig(scenarioConfig as ConfigData);
+		}  else if (configID === "controlflow") {
+			//@ts-ignore TODO don't know why it is necessary here - check
+			this.configStore.loadConfig(controlFlowConfig as ConfigData);
+		}  else if (configID === "dataflow") {
+			this.configStore.loadConfig(dataFlowConfig as ConfigData);
+		} else if (configID === "substructures") {
+			this.configStore.loadConfig(substructuresConfig as ConfigData);
+		} else if (configID === "hectorschool") {
+			this.configStore.loadConfig(hectorschoolConfig as ConfigData);
 		}
+
+		// else {
+			// Todo: temporarily load s3tconfig as default REMOVE
+			// this.configStore.loadConfig(s3tConfig as ConfigData);
+		// }
 		const modelID = this.$route.params.modelID;
 		if (modelID) {
 

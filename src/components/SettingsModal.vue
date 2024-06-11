@@ -28,12 +28,22 @@
 							<label class="label is-small">Upload config file:</label>
 							<input class="button is-small" style="margin-left: 15px" type="file" name="configfile"
 								@change="(event) => {
-								readFile(event)
-								}" />
+					readFile(event)
+				}" />
+						</div>
+						<div class="field">
+							<!-- <router-link to="/configurator" class="button is-link">Configurator</router-link> -->
+							<RouterLink class="button is-link" to="/configurator">Configurator</RouterLink>
+							<!-- <button style="margin-left: 15px" @click.stop="() => {
+					setShowView()
+				}" class="button is-primary is-outlined"> Config
+							</button> -->
+
+
 						</div>
 					</div>
 
-					<div class="block is-flex is-justify-content-center">
+					<div class=" block is-flex is-justify-content-center">
 						<div class="field has-addons">
 							<p class="control">
 								<button @click="onUserModeClick('assisted')" class="button is-small"
@@ -77,6 +87,11 @@ export default defineComponent({
 		...mapStores(useConfigStore)
 	},
 	methods: {
+		setShowView() {
+console.log("button pe")
+			this.uiStateStore.showView = 'configurator'
+
+		},
 		close() {
 			this.uiStateStore.showModal = 'none'
 		},

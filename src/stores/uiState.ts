@@ -4,6 +4,7 @@ import {
 } from '@/App.vue'
 
 export type ShowModal = 'none' | 'place' | 'preset' | 'postset' | 'transition' | 'examples' | 'help' | 'settings'
+export type ShowView = 'mainEditor' | 'configurator'
 
 /**
  * Handles general state of user interface.
@@ -16,6 +17,7 @@ export const useUiStateStore = defineStore('uiState', {
       showModal: 'none' as ShowModal,
       showEditor: 'none' as string,
       lastSelectedID: '' as string,
+      showView: 'mainEditor' as ShowView
     }
   },
   actions: {
@@ -25,6 +27,11 @@ export const useUiStateStore = defineStore('uiState', {
     setModal(modal: ShowModal, selectedID = '') {
       this.showModal = modal;
       this.lastSelectedID = selectedID;
+    }, 
+    setView(view: ShowView) {
+      this.showView = view;
+      // this.lastSelectedID = selectedID;
     },
+
   }
 })

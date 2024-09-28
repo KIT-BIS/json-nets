@@ -93,4 +93,4 @@ JSON-Nets editor is published under MIT license. If you use the JSON-Nets editor
 
 ## Acknowlegment
 
-The project Scope3transparent is supported by the Federal Ministry forEconomic Affairs and Climate Action (BMWK) as part of the National Climate Initiative on the basis of a decision by the German Bundestag.
+The project Scope3transparent is supported by the Federal Ministry for Economic Affairs and Climate Action (BMWK) as part of the National Climate Initiative on the basis of a decision by the German Bundestag.

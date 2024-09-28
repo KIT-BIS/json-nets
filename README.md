@@ -21,6 +21,7 @@ Note that the editor is a research prototoype and not production-ready. We are c
 
 - Extended simulation support
 - Improved support for custom configurations
+- Improved support for data exchange with external APIs
 - Additional QoL-Features like copy/paste of model elements
 
 ## Contributing
